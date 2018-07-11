@@ -36,11 +36,13 @@ namespace Taxi.Controllers.Accounts
             var userIdentity = _mapper.Map<AppUser>(model);
 
             var result = await _userManager.CreateAsync(userIdentity, model.Password);
+
             if (!result.Succeeded)
             {
-                return BadRequest();
+                if (result.Errors.FirstOrDefault(o => o.Code == "DuplicateUserName") != null)
+                    ModelState.AddModelError(nameof(CustomerRegistrationDto), "User name already taken");
+                return BadRequest(ModelState);
             }
-
             var driver = _mapper.Map<Driver>(model);
             driver.IdentityId = userIdentity.Id;
 

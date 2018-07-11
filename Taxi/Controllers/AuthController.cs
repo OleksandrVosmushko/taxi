@@ -62,6 +62,8 @@ namespace Taxi.Controllers
             // get the user to verifty
             var userToVerify = await _userManager.FindByNameAsync(userName);
 
+            
+
             if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
 
             // check the credentials

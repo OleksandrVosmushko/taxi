@@ -12,14 +12,14 @@ using Taxi.Services;
 namespace Taxi.Controllers.Accounts
 {
     [Route("api/accounts/customers")]
-    public class CustomerController : Controller
+    public class CustomersController : Controller
     {
 
         private IMapper _mapper;
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
 
-        public CustomerController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
+        public CustomersController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
         {
             _mapper = mapper;
             _userManager = userManager;

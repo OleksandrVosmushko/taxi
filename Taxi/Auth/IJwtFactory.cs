@@ -9,6 +9,6 @@ namespace Taxi.Auth
     public interface IJwtFactory
     {
         Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity);
-        ClaimsIdentity GenerateClaimsIdentity(string userName, string id);
+        Task<ClaimsIdentity> GenerateClaimsIdentity(string userName, string id);
     }
 }

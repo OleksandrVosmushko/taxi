@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180702113825_initial")]
-    partial class initial
+    [Migration("20180712125006_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -198,6 +198,22 @@ namespace Taxi.Migrations
                     b.ToTable("Customers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Driver", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("City");
+
+                    b.Property<string>("IdentityId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdentityId");
+
+                    b.ToTable("Drivers");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
@@ -244,6 +260,13 @@ namespace Taxi.Migrations
                 });
 
             modelBuilder.Entity("Taxi.Entities.Customer", b =>
+                {
+                    b.HasOne("Taxi.Entities.AppUser", "Identity")
+                        .WithMany()
+                        .HasForeignKey("IdentityId");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.Driver", b =>
                 {
                     b.HasOne("Taxi.Entities.AppUser", "Identity")
                         .WithMany()

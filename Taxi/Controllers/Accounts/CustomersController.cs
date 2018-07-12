@@ -25,7 +25,6 @@ namespace Taxi.Controllers.Accounts
             _userManager = userManager;
             _usersRepository = usersRepository;
         }
-
         [HttpGet(Name = "GetCustomer")]
         [Route("{id}")]
         public async Task<IActionResult> GetCustomer(Guid id)
@@ -72,10 +71,12 @@ namespace Taxi.Controllers.Accounts
 
             await _usersRepository.AddCustomer(customer);
 
+
             var customerDto = _mapper.Map<CustomerDto>(model);
 
             _mapper.Map(userIdentity, customerDto);
 
+            
             return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);
         }
     }

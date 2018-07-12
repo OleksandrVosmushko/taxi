@@ -42,6 +42,7 @@ namespace Taxi
             services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
+            services.AddScoped<UserManager<AppUser>, ApiUserManager>();
 
 
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
@@ -95,6 +96,7 @@ namespace Taxi
                 o.Password.RequireUppercase = false;
                 o.Password.RequireNonAlphanumeric = false;
                 o.Password.RequiredLength = 6;
+               
             });
             builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), builder.Services);
             builder.AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();

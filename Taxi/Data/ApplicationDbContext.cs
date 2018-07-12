@@ -15,6 +15,15 @@ namespace Taxi.Data
             
         }
 
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<AppUser>(entity =>
+            {
+                entity.HasIndex(u => u.PhoneNumber).IsUnique();
+            });
+            base.OnModelCreating(builder);
+        }
+
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Driver> Drivers { get; set; }

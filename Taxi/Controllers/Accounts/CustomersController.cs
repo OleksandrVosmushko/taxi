@@ -19,7 +19,7 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
 
-        public CustomersController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
+        public CustomersController(ApiUserManager userManager, IMapper mapper, IUsersRepository usersRepository)
         {
             _mapper = mapper;
             _userManager = userManager;
@@ -75,6 +75,7 @@ namespace Taxi.Controllers.Accounts
             var customerDto = _mapper.Map<CustomerDto>(model);
 
             _mapper.Map(userIdentity, customerDto);
+
 
             
             return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);

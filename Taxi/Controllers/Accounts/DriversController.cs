@@ -18,7 +18,7 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
 
-        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
+        public DriversController(ApiUserManager userManager, IMapper mapper, IUsersRepository usersRepository)
         {
             _mapper = mapper;
             _userManager = userManager;

@@ -17,9 +17,9 @@ namespace Taxi.Auth
     {
         private readonly JwtIssuerOptions _jwtOptions;
         private readonly IUsersRepository _repository;
-        private readonly UserManager<AppUser> _userManager;
+        private ApiUserManager _userManager;
 
-        public JwtFactory(IOptions<JwtIssuerOptions> jwtOptions, IUsersRepository repository, UserManager<AppUser> userManager)
+        public JwtFactory(IOptions<JwtIssuerOptions> jwtOptions, IUsersRepository repository, ApiUserManager userManager)
         {
             _jwtOptions = jwtOptions.Value;
             _repository = repository;

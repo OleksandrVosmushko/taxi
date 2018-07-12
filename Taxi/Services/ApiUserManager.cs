@@ -24,18 +24,17 @@ namespace Taxi.Services
                 userValidators, passwordValidators, keyNormalizer,
                 errors, services, logger){ }
 
-        public override async Task<IdentityResult> SetPhoneNumberAsync(AppUser user, string phoneNumber)
-        {
-            if (Users.Any(u => u.PhoneNumber == user.PhoneNumber))
-            {
-                return IdentityResult.Failed(new IdentityError()
-                {
-                    Code = "DuplicatePhoneException", // Wrong practice, lets set some beautiful code values in the future
-                    Description = "An existing user with same phone already exists."
-                });
-            } 
-            return await base.SetPhoneNumberAsync(user, phoneNumber);
-        }
-
+        //public override async Task<IdentityResult> SetPhoneNumberAsync(AppUser user, string phoneNumber)
+        //{
+        //    if (Users.Any(u => u.PhoneNumber == user.PhoneNumber))
+        //    {
+        //        return IdentityResult.Failed(new IdentityError()
+        //        {
+        //            Code = "DuplicatePhoneException", // Wrong practice, lets set some beautiful code values in the future
+        //            Description = "An existing user with same phone already exists."
+        //        });
+        //    } 
+        //    return await base.SetPhoneNumberAsync(user, phoneNumber);
+        //}
     }
 }

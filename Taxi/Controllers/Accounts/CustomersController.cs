@@ -16,7 +16,7 @@ namespace Taxi.Controllers.Accounts
     {
 
         private IMapper _mapper;
-        private UserManager<AppUser> _userManager;
+        private ApiUserManager _userManager;
         private IUsersRepository _usersRepository;
 
         public CustomersController(ApiUserManager userManager, IMapper mapper, IUsersRepository usersRepository)

@@ -13,17 +13,18 @@ using System.Security.Claims;
 using Newtonsoft.Json;
 using Taxi.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Taxi.Services;
 
 namespace Taxi.Controllers
 {
     [Route("api/[controller]")]
     public class AuthController: Controller
     {
-        private UserManager<AppUser> _userManager;
+        private ApiUserManager _userManager;
         private IJwtFactory _jwtFactory;
         private JwtIssuerOptions _jwtOptions;
 
-        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions)
+        public AuthController(ApiUserManager userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;

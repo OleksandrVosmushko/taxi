@@ -60,7 +60,8 @@ namespace Taxi.Controllers
             {
                 return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
             }
-
+            // Ensure the email is confirmed.
+            
             var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, new JsonSerializerSettings { Formatting = Formatting.Indented });
             return Ok(jwt);
         }
@@ -71,14 +72,18 @@ namespace Taxi.Controllers
 
             // get the user to verifty
             var userToVerify = await _userManager.FindByNameAsync(userName);
-
             
-
             if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
-
+            
             // check the credentials
             if (await _userManager.CheckPasswordAsync(userToVerify, password))
             {
+                // Ensure the email is confirmed.
+                if (!await _userManager.IsEmailConfirmedAsync(userToVerify))
+                {
+                    ModelState.AddModelError("login_failure", "Email not confirmed");
+                    return await Task.FromResult<ClaimsIdentity>(null);
+                }
                 return await Task.FromResult( _jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
             }
 

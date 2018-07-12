@@ -86,6 +86,12 @@ namespace Taxi
                 options.AddPolicy("Customer", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.CustomerAccess));
                 options.AddPolicy("Driver", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.DriverAccess));
             });
+
+            services.Configure<EmailSenderOptions>(Configuration.GetSection("email"));
+
+            services.AddTransient<IEmailSender, EmailSender>();
+    
+
             //identity configuration
             var builder = services.AddIdentityCore<AppUser>(o =>
             {

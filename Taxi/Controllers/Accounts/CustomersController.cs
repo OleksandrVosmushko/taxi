@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,18 +13,23 @@ using Taxi.Services;
 namespace Taxi.Controllers.Accounts
 {
     [Route("api/accounts/customers")]
-    public class CustomerController : Controller
+    public class CustomersController : Controller
     {
 
         private IMapper _mapper;
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
+        private IEmailSender _emailSender;
 
-        public CustomerController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
+        public CustomersController(UserManager<AppUser> userManager, 
+            IMapper mapper, 
+            IUsersRepository usersRepository,
+            IEmailSender emailSender)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
+            _emailSender = emailSender;
         }
 
         [HttpGet(Name = "GetCustomer")]
@@ -76,7 +82,16 @@ namespace Taxi.Controllers.Accounts
 
             _mapper.Map(userIdentity, customerDto);
 
+            if (!userIdentity.EmailConfirmed)
+            {
+                var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(userIdentity);
+                var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new { uid = userIdentity.Id, token = confirmToken }, this.Request.Scheme);
+                await _emailSender.SendEmailAsync(userIdentity.Email, "Confirm your account",
+                    $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+            }
+
             return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);
         }
+        
     }
 }

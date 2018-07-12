@@ -13,6 +13,7 @@ using System.Security.Claims;
 using Newtonsoft.Json;
 using Taxi.Helpers;
 using Microsoft.AspNetCore.Authorization;
+using Taxi.Services;
 
 namespace Taxi.Controllers
 {
@@ -22,12 +23,21 @@ namespace Taxi.Controllers
         private UserManager<AppUser> _userManager;
         private IJwtFactory _jwtFactory;
         private JwtIssuerOptions _jwtOptions;
+        private IEmailSender _emailSender;
 
-        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions)
+        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions, IEmailSender emailSender)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;
             _jwtOptions = jwtOptions.Value;
+            _emailSender = emailSender;
+        }
+
+        [HttpGet("email")]
+        public async Task<IActionResult> SendEmail()
+        {
+            await _emailSender.SendEmailAsync("sasha.vosmushko@gmail.com", "no subject" , "message", "message");
+            return Ok();
         }
 
         [HttpGet()]
@@ -74,6 +84,23 @@ namespace Taxi.Controllers
 
             // Credentials are invalid, or account doesn't exist
             return await Task.FromResult<ClaimsIdentity>(null);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("confirm", Name = "ConfirmEmail")]
+        public async Task<IActionResult> Confirm(string uid, string token)
+        {
+            var user = await _userManager.FindByIdAsync(uid);
+            var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
+            //change links
+            if (confirmResult.Succeeded)
+            {
+                return Redirect("/?confirmed=1");
+            }
+            else
+            {
+                return Redirect("/error/email-confirm");
+            }
         }
     }
 }

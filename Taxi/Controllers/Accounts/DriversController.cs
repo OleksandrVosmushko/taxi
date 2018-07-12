@@ -17,12 +17,14 @@ namespace Taxi.Controllers.Accounts
         private IMapper _mapper;
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
+        private IEmailSender _emailSender;
 
-        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository)
+        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IEmailSender emailSender)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
+            _emailSender = emailSender;
         }
 
         
@@ -51,6 +53,14 @@ namespace Taxi.Controllers.Accounts
             var driverDto = _mapper.Map<DriverDto>(model);
 
             _mapper.Map(userIdentity, driverDto);
+
+            if (!userIdentity.EmailConfirmed)
+            {
+                var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(userIdentity);
+                var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new { uid = userIdentity.Id, token = confirmToken }, this.Request.Scheme);
+                await _emailSender.SendEmailAsync(userIdentity.Email, "Confirm your account",
+                    $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+            }
 
             return CreatedAtRoute("GetDriver", new { id = userIdentity.Id }, driverDto);
         }

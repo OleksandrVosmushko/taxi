@@ -12,8 +12,7 @@ namespace Taxi.Services
         Task AddCustomer(Customer customer);
 
         Task AddDriver(Driver driver);
-
-
+        
         Customer GetCustomerByIdentityId(string identityId);
 
         Driver GetDriverByIdentityId(string identityId);

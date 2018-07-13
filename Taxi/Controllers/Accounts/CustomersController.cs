@@ -62,7 +62,10 @@ namespace Taxi.Controllers.Accounts
             if (!result.Succeeded)
             {
                 if (result.Errors.FirstOrDefault(o => o.Code == "DuplicateUserName") != null)
-                    ModelState.AddModelError(nameof(CustomerRegistrationDto), "User name already taken");
+                    ModelState.AddModelError(nameof(CustomerRegistrationDto.Email), "User name already taken");
+
+                if (result.Errors.FirstOrDefault(o => o.Code == "DuplicatePhoneException") != null)
+                    ModelState.AddModelError(nameof(CustomerRegistrationDto.PhoneNumber), "Phone already used");
                 return BadRequest(ModelState);
             }
 

@@ -15,9 +15,9 @@ namespace Taxi.Services
     {
         ApplicationDbContext _dataContext;
         private IMapper _mapper;
-        private UserManager<AppUser> _userManager;
+        private ApiUserManager _userManager;
 
-        public UsersRepository(ApplicationDbContext dataContext, IMapper mapper, UserManager<AppUser> userManager)
+        public UsersRepository(ApplicationDbContext dataContext, IMapper mapper, ApiUserManager userManager)
         {
             _dataContext = dataContext;
             _mapper = mapper;

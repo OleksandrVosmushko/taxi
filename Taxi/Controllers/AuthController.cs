@@ -62,8 +62,11 @@ namespace Taxi.Controllers
 
             // get the user to verifty
             var userToVerify = await _userManager.FindByNameAsync(userName);
-
-            
+            //try to get by phone
+            if (userToVerify == null)
+            {
+                userToVerify = _userManager.Users.FirstOrDefault(u => u.PhoneNumber == userName);
+            }
 
             if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
 

@@ -33,12 +33,7 @@ namespace Taxi.Controllers
             _emailSender = emailSender;
         }
 
-        [HttpGet("email")]
-        public async Task<IActionResult> SendEmail()
-        {
-            await _emailSender.SendEmailAsync("sasha.vosmushko@gmail.com", "no subject" , "message", "message");
-            return Ok();
-        }
+      
 
         [HttpGet()]
         [Authorize (Policy = "Customer")]
@@ -106,6 +101,27 @@ namespace Taxi.Controllers
             {
                 return Redirect("/error/email-confirm");
             }
+        }
+
+        [HttpPost("restore", Name  = "RestorePassword" )]
+        public async Task<IActionResult> RestorePassword(RestorePasswordDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var user = await _userManager.FindByNameAsync(model.Email); 
+            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+            {
+                ModelState.AddModelError(nameof(user.Email), "Email not confirmed or user doesn't exist");
+                return BadRequest(ModelState);
+            }
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var callbackUrl = Url.RouteUrl("ConfirmEmail", 
+                 new { UserId = user.Id, token }, Request.Scheme);
+            await _emailSender.SendEmailAsync(user.Id, "Reset Password",
+                "Please reset your password by clicking here: <a href=\"" + callbackUrl + "\">link</a>");
+            return NoContent();
         }
     }
 }

@@ -36,6 +36,7 @@ namespace Taxi.Controllers.Accounts
         [Route("{id}")]
         public async Task<IActionResult> GetCustomer(Guid id)
         {
+
             var customerIdentity = await _userManager.FindByIdAsync(id.ToString());
 
             if (customerIdentity == null)

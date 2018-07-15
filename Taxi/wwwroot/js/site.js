@@ -90,10 +90,9 @@ function login() {
         },
         success: function (result) {
             $("#response").html("login succeed");
-            var res = JSON.parse(result);
-            //console.log(res);
-            token = res.auth_token;
-         //   console.log(token);
+         
+            token = result.auth_token;
+            console.log(token);
         }
     });
 

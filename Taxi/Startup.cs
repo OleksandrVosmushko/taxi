@@ -106,6 +106,7 @@ namespace Taxi
             builder.AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
             services.AddAutoMapper();
+            services.AddCors();
             services.AddMvc();
         }
 
@@ -124,7 +125,12 @@ namespace Taxi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
-          
+            app.UseCors(cfg =>
+            {
+                cfg.AllowAnyHeader().
+                    AllowAnyMethod().
+                    AllowAnyOrigin();
+            });
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

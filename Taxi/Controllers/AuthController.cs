@@ -57,8 +57,9 @@ namespace Taxi.Controllers
             }
             // Ensure the email is confirmed.
             
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, new JsonSerializerSettings { Formatting = Formatting.Indented });
-            return Ok(jwt);
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, new JsonSerializerSettings { /*Formatting = Formatting.Indented*/ });
+
+            return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)
         {

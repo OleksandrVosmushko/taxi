@@ -18,7 +18,7 @@ using Taxi.Services;
 namespace Taxi.Controllers
 {
     [Route("api/[controller]")]
-    public class AuthController: Controller
+    public class AuthController : Controller
     {
         private UserManager<AppUser> _userManager;
         private IJwtFactory _jwtFactory;
@@ -33,17 +33,17 @@ namespace Taxi.Controllers
             _emailSender = emailSender;
         }
 
-      
+
 
         [HttpGet()]
-        [Authorize (Policy = "Customer")]
+        [Authorize(Policy = "Customer")]
         public IActionResult GetAuthorizedOnly()
         {
             return Ok(1);
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody]CustomerCreditionalsDto credentials)
+        public async Task<IActionResult> Login([FromBody]CreditionalsDto credentials)
         {
             if (!ModelState.IsValid)
             {
@@ -56,7 +56,7 @@ namespace Taxi.Controllers
                 return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
             }
             // Ensure the email is confirmed.
-            
+
             var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, new JsonSerializerSettings { /*Formatting = Formatting.Indented*/ });
 
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
@@ -68,9 +68,9 @@ namespace Taxi.Controllers
 
             // get the user to verifty
             var userToVerify = await _userManager.FindByNameAsync(userName);
-            
+
             if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
-            
+
             // check the credentials
             if (await _userManager.CheckPasswordAsync(userToVerify, password))
             {
@@ -80,7 +80,7 @@ namespace Taxi.Controllers
                     ModelState.AddModelError("login_failure", "Email not confirmed");
                     return await Task.FromResult<ClaimsIdentity>(null);
                 }
-                return await Task.FromResult( _jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
+                return await Task.FromResult(_jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
             }
 
             // Credentials are invalid, or account doesn't exist
@@ -103,22 +103,22 @@ namespace Taxi.Controllers
                 return Redirect("/error/email-confirm");
             }
         }
-
-        [HttpPost("restore", Name  = "RestorePassword" )]
+        [ProducesResponseType(204)]
+        [HttpPost("restore", Name = "RestorePassword")]
         public async Task<IActionResult> RestorePassword(RestorePasswordDto model)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var user = await _userManager.FindByNameAsync(model.Email); 
+            var user = await _userManager.FindByNameAsync(model.Email);
             if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
             {
                 ModelState.AddModelError(nameof(user.Email), "Email not confirmed or user doesn't exist");
                 return BadRequest(ModelState);
             }
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.RouteUrl("ConfirmEmail", 
+            var callbackUrl = Url.RouteUrl("ConfirmEmail",
                  new { UserId = user.Id, token }, Request.Scheme);
             await _emailSender.SendEmailAsync(user.Id, "Reset Password",
                 "Please reset your password by clicking here: <a href=\"" + callbackUrl + "\">link</a>");

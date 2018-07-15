@@ -16,6 +16,7 @@ using Taxi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
 
@@ -105,6 +106,22 @@ namespace Taxi
             builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), builder.Services);
             builder.AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info {Title = "Taxi api", Version = "v1"});
+                c.AddSecurityDefinition("Bearer",
+                    new ApiKeyScheme
+                    {
+                        In = "header",
+                        Description = "Please enter JWT with Bearer into field",
+                        Name = "Authorization",
+                        Type = "apiKey"
+                    });
+                c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
+                {
+                    {"Bearer", Enumerable.Empty<string>()}
+                });
+            });
             services.AddAutoMapper();
             services.AddCors();
             services.AddMvc();
@@ -131,6 +148,12 @@ namespace Taxi
                     AllowAnyMethod().
                     AllowAnyOrigin();
             });
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Taxi V1");
+            });
+
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

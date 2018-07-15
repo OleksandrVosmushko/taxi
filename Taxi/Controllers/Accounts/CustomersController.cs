@@ -21,8 +21,8 @@ namespace Taxi.Controllers.Accounts
         private IUsersRepository _usersRepository;
         private IEmailSender _emailSender;
 
-        public CustomersController(UserManager<AppUser> userManager, 
-            IMapper mapper, 
+        public CustomersController(UserManager<AppUser> userManager,
+            IMapper mapper,
             IUsersRepository usersRepository,
             IEmailSender emailSender)
         {
@@ -32,8 +32,7 @@ namespace Taxi.Controllers.Accounts
             _emailSender = emailSender;
         }
 
-        [HttpGet(Name = "GetCustomer")]
-        [Route("{id}")]
+        [HttpGet("{id}",Name = "GetCustomer")]
         public async Task<IActionResult> GetCustomer(Guid id)
         {
 
@@ -56,7 +55,7 @@ namespace Taxi.Controllers.Accounts
 
             return Ok(customerDto);
         }
-        
+        [ProducesResponseType(201)]
         [HttpPost]
         public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto model)
         {
@@ -93,6 +92,5 @@ namespace Taxi.Controllers.Accounts
 
             return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);
         }
-        
     }
 }

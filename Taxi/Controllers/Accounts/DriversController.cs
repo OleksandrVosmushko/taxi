@@ -11,7 +11,7 @@ using Taxi.Services;
 
 namespace Taxi.Controllers.Accounts
 {
-    [Route ("api/accounts/drivers")]
+    [Route("api/accounts/drivers")]
     public class DriversController : Controller
     {
         private IMapper _mapper;
@@ -27,7 +27,7 @@ namespace Taxi.Controllers.Accounts
             _emailSender = emailSender;
         }
 
-        
+        [ProducesResponseType(201)]
         [HttpPost]
         public async Task<IActionResult> RegisterDriver([FromBody] DriverRegistrationDto model)
         {
@@ -65,8 +65,7 @@ namespace Taxi.Controllers.Accounts
             return CreatedAtRoute("GetDriver", new { id = userIdentity.Id }, driverDto);
         }
 
-        [HttpGet(Name = "GetDriver")]
-        [Route("{id}")]
+        [HttpGet("{id}",Name = "GetDriver")]
         public async Task<IActionResult> GetDriver(Guid id)
         {
             var driverIdentity = await _userManager.FindByIdAsync(id.ToString());

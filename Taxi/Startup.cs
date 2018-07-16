@@ -128,7 +128,7 @@ namespace Taxi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext context)
         {
             if (env.IsDevelopment())
             {
@@ -153,7 +153,7 @@ namespace Taxi
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Taxi V1");
             });
-
+            context.Database.Migrate();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

@@ -31,7 +31,7 @@ namespace Taxi.Controllers.Accounts
             _usersRepository = usersRepository;
             _emailSender = emailSender;
         }
-
+        [Produces(contentType: "application/json")]
         [HttpGet("{id}",Name = "GetCustomer")]
         public async Task<IActionResult> GetCustomer(Guid id)
         {
@@ -56,6 +56,7 @@ namespace Taxi.Controllers.Accounts
             return Ok(customerDto);
         }
         [ProducesResponseType(201)]
+        [Produces(contentType: "application/json")]
         [HttpPost]
         public async Task<IActionResult> RegisterCustomer([FromBody] CustomerRegistrationDto model)
         {

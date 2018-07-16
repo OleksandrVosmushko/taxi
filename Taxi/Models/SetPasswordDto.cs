@@ -9,6 +9,10 @@ namespace Taxi.Models
     public class SetPasswordDto
     {
         [Required]
+        [EmailAddress]
+        public string Email { get; set; }
+
+        [Required]
         [StringLength(100, MinimumLength = 6)]
         public string Password { get; set; }
 
@@ -17,5 +21,7 @@ namespace Taxi.Models
         [Compare("Password", ErrorMessage ="Compare password do not match")]
         public string ConfirmPassword { get; set; }
 
+        [Required]
+        public string Token { get; set; }
     }
 }

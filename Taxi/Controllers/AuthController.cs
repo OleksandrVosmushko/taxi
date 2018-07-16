@@ -41,7 +41,7 @@ namespace Taxi.Controllers
         {
             return Ok(1);
         }
-
+        [Produces(contentType: "application/json")]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]CreditionalsDto credentials)
         {
@@ -96,13 +96,16 @@ namespace Taxi.Controllers
             //change links
             if (confirmResult.Succeeded)
             {
-                return Redirect("/?confirmed=1");
+                //return Redirect("/?confirmed=1");
+                return Ok("email_confirmed");
             }
             else
             {
-                return Redirect("/error/email-confirm");
+                //    return Redirect("/error/email-confirm");
+                return BadRequest();
             }
         }
+        [Produces(contentType: "application/json")]
         [ProducesResponseType(204)]
         [HttpPost("restore", Name = "RestorePassword")]
         public async Task<IActionResult> RestorePassword(RestorePasswordDto model)
@@ -118,11 +121,39 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
             }
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var callbackUrl = Url.RouteUrl("ConfirmEmail",
-                 new { UserId = user.Id, token }, Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Id, "Reset Password",
-                "Please reset your password by clicking here: <a href=\"" + callbackUrl + "\">link</a>");
+            var callbackUrl = Url.RouteUrl("ResetPassword",
+                 new { uid = user.Id, token }, Request.Scheme);
+            await _emailSender.SendEmailAsync(user.Email, "Reset Password",
+                $"Please reset your password by clicking here:  <a href=\"{callbackUrl}\">link</a>");
             return NoContent();
+        }
+
+        [HttpGet("reset", Name = "ResetPassword")]
+        public IActionResult ResetPassword(string uid, string token)
+        {
+            //probably redirect to website
+            return Ok(token);
+        }
+        [Produces(contentType: "application/json")]
+        [HttpPost("reset")]
+        public async Task<IActionResult> ResetPassword(SetPasswordDto setPasswordDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
+            var user = await _userManager.FindByEmailAsync(setPasswordDto.Email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var resetResult = _userManager.ResetPasswordAsync(user, setPasswordDto.Token, setPasswordDto.Password).Result;
+            
+            if (!resetResult.Succeeded)
+            {
+                return BadRequest();
+            }
+            return Ok();
         }
     }
 }

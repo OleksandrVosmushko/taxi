@@ -28,6 +28,7 @@ namespace Taxi.Controllers.Accounts
         }
 
         [ProducesResponseType(201)]
+        [Produces(contentType: "application/json")]
         [HttpPost]
         public async Task<IActionResult> RegisterDriver([FromBody] DriverRegistrationDto model)
         {
@@ -64,7 +65,7 @@ namespace Taxi.Controllers.Accounts
 
             return CreatedAtRoute("GetDriver", new { id = userIdentity.Id }, driverDto);
         }
-
+        [Produces(contentType: "application/json")]
         [HttpGet("{id}",Name = "GetDriver")]
         public async Task<IActionResult> GetDriver(Guid id)
         {

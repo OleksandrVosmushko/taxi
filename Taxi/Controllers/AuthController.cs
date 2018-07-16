@@ -80,7 +80,7 @@ namespace Taxi.Controllers
                     ModelState.AddModelError("login_failure", "Email not confirmed");
                     return await Task.FromResult<ClaimsIdentity>(null);
                 }
-                return await Task.FromResult(_jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
+                return await Task.FromResult(await _jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
             }
 
             // Credentials are invalid, or account doesn't exist

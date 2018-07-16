@@ -17,11 +17,13 @@ namespace Taxi.Auth
     {
         private readonly JwtIssuerOptions _jwtOptions;
         private readonly IUsersRepository _repository;
+        private readonly UserManager<AppUser> _userManager;
 
-        public JwtFactory(IOptions<JwtIssuerOptions> jwtOptions, IUsersRepository repository)
+        public JwtFactory(IOptions<JwtIssuerOptions> jwtOptions, IUsersRepository repository, UserManager<AppUser> userManager)
         {
             _jwtOptions = jwtOptions.Value;
             _repository = repository;
+            _userManager = userManager;
         }
 
         public async Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity)
@@ -35,8 +37,7 @@ namespace Taxi.Auth
                 claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id)
             };
 
-            //var tmp = claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
-
+     
             var jwt = new JwtSecurityToken(
                  issuer: _jwtOptions.Issuer,
                  audience: _jwtOptions.Audience,
@@ -55,28 +56,19 @@ namespace Taxi.Auth
                 new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero))
                 .TotalSeconds);
 
-        public ClaimsIdentity GenerateClaimsIdentity(string userName, string id)
+        public async Task <ClaimsIdentity> GenerateClaimsIdentity(string userName, string id)
         {
-            ClaimsIdentity identity = null;
+            
+            var user = await _userManager.FindByIdAsync(id);
 
-            var driver = _repository.GetDriverByIdentityId(id);
-            if (driver != null)
+            var rolClaim = (await _userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
+
+            ClaimsIdentity identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
             {
-                identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
-                {
-                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id),
-                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess)
-                });
-             
-            }
-            var customer = _repository.GetCustomerByIdentityId(id);
-            if (customer != null) {
-                identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
-                {
-                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id),
-                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess)
-                });
-            }
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id),
+                rolClaim
+            }); ;
+
             return identity;
         }
 

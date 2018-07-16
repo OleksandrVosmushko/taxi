@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -7,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models;
+using Taxi.Models.Drivers;
 using Taxi.Services;
 
 namespace Taxi.Controllers.Accounts
@@ -89,6 +91,38 @@ namespace Taxi.Controllers.Accounts
             return Ok(driverDto);
         }
 
+        [HttpPut("{id}")]
+        [Authorize(Policy = "Driver")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> UpdateDriver(string id, DriverUpdateDto driverDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var driver = _usersRepository.GetDriverByIdentityId(id);
+
+            if (driver == null)
+            {
+                return NotFound();
+            }
+
+            Mapper.Map(driverDto, driver.Identity);
+
+            Mapper.Map(driverDto, driver);
+
+
+            if (driverDto.CurrentPassword != null && driverDto.NewPassword != null)
+            {
+                var result = await _userManager.ChangePasswordAsync(driver.Identity, driverDto.CurrentPassword, driverDto.NewPassword);
+                if (!result.Succeeded)
+                    return BadRequest();
+            }
+
+            await _usersRepository.UpdateDriver(driver);
+
+            return NoContent();
+        }
 
     }
 }

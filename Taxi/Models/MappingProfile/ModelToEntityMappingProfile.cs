@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Models.Customers;
+using Taxi.Models.Drivers;
 
 namespace Taxi.Models.MappingProfile
 {
@@ -30,6 +32,14 @@ namespace Taxi.Models.MappingProfile
             CreateMap<CustomerRegistrationDto, CustomerDto>();
 
             CreateMap<DriverRegistrationDto, DriverDto>();
+
+            CreateMap<CustomerUpdateDto, AppUser>();
+
+            CreateMap<DriverUpdateDto, AppUser>();
+
+            CreateMap<CustomerUpdateDto, Customer>();
+
+            CreateMap<DriverUpdateDto, Driver>();
 
         }
     }

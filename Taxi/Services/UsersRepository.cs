@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,6 +37,16 @@ namespace Taxi.Services
 
         }
 
+        public async Task UpdateCustomer(Customer customer)
+        {
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateDriver(Driver Driver)
+        {
+            await _dataContext.SaveChangesAsync();
+        }
+
         public async Task AddDriver(Driver driver)
         {
             await _dataContext.Drivers.AddAsync(driver);
@@ -49,14 +60,14 @@ namespace Taxi.Services
 
         public Driver GetDriverByIdentityId(string identityId)
         {
-            var driver = _dataContext.Drivers.Where(o => o.IdentityId == identityId).FirstOrDefault();
+            var driver = _dataContext.Drivers.Where(o => o.IdentityId == identityId).Include(d => d.Identity).FirstOrDefault();
 
             return driver;
         }
 
         public Customer GetCustomerByIdentityId(string identityId)
         {
-            var customer = _dataContext.Customers.Where(o => o.IdentityId == identityId).FirstOrDefault();
+            var customer = _dataContext.Customers.Where(o => o.IdentityId == identityId).Include(d => d.Identity).FirstOrDefault();
 
             return customer;
         }

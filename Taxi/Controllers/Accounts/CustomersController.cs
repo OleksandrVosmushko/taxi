@@ -8,6 +8,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models;
+using Taxi.Models.Customers;
 using Taxi.Services;
 
 namespace Taxi.Controllers.Accounts
@@ -32,7 +33,7 @@ namespace Taxi.Controllers.Accounts
             _emailSender = emailSender;
         }
         [Produces(contentType: "application/json")]
-        [HttpGet("{id}",Name = "GetCustomer")]
+        [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<IActionResult> GetCustomer(Guid id)
         {
 
@@ -92,6 +93,40 @@ namespace Taxi.Controllers.Accounts
             }
 
             return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize (Policy = "Customer")]
+        [ProducesResponseType(204)]
+        public async Task <IActionResult> UpdateCustomer(string id, CustomerUpdateDto customerDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var customer = _usersRepository.GetCustomerByIdentityId(id);
+
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            Mapper.Map(customerDto, customer.Identity);
+            Mapper.Map(customerDto, customer);
+
+
+            if (customerDto.CurrentPassword != null && customerDto.NewPassword != null)
+            {
+                var result = await _userManager.ChangePasswordAsync(customer.Identity, customerDto.CurrentPassword, customerDto.NewPassword);
+                if (!result.Succeeded)
+                {
+                    return BadRequest();
+                }
+            }
+
+            await _usersRepository.UpdateCustomer(customer);
+
+            return NoContent();
         }
     }
 }

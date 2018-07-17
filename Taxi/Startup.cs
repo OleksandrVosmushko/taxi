@@ -40,7 +40,7 @@ namespace Taxi
                 options.UseSqlServer(Configuration.GetConnectionString("DbConnection"),
                 b=> b.MigrationsAssembly("Taxi")));
 
-            services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
+          //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
 
@@ -128,8 +128,9 @@ namespace Taxi
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ApplicationDbContext context)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
+            
             if (env.IsDevelopment())
             {
                 app.UseBrowserLink();
@@ -153,7 +154,13 @@ namespace Taxi
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Taxi V1");
             });
-            context.Database.Migrate();
+
+            using (var serviceScope = app.ApplicationServices.CreateScope())
+            {
+                var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
+               
+                context.Database.Migrate();
+            }
             app.UseMvc(routes =>
             {
                 routes.MapRoute(

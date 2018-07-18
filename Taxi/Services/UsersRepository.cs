@@ -33,8 +33,6 @@ namespace Taxi.Services
             var claim = new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess);
 
             var addClaimRes = await _userManager.AddClaimAsync(customer.Identity, claim);
-
-
         }
 
         public async Task UpdateCustomer(Customer customer)
@@ -52,10 +50,14 @@ namespace Taxi.Services
             await _dataContext.Drivers.AddAsync(driver);
             await _dataContext.SaveChangesAsync();
 
-            var claim = new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess);
+            var claims = new List<Claim>() {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess),
 
-            var addClaimRes = await _userManager.AddClaimAsync(driver.Identity, claim);
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess)
+            };
 
+            var addClaimRes = await _userManager.AddClaimsAsync(driver.Identity, claims);
+            
         }
 
         public Driver GetDriverByIdentityId(string identityId)
@@ -95,5 +97,7 @@ namespace Taxi.Services
         {
             return _dataContext.Customers.ToList();
         }
+
+        
     }
 }

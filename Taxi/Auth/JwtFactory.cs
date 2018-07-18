@@ -61,13 +61,12 @@ namespace Taxi.Auth
             
             var user = await _userManager.FindByIdAsync(id);
 
-            var rolClaim = (await _userManager.GetClaimsAsync(user)).FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
+            var rolClaims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
 
             ClaimsIdentity identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
             {
-                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id),
-                rolClaim
-            }); ;
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id)  
+            }.Union(rolClaims)); 
 
             return identity;
         }

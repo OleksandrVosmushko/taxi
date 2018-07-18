@@ -24,26 +24,28 @@ namespace Taxi.Controllers
         private IJwtFactory _jwtFactory;
         private JwtIssuerOptions _jwtOptions;
         private IEmailSender _emailSender;
+        private IUsersRepository _userRepository;
 
-        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions, IEmailSender emailSender)
+        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions, IEmailSender emailSender, IUsersRepository usersRepository)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;
             _jwtOptions = jwtOptions.Value;
             _emailSender = emailSender;
+            _userRepository = usersRepository;
         }
 
 
 
         [HttpGet()]
-        [Authorize(Policy = "Customer")]
+        [Authorize(Policy = "Driver")]
         public IActionResult GetAuthorizedOnly()
         {
             return Ok(1);
         }
         [Produces(contentType: "application/json")]
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody]CreditionalsDto credentials)
+        [HttpPost("loginCustomer")]
+        public async Task<IActionResult> LoginCustomer([FromBody]CreditionalsDto credentials)
         {
             if (!ModelState.IsValid)
             {
@@ -56,11 +58,46 @@ namespace Taxi.Controllers
                 return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
             }
             // Ensure the email is confirmed.
+            var customer = _userRepository.GetCustomerByIdentityId(identity.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.Id).Value);
+            
+            if (customer == null)
+            {
+                return NotFound(Errors.AddErrorToModelState("login_failure", "Customer does not exists", ModelState));
+            }
 
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, new JsonSerializerSettings {  });
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id);
 
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
+
+        [Produces(contentType: "application/json")]
+        [HttpPost("loginDriver")]
+        public async Task<IActionResult> LoginDriver([FromBody]CreditionalsDto credentials)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var identity = await GetClaimsIdentity(credentials.UserName, credentials.Password);
+            if (identity == null)
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            // Ensure the email is confirmed.
+            var driver = _userRepository.GetDriverByIdentityId(identity.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.Id).Value);
+            
+            if (driver == null)
+            {
+                return NotFound(Errors.AddErrorToModelState("login_failure", "Driver does not exists", ModelState));
+            }
+
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id);
+
+            return Ok(JsonConvert.DeserializeObject(jwt)); 
+        }
+
+
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
@@ -82,7 +119,6 @@ namespace Taxi.Controllers
                 }
                 return await Task.FromResult(await _jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
             }
-
             // Credentials are invalid, or account doesn't exist
             return await Task.FromResult<ClaimsIdentity>(null);
         }

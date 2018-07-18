@@ -21,13 +21,13 @@ namespace Taxi.Models.MappingProfile
 
             CreateMap<CustomerRegistrationDto, Customer>();
 
-            CreateMap<Customer, CustomerDto>().ForMember(x => x.Id, opt => opt.Ignore());
+            CreateMap<Customer, CustomerDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
 
-            CreateMap<AppUser, CustomerDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
+            CreateMap<AppUser, CustomerDto>().ForMember(x => x.Id, opt => opt.Ignore());
 
-            CreateMap<Driver, DriverDto>().ForMember(x => x.Id, opt => opt.Ignore());
+            CreateMap<Driver, DriverDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
 
-            CreateMap<AppUser, DriverDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
+            CreateMap<AppUser, DriverDto>().ForMember(x => x.Id, opt => opt.Ignore());
 
             CreateMap<CustomerRegistrationDto, CustomerDto>();
 

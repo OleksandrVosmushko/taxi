@@ -7,6 +7,8 @@ namespace Taxi.Entities
 {
     public class Trip
     {
+        public Guid Id { set; get; }
+
         public Guid CustomerId { get; set; }
 
         public Customer Customer { get; set; }
@@ -18,5 +20,7 @@ namespace Taxi.Entities
         public Place From { get; set; }
 
         public Place To { get; set; }
+
+        public DateTime CreationTime { get; set; }
     }
 }

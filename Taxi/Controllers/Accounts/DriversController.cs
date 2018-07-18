@@ -55,7 +55,7 @@ namespace Taxi.Controllers.Accounts
 
             var driverDto = _mapper.Map<DriverDto>(model);
 
-            _mapper.Map(userIdentity, driverDto);
+            driverDto.Id = driver.Id;
 
             if (!userIdentity.EmailConfirmed)
             {
@@ -65,42 +65,49 @@ namespace Taxi.Controllers.Accounts
                     $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
             }
 
-            return CreatedAtRoute("GetDriver", new { id = userIdentity.Id }, driverDto);
+            return CreatedAtRoute("GetDriver", new { id = driver.Id }, driverDto);
         }
         [Produces(contentType: "application/json")]
         [HttpGet("{id}",Name = "GetDriver")]
         public async Task<IActionResult> GetDriver(Guid id)
         {
-            var driverIdentity = await _userManager.FindByIdAsync(id.ToString());
-
-            if (driverIdentity == null)
-            {
-                return NotFound();
-            }
-            var driver = _usersRepository.GetDriverByIdentityId(id.ToString());
+            
+            var driver = _usersRepository.GetDriverById(id);
 
             if (driver == null)
             {
                 return NotFound();
             }
 
-            var driverDto = _mapper.Map<Driver, DriverDto>(driver);
+            var driverIdentity = await _userManager.FindByIdAsync(driver.IdentityId);
 
-            _mapper.Map(driverIdentity, driverDto);
+            if (driverIdentity == null)
+            {
+                return NotFound();
+            }
+            var driverDto =_mapper.Map<DriverDto>(driverIdentity);
+
+            _mapper.Map(driver, driverDto);
 
             return Ok(driverDto);
+        }
+
+        [HttpGet]
+        public IActionResult GetDrivers()
+        {
+            return Ok(_usersRepository.GetDrivers());
         }
 
         [HttpPut("{id}")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> UpdateDriver(string id, DriverUpdateDto driverDto)
+        public async Task<IActionResult> UpdateDriver(Guid id, DriverUpdateDto driverDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var driver = _usersRepository.GetDriverByIdentityId(id);
+            var driver = _usersRepository.GetDriverById(id);
 
             if (driver == null)
             {

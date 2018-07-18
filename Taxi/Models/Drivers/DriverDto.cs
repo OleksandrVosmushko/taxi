@@ -7,7 +7,7 @@ namespace Taxi.Models
 {
     public class DriverDto
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
 
         public string Email { get; set; }
 

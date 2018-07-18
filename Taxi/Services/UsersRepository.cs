@@ -72,7 +72,28 @@ namespace Taxi.Services
             return customer;
         }
         
-        
-        
+        public Customer GetCustomerById(Guid id)
+        {
+            var customer = _dataContext.Customers.Include(d => d.Identity).SingleOrDefault(o => o.Id == id);
+
+            return customer;
+        }
+
+        public Driver GetDriverById(Guid id)
+        {
+            var driver = _dataContext.Drivers.Include(d => d.Identity).SingleOrDefault(o => o.Id == id);
+
+            return driver;
+        }
+
+        public IEnumerable<Driver> GetDrivers()
+        {
+            return _dataContext.Drivers.ToList();
+        }
+
+        public IEnumerable<Customer> GetCustomers()
+        {
+            return _dataContext.Customers.ToList();
+        }
     }
 }

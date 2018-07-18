@@ -20,6 +20,13 @@ namespace Taxi.Services
         Customer GetCustomerByIdentityId(string identityId);
 
         Driver GetDriverByIdentityId(string identityId);
-        
+
+        Customer GetCustomerById(Guid Id);
+
+        Driver GetDriverById(Guid Id);
+
+        IEnumerable<Driver> GetDrivers();
+
+        IEnumerable<Customer> GetCustomers();
     }
 }

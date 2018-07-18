@@ -32,27 +32,28 @@ namespace Taxi.Controllers.Accounts
             _usersRepository = usersRepository;
             _emailSender = emailSender;
         }
+
         [Produces(contentType: "application/json")]
         [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<IActionResult> GetCustomer(Guid id)
         {
-
-            var customerIdentity = await _userManager.FindByIdAsync(id.ToString());
-
-            if (customerIdentity == null)
-            {
-                return NotFound();
-            }
-            var customer = _usersRepository.GetCustomerByIdentityId(id.ToString());
+            var customer = _usersRepository.GetCustomerById(id);
 
             if (customer == null)
             {
                 return NotFound();
             }
 
-            var customerDto = _mapper.Map<Customer, CustomerDto>(customer);
+            var customerIdentity = await _userManager.FindByIdAsync(customer.IdentityId);
 
-            _mapper.Map(customerIdentity, customerDto);
+            if (customerIdentity == null)
+            {
+                return NotFound();
+            }
+         
+            var customerDto = _mapper.Map<CustomerDto>(customerIdentity);
+
+            _mapper.Map(customer, customerDto);
 
             return Ok(customerDto);
         }
@@ -82,7 +83,7 @@ namespace Taxi.Controllers.Accounts
 
             var customerDto = _mapper.Map<CustomerDto>(model);
 
-            _mapper.Map(userIdentity, customerDto);
+            customerDto.Id = customer.Id;
 
             if (!userIdentity.EmailConfirmed)
             {
@@ -92,19 +93,19 @@ namespace Taxi.Controllers.Accounts
                     $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
             }
 
-            return CreatedAtRoute("GetCustomer", new { id = userIdentity.Id }, customerDto);
+            return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customerDto);
         }
 
         [HttpPut("{id}")]
         [Authorize (Policy = "Customer")]
         [ProducesResponseType(204)]
-        public async Task <IActionResult> UpdateCustomer(string id, CustomerUpdateDto customerDto)
+        public async Task <IActionResult> UpdateCustomer(Guid id, CustomerUpdateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var customer = _usersRepository.GetCustomerByIdentityId(id);
+            var customer = _usersRepository.GetCustomerById(id);
 
             if (customer == null)
             {

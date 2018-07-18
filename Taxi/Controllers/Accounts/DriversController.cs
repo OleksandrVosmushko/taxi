@@ -53,6 +53,10 @@ namespace Taxi.Controllers.Accounts
 
             await _usersRepository.AddDriver(driver);
 
+            var customerFromDriver = _mapper.Map<Customer>(driver);
+
+            await _usersRepository.AddCustomer(customerFromDriver);
+
             var driverDto = _mapper.Map<DriverDto>(model);
 
             driverDto.Id = driver.Id;

@@ -45,7 +45,7 @@ namespace Taxi.Models.MappingProfile
 
             CreateMap<CustomerDriverUpgradeDto, Driver>();
 
-
+            CreateMap<Driver, Customer>().ForMember(x => x.Id, opt => opt.Ignore());
         }
     }
 }

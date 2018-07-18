@@ -92,11 +92,11 @@ namespace Taxi.Controllers.Accounts
             return Ok(driverDto);
         }
 
-        [HttpGet]
-        public IActionResult GetDrivers()
-        {
-            return Ok(_usersRepository.GetDrivers());
-        }
+        //[HttpGet]
+        //public IActionResult GetDrivers()
+        //{
+        //    return Ok(_usersRepository.GetDrivers());
+        //}
 
         [HttpPut("{id}")]
         [Authorize(Policy = "Driver")]

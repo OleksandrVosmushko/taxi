@@ -62,7 +62,7 @@ namespace Taxi.Controllers
             
             if (customer == null)
             {
-                return NotFound(Errors.AddErrorToModelState("login_failure", "Customer does not exists", ModelState));
+                return NotFound();
             }
 
             var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id);
@@ -89,7 +89,7 @@ namespace Taxi.Controllers
             
             if (driver == null)
             {
-                return NotFound(Errors.AddErrorToModelState("login_failure", "Driver does not exists", ModelState));
+                return NotFound();
             }
 
             var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id);

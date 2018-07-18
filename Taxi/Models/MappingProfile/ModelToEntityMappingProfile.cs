@@ -39,7 +39,12 @@ namespace Taxi.Models.MappingProfile
 
             CreateMap<CustomerUpdateDto, Customer>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)); 
 
-            CreateMap<DriverUpdateDto, Driver>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null)); 
+            CreateMap<DriverUpdateDto, Driver>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<Customer, Driver>().ForMember(x => x.Id, opt => opt.Ignore()); 
+
+            CreateMap<CustomerDriverUpgradeDto, Driver>();
+
 
         }
     }

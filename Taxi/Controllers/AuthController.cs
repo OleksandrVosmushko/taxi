@@ -14,6 +14,8 @@ using Newtonsoft.Json;
 using Taxi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Taxi.Services;
+using Taxi.Models.Customers;
+using AutoMapper;
 
 namespace Taxi.Controllers
 {
@@ -25,14 +27,21 @@ namespace Taxi.Controllers
         private JwtIssuerOptions _jwtOptions;
         private IEmailSender _emailSender;
         private IUsersRepository _userRepository;
+        private IMapper _mapper;
 
-        public AuthController(UserManager<AppUser> userManager, IJwtFactory jwtFactory, IOptions<JwtIssuerOptions> jwtOptions, IEmailSender emailSender, IUsersRepository usersRepository)
+        public AuthController(UserManager<AppUser> userManager, 
+            IJwtFactory jwtFactory,
+            IOptions<JwtIssuerOptions> jwtOptions, 
+            IEmailSender emailSender, 
+            IUsersRepository usersRepository,
+            IMapper mapper)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;
             _jwtOptions = jwtOptions.Value;
             _emailSender = emailSender;
             _userRepository = usersRepository;
+            _mapper = mapper;
         }
 
 
@@ -44,7 +53,7 @@ namespace Taxi.Controllers
             return Ok(1);
         }
         [Produces(contentType: "application/json")]
-        [HttpPost("loginCustomer")]
+        [HttpPost("customer")]
         public async Task<IActionResult> LoginCustomer([FromBody]CreditionalsDto credentials)
         {
             if (!ModelState.IsValid)
@@ -70,8 +79,45 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
 
+
+        [Authorize(Policy = "Customer")]
+        [HttpPost("customerdriver")]
+        public async Task<IActionResult> MakeCustomerDriver(CustomerDriverUpgradeDto customerDriverUpgradeDto )
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var uid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.Id).Value;
+
+            var customer = _userRepository.GetCustomerByIdentityId(uid);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+            var testDriver = _userRepository.GetDriverByIdentityId(uid);
+
+            if (testDriver != null)
+            {
+                return BadRequest();
+            }
+
+            var driver = _mapper.Map<Driver>(customer);
+
+            _mapper.Map(customerDriverUpgradeDto, driver);
+
+            await _userRepository.AddDriver(driver);
+
+            var user = await _userManager.FindByIdAsync(uid);
+
+            var driverDto = _mapper.Map<DriverDto>(user);
+
+            _mapper.Map(driver, driverDto);
+
+            return CreatedAtRoute("GetDriver", new { id = driver.Id }, driverDto);
+        }
+
+
         [Produces(contentType: "application/json")]
-        [HttpPost("loginDriver")]
+        [HttpPost("driver")]
         public async Task<IActionResult> LoginDriver([FromBody]CreditionalsDto credentials)
         {
             if (!ModelState.IsValid)

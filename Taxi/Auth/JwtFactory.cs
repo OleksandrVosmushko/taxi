@@ -19,14 +19,17 @@ namespace Taxi.Auth
         private readonly JwtIssuerOptions _jwtOptions;
         private readonly IUsersRepository _repository;
         private readonly UserManager<AppUser> _userManager;
+        private IEmailSender _emailSender;
 
         public JwtFactory(IOptions<JwtIssuerOptions> jwtOptions,
             IUsersRepository repository,
-            UserManager<AppUser> userManager)
+            UserManager<AppUser> userManager,
+            IEmailSender emailSender)
         {
             _jwtOptions = jwtOptions.Value;
             _repository = repository;
             _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         public async Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity )
@@ -80,7 +83,7 @@ namespace Taxi.Auth
             return identity;
         }
 
-        public async Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity)
+        public async Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity, string ip)
         {
             var claims = new List<Claim>
             {
@@ -99,13 +102,15 @@ namespace Taxi.Auth
                  signingCredentials: _jwtOptions.SigningCredentials);
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
+
             var hashedJwt = _userManager.PasswordHasher.HashPassword(new AppUser(), encodedJwt);
 
             await _repository.AddRefreshToken(new Entities.RefreshToken()
             {
                 Token = hashedJwt,
                 IdentityId = claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value,
-                Expiration = ToUnixEpochDate(_jwtOptions.RefleshExpiration)
+                Expiration = ToUnixEpochDate(_jwtOptions.RefleshExpiration),
+                Ip = ip
             });
 
             var tokensFromDb = _repository.GetTokensForUser(claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value);
@@ -121,13 +126,13 @@ namespace Taxi.Auth
             return encodedJwt;
         }
 
-        public async Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions)
+        public async Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions, string ip)
         {
             var handler = new JwtSecurityTokenHandler();
 
-            var tokenClaims = (handler.ReadToken(refreshToken) as JwtSecurityToken).Claims;
+            var tokenClaims = (handler.ReadToken(refreshToken) as JwtSecurityToken)?.Claims;
 
-            var expirationTime = tokenClaims.FirstOrDefault(o => o.Type == "exp").Value;
+            var expirationTime = tokenClaims.FirstOrDefault(o => o.Type == "exp")?.Value;
 
             if (expirationTime == null)
             {
@@ -147,18 +152,35 @@ namespace Taxi.Auth
             }
 
             var tokensFromDb = _repository.GetTokensForUser(uid);
+            //check if (token + ip) hash match one of user refresh tokens 
+            var curToken = tokensFromDb
+                .SingleOrDefault(t => (_userManager.PasswordHasher
+                .VerifyHashedPassword(new AppUser(), t.Token, refreshToken)) == PasswordVerificationResult.Success);
             
-            var curToken = tokensFromDb.Where(t => (_userManager.PasswordHasher
-                .VerifyHashedPassword(new AppUser(), t.Token, refreshToken)) == PasswordVerificationResult.Success)
-                .SingleOrDefault();
-
             if (curToken == null)
             {
                 return null;
             }
 
-            var user = await _userManager.FindByIdAsync(curToken.IdentityId);
             
+            var user = await _userManager.FindByIdAsync(curToken.IdentityId);
+
+            if (curToken.Ip != ip)
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(user.Email, "Security",
+                        $"Somebody was attempting to login to your account from {ip}, if it was not you consider changing your password");
+                }
+                catch
+                {
+                    return null;
+                }
+
+                return null;
+            }
+
+
             if (tokensFromDb.Count() > 20)
             {
                 foreach (var t in tokensFromDb.ToList())
@@ -180,7 +202,7 @@ namespace Taxi.Auth
 
             var claimsIdentity = await GenerateClaimsIdentity(user.UserName, user.Id);
 
-            var newRefreshToken = await GenerateRefreshToken(user.UserName, claimsIdentity);
+            var newRefreshToken = await GenerateRefreshToken(user.UserName, claimsIdentity, ip);
 
             var newAccessToken =  await GenerateEncodedToken(user.UserName, claimsIdentity);
 

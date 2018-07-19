@@ -11,8 +11,8 @@ namespace Taxi.Auth
     {
         Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity);
         Task<ClaimsIdentity> GenerateClaimsIdentity(string userName, string id);
-        Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity);
-        Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions);
+        Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity, string ip);
+        Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions, string ip);
         Task RemoveRefreshTokens(string userId);
     }
 }

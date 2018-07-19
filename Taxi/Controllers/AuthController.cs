@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Authorization;
 using Taxi.Services;
 using Taxi.Models.Customers;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 
 namespace Taxi.Controllers
 {
@@ -28,13 +29,15 @@ namespace Taxi.Controllers
         private IEmailSender _emailSender;
         private IUsersRepository _userRepository;
         private IMapper _mapper;
+        private IHttpContextAccessor _httpContextAccessor;
 
         public AuthController(UserManager<AppUser> userManager, 
             IJwtFactory jwtFactory,
             IOptions<JwtIssuerOptions> jwtOptions, 
             IEmailSender emailSender, 
             IUsersRepository usersRepository,
-            IMapper mapper)
+            IMapper mapper,
+            IHttpContextAccessor  httpContextAccessor)
         {
             _userManager = userManager;
             _jwtFactory = jwtFactory;
@@ -42,6 +45,7 @@ namespace Taxi.Controllers
             _emailSender = emailSender;
             _userRepository = usersRepository;
             _mapper = mapper;
+            _httpContextAccessor = httpContextAccessor;
         }
 
 
@@ -73,8 +77,8 @@ namespace Taxi.Controllers
             {
                 return NotFound();
             }
-
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id);
+            var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id, ip);
 
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
@@ -138,8 +142,8 @@ namespace Taxi.Controllers
             {
                 return NotFound();
             }
-
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id);
+            var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id, ip);
 
             return Ok(JsonConvert.DeserializeObject(jwt)); 
         }
@@ -242,7 +246,9 @@ namespace Taxi.Controllers
         [HttpPost("refreshtoken")]
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {
-            var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions);
+            var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+
+            var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions,ip);
 
             if (res == null)
                 return BadRequest();
@@ -254,7 +260,10 @@ namespace Taxi.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value;
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            if (id == null)
+                return NotFound();
 
             await _jwtFactory.RemoveRefreshTokens(id);
 

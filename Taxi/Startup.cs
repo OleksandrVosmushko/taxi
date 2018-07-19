@@ -16,6 +16,8 @@ using Taxi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
@@ -39,12 +41,12 @@ namespace Taxi
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DbConnection"),
                 b=> b.MigrationsAssembly("Taxi")));
-
-          //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
+            //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-           
+
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
             {

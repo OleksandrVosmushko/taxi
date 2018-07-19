@@ -88,9 +88,18 @@ namespace Taxi.Controllers.Accounts
             if (!userIdentity.EmailConfirmed)
             {
                 var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(userIdentity);
-                var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new { uid = userIdentity.Id, token = confirmToken }, this.Request.Scheme);
-                await _emailSender.SendEmailAsync(userIdentity.Email, "Confirm your account",
-                    $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+                var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new {uid = userIdentity.Id, token = confirmToken},
+                    this.Request.Scheme);
+                try
+                {
+                    await _emailSender.SendEmailAsync(userIdentity.Email, "Confirm your account",
+                        $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+                }
+                catch
+                {
+                    ModelState.AddModelError("email", "Failed to send confirmation letter");
+                    return BadRequest();
+                }
             }
 
             return CreatedAtRoute("GetCustomer", new { id = customer.Id }, customerDto);

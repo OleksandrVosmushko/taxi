@@ -11,9 +11,9 @@ namespace Taxi.Helpers
 {
     public class Tokens
     {
-        public static async Task<string> GenerateJwt(ClaimsIdentity identity, IJwtFactory jwtFactory, string userName, JwtIssuerOptions jwtOptions, Guid id)
+        public static async Task<string> GenerateJwt(ClaimsIdentity identity, IJwtFactory jwtFactory, string userName, JwtIssuerOptions jwtOptions, Guid id, string ip)
         {
-            var refresh_token = await jwtFactory.GenerateRefreshToken(userName, identity);
+            var refresh_token = await jwtFactory.GenerateRefreshToken(userName, identity,ip);
             var response = new
             {
                 id = id,//identity.Claims.Single(c => c.Type == "id").Value,

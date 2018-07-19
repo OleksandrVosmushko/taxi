@@ -15,6 +15,8 @@ namespace Taxi.Entities
 
         public long Expiration { get; set; }
 
+        public string Ip { get; set; }
+
         public AppUser Identity { get; set; }
     }
 }

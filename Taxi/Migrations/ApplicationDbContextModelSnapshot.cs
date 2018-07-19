@@ -222,6 +222,8 @@ namespace Taxi.Migrations
 
                     b.Property<string>("IdentityId");
 
+                    b.Property<string>("Ip");
+
                     b.HasKey("Token");
 
                     b.HasIndex("IdentityId");

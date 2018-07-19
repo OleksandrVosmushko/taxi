@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180719142649_migr")]
-    partial class migr
+    [Migration("20180719185209_mig")]
+    partial class mig
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -222,6 +222,8 @@ namespace Taxi.Migrations
                     b.Property<long>("Expiration");
 
                     b.Property<string>("IdentityId");
+
+                    b.Property<string>("Ip");
 
                     b.HasKey("Token");
 

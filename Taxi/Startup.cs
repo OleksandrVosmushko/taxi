@@ -44,12 +44,13 @@ namespace Taxi
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
 
-
+           
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
             {
                 options.Issuer = jwtOptions[nameof(JwtIssuerOptions.Issuer)];
                 options.Audience = jwtOptions[nameof(JwtIssuerOptions.Audience)];
+
                 options.SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
             });
 

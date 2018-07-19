@@ -28,14 +28,21 @@ namespace Taxi.Auth
 
         public async Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim (JwtRegisteredClaimNames.Sub, userName),
                 new Claim (JwtRegisteredClaimNames.Jti, await _jwtOptions.JtiGenerator()),
                 new Claim(JwtRegisteredClaimNames.Iat, ToUnixEpochDate(_jwtOptions.IssuedAt).ToString(), ClaimValueTypes.Integer64),
-                claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol),
+              //  claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol),
                 claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id)
             };
+            foreach (var claim in claimsIdentity.Claims)
+            {
+                if (claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol)
+                {
+                    claims.Add(claim);
+                }
+            }
 
      
             var jwt = new JwtSecurityToken(
@@ -47,7 +54,7 @@ namespace Taxi.Auth
                  signingCredentials: _jwtOptions.SigningCredentials);
 
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
-
+            
             return encodedJwt;
         }
 
@@ -71,5 +78,9 @@ namespace Taxi.Auth
             return identity;
         }
 
+        public Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -193,5 +193,15 @@ namespace Taxi.Auth
 
             return responce;
         }
+
+        public async Task RemoveRefreshTokens(string userId)
+        {
+            var tokensFromDb = _repository.GetTokensForUser(userId);
+
+            foreach (var t in tokensFromDb.ToList())
+            {
+                await _repository.DeleteRefleshToken(t);
+            }
+        }
     }
 }

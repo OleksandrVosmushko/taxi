@@ -82,6 +82,7 @@ namespace Taxi.Controllers
 
         [Authorize(Policy = "Customer")]
         [HttpPost("customerdriver")]
+        [ProducesResponseType(201)]
         public async Task<IActionResult> MakeCustomerDriver(CustomerDriverUpgradeDto customerDriverUpgradeDto )
         {
             if (!ModelState.IsValid)
@@ -248,5 +249,17 @@ namespace Taxi.Controllers
             return Ok(res);
         }
        
+        [Authorize]
+        [ProducesResponseType(204)]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value;
+
+            await _jwtFactory.RemoveRefreshTokens(id);
+
+            return NoContent();
+        }
+
     }
 }

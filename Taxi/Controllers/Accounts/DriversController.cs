@@ -73,7 +73,7 @@ namespace Taxi.Controllers.Accounts
                 catch
                 {
                     ModelState.AddModelError("email", "Failed to send confirmation letter");
-                    return BadRequest();
+                    return BadRequest(ModelState);
                 }
             }
 

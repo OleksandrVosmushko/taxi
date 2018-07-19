@@ -29,6 +29,9 @@ namespace Taxi.Models
         /// </summary>
         public DateTime Expiration => IssuedAt.Add(ValidFor);
 
+
+
+        public DateTime RefleshExpiration => DateTime.UtcNow.AddMinutes(0.5);
         /// <summary>
         /// 4.1.5.  "nbf" (Not Before) Claim - The "nbf" (not before) claim identifies the time before which the JWT MUST NOT be accepted for processing.
         /// </summary>
@@ -42,10 +45,8 @@ namespace Taxi.Models
         /// <summary>
         /// Set the timespan the token will be valid for (default is 120 min)
         /// </summary>
-        public TimeSpan ValidFor { get; set; } = TimeSpan.FromMinutes(5);
-
-
-
+        public TimeSpan ValidFor { get; set; } = TimeSpan.FromMinutes(1);
+        
         /// <summary>
         /// "jti" (JWT ID) Claim (default ID is a GUID)
         /// </summary>

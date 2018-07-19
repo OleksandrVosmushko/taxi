@@ -28,5 +28,13 @@ namespace Taxi.Services
         IEnumerable<Driver> GetDrivers();
 
         IEnumerable<Customer> GetCustomers();
+
+        RefreshToken GetRefreshToken(string token);
+
+        Task<bool> DeleteRefleshToken(RefreshToken token);
+
+        Task<bool> AddRefreshToken(RefreshToken token);
+
+        IEnumerable<RefreshToken> GetTokensForUser(string userId);
    }
 }

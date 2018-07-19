@@ -15,8 +15,11 @@ namespace Taxi.Data
             
         }
 
+
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Driver> Drivers { get; set; }
+
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }

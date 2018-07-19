@@ -237,5 +237,16 @@ namespace Taxi.Controllers
             }
             return Ok();
         }
+
+        [HttpPost("refreshtoken")]
+        public async Task<IActionResult> RefreshToken(string refreshToken)
+        {
+            var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions);
+
+            if (res == null)
+                return BadRequest();
+            return Ok(res);
+        }
+       
     }
 }

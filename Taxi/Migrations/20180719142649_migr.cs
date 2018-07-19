@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Taxi.Migrations
 {
-    public partial class migration : Migration
+    public partial class migr : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -193,6 +193,25 @@ namespace Taxi.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    Token = table.Column<string>(nullable: false),
+                    Expiration = table.Column<long>(nullable: false),
+                    IdentityId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Token);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_AspNetUsers_IdentityId",
+                        column: x => x.IdentityId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -241,6 +260,11 @@ namespace Taxi.Migrations
                 name: "IX_Drivers_IdentityId",
                 table: "Drivers",
                 column: "IdentityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_IdentityId",
+                table: "RefreshTokens",
+                column: "IdentityId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -265,6 +289,9 @@ namespace Taxi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Drivers");
+
+            migrationBuilder.DropTable(
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

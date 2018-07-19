@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180716101233_migration")]
-    partial class migration
+    [Migration("20180719142649_migr")]
+    partial class migr
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -214,6 +214,22 @@ namespace Taxi.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>
+                {
+                    b.Property<string>("Token")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("Expiration");
+
+                    b.Property<string>("IdentityId");
+
+                    b.HasKey("Token");
+
+                    b.HasIndex("IdentityId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
@@ -270,6 +286,13 @@ namespace Taxi.Migrations
                 {
                     b.HasOne("Taxi.Entities.AppUser", "Identity")
                         .WithMany()
+                        .HasForeignKey("IdentityId");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Taxi.Entities.AppUser", "Identity")
+                        .WithMany("RefreshTokens")
                         .HasForeignKey("IdentityId");
                 });
 #pragma warning restore 612, 618

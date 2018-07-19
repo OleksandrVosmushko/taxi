@@ -94,6 +94,42 @@ namespace Taxi.Services
             return _dataContext.Customers.ToList();
         }
 
-        
+        public RefreshToken GetRefreshToken(string token)
+        {
+            return _dataContext.RefreshTokens.FirstOrDefault(t => t.Token == token);
+        }
+
+        public async Task<bool> DeleteRefleshToken(RefreshToken token)
+        {
+            try
+            {
+                 _dataContext.RefreshTokens.Remove(token);
+                await _dataContext.SaveChangesAsync();
+
+            } catch (Exception e)
+            {
+                return false;
+            }
+            return true;
+        }
+        public async Task<bool> AddRefreshToken(RefreshToken token)
+        {
+            try
+            {
+                await _dataContext.RefreshTokens.AddAsync(token);
+                await _dataContext.SaveChangesAsync();
+
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public IEnumerable<RefreshToken> GetTokensForUser(string userId)
+        {
+            return _dataContext.RefreshTokens.Where(t => t.IdentityId == userId).ToList();
+        }
     }
 }

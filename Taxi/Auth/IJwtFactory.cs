@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Taxi.Models;
 
 namespace Taxi.Auth
 {
@@ -11,5 +12,6 @@ namespace Taxi.Auth
         Task<string> GenerateEncodedToken(string userName, ClaimsIdentity claimsIdentity);
         Task<ClaimsIdentity> GenerateClaimsIdentity(string userName, string id);
         Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity);
+        Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions);
     }
 }

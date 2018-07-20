@@ -244,9 +244,12 @@ namespace Taxi.Controllers
         }
 
         [HttpPost("refreshtoken")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken(string refreshToken)
         {
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            
+            if (refreshToken == null)
+                return BadRequest();
 
             var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions,ip);
 

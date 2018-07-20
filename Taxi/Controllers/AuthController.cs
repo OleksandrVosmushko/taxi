@@ -244,7 +244,7 @@ namespace Taxi.Controllers
         }
 
         [HttpPost("refreshtoken")]
-        public async Task<IActionResult> RefreshToken(string refreshToken)
+        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
         {
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 

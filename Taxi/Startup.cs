@@ -136,6 +136,7 @@ namespace Taxi
                     {"Bearer", Enumerable.Empty<string>()}
                 });
             });
+            services.AddMemoryCache();
             services.AddAutoMapper();
             services.AddCors();
             services.AddMvc();

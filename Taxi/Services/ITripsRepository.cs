@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Taxi.Services
 {
-    public class ITripsRepository
+    public interface ITripsRepository
     {
     }
 }

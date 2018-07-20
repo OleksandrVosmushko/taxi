@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models;
 using Taxi.Models.Customers;
+using Taxi.Models.Trips;
 using Taxi.Services;
 
 namespace Taxi.Controllers.Accounts
@@ -137,6 +138,13 @@ namespace Taxi.Controllers.Accounts
             await _usersRepository.UpdateCustomer(customer);
 
             return NoContent();
+        }
+
+        [HttpPost] 
+        public IActionResult CreateTrip(TripCreationDto tripCreationDto)
+        {
+            
+            return Ok();
         }
     }
 }

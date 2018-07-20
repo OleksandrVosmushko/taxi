@@ -21,6 +21,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace Taxi
 {
@@ -153,6 +154,12 @@ namespace Taxi
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+            //trying forvarde3d headers
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                ForwardedHeaders.XForwardedProto
+            });
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();

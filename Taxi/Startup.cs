@@ -155,11 +155,11 @@ namespace Taxi
                 app.UseExceptionHandler("/Home/Error");
             }
             //trying forvarde3d headers
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
-            {
-                ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                ForwardedHeaders.XForwardedProto
-            });
+            //app.UseForwardedHeaders(new ForwardedHeadersOptions
+            //{
+            //    ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+            //    ForwardedHeaders.XForwardedProto
+            //});
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();

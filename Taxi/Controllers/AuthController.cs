@@ -78,7 +78,8 @@ namespace Taxi.Controllers
                 return NotFound();
             }
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id, ip);
+            var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, customer.Id, ip,userAgent);
 
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
@@ -143,7 +144,9 @@ namespace Taxi.Controllers
                 return NotFound();
             }
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id, ip);
+            var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];
+
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id, ip, userAgent);
 
             return Ok(JsonConvert.DeserializeObject(jwt)); 
         }
@@ -247,11 +250,13 @@ namespace Taxi.Controllers
         public async Task<IActionResult> RefreshToken(string refreshToken)
         {
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
-            
+
+            var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];
+
             if (refreshToken == null)
                 return BadRequest();
 
-            var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions,ip);
+            var res = await _jwtFactory.RefreshToken(refreshToken, _jwtOptions,ip, userAgent);
 
             if (res == null)
                 return BadRequest();

@@ -17,6 +17,8 @@ namespace Taxi.Entities
 
         public string Ip { get; set; }
 
+        public string Useragent { get; set; }
+
         public AppUser Identity { get; set; }
     }
 }

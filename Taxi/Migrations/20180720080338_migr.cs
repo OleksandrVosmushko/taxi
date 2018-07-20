@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Taxi.Migrations
 {
-    public partial class mig : Migration
+    public partial class migr : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -200,7 +200,8 @@ namespace Taxi.Migrations
                     Token = table.Column<string>(nullable: false),
                     Expiration = table.Column<long>(nullable: false),
                     IdentityId = table.Column<string>(nullable: true),
-                    Ip = table.Column<string>(nullable: true)
+                    Ip = table.Column<string>(nullable: true),
+                    Useragent = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {

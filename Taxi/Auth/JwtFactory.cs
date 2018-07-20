@@ -83,7 +83,7 @@ namespace Taxi.Auth
             return identity;
         }
 
-        public async Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity, string ip)
+        public async Task<string> GenerateRefreshToken(string userName, ClaimsIdentity claimsIdentity, string ip, string userAgent)
         {
             var claims = new List<Claim>
             {
@@ -132,13 +132,14 @@ namespace Taxi.Auth
                 Token = hashedJwt,
                 IdentityId = claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value,
                 Expiration = ToUnixEpochDate(_jwtOptions.RefleshExpiration),
-                Ip = ip
+                Ip = ip,
+                Useragent = userAgent
             });
             
             return encodedJwt;
         }
 
-        public async Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions, string ip)
+        public async Task<TokensDto> RefreshToken(string refreshToken, JwtIssuerOptions jwtOptions, string ip, string userAgent)
         {
             var handler = new JwtSecurityTokenHandler();
 
@@ -177,7 +178,7 @@ namespace Taxi.Auth
             
             var user = await _userManager.FindByIdAsync(curToken.IdentityId);
 
-            if (curToken.Ip != ip)
+            if (curToken.Ip != ip || curToken.Useragent != userAgent)
             {
                 try
                 {
@@ -214,7 +215,7 @@ namespace Taxi.Auth
 
             var claimsIdentity = await GenerateClaimsIdentity(user.UserName, user.Id);
 
-            var newRefreshToken = await GenerateRefreshToken(user.UserName, claimsIdentity, ip);
+            var newRefreshToken = await GenerateRefreshToken(user.UserName, claimsIdentity, ip, userAgent);
 
             var newAccessToken =  await GenerateEncodedToken(user.UserName, claimsIdentity);
 

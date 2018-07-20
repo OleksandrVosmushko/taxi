@@ -162,6 +162,13 @@ namespace Taxi.Controllers
 
             if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
 
+            var looked = await _userManager.IsLockedOutAsync(userToVerify);
+            if (looked)
+            {
+                ModelState.AddModelError("login_failure", $"Number of your login attempts expired, try again in {userToVerify.LockoutEnd}");
+                return await Task.FromResult<ClaimsIdentity>(null);
+            }
+
             // check the credentials
             if (await _userManager.CheckPasswordAsync(userToVerify, password))
             {
@@ -171,8 +178,12 @@ namespace Taxi.Controllers
                     ModelState.AddModelError("login_failure", "Email not confirmed");
                     return await Task.FromResult<ClaimsIdentity>(null);
                 }
+                await _userManager.ResetAccessFailedCountAsync(userToVerify);
                 return await Task.FromResult(await _jwtFactory.GenerateClaimsIdentity(userName, userToVerify.Id));
             }
+
+            //inc the number of failed logins
+            await _userManager.AccessFailedAsync(userToVerify);
             // Credentials are invalid, or account doesn't exist
             return await Task.FromResult<ClaimsIdentity>(null);
         }

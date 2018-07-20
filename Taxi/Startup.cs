@@ -94,9 +94,15 @@ namespace Taxi
             services.Configure<EmailSenderOptions>(Configuration.GetSection("email"));
 
             services.AddTransient<IEmailSender, EmailSender>();
-    
+
 
             //identity configuration
+            var lockoutOptions = new LockoutOptions()
+            {
+                AllowedForNewUsers = true,
+                DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5),
+                MaxFailedAccessAttempts = 5
+            };
             var builder = services.AddIdentityCore<AppUser>(o =>
             {
                 // configure identity options
@@ -105,8 +111,12 @@ namespace Taxi
                 o.Password.RequireUppercase = false;
                 o.Password.RequireNonAlphanumeric = false;
                 o.Password.RequiredLength = 6;
+                o.Lockout = lockoutOptions;
             });
             builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), builder.Services);
+
+            
+
             builder.AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
       
             services.AddSwaggerGen(c =>

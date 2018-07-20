@@ -104,6 +104,28 @@ namespace Taxi.Auth
             var encodedJwt = new JwtSecurityTokenHandler().WriteToken(jwt);
 
             var hashedJwt = _userManager.PasswordHasher.HashPassword(new AppUser(), encodedJwt);
+            //remove tokens for user if strange activity
+            var tokensFromDb = _repository.GetTokensForUser(claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value).ToList();
+
+            if (tokensFromDb.Count() > 20)
+            {
+                foreach (var t in tokensFromDb.ToList())
+                {
+                    if (t != null)
+                        await _repository.DeleteRefleshToken(t);
+
+                }
+            }
+            else
+            {
+                foreach (var t in tokensFromDb.ToList())
+                {
+                    if (t.Expiration < ToUnixEpochDate(DateTime.UtcNow))
+                    {
+                        await _repository.DeleteRefleshToken(t);
+                    }
+                }
+            }
 
             await _repository.AddRefreshToken(new Entities.RefreshToken()
             {
@@ -112,17 +134,7 @@ namespace Taxi.Auth
                 Expiration = ToUnixEpochDate(_jwtOptions.RefleshExpiration),
                 Ip = ip
             });
-
-            var tokensFromDb = _repository.GetTokensForUser(claimsIdentity.FindFirst(Helpers.Constants.Strings.JwtClaimIdentifiers.Id).Value);
-
-            foreach (var t in tokensFromDb.ToList())
-            {
-                if (t.Expiration < ToUnixEpochDate(DateTime.UtcNow))
-                {
-                    await _repository.DeleteRefleshToken(t);
-                }
-            }
-
+            
             return encodedJwt;
         }
 
@@ -151,7 +163,7 @@ namespace Taxi.Auth
                 return null;
             }
 
-            var tokensFromDb = _repository.GetTokensForUser(uid);
+            var tokensFromDb = _repository.GetTokensForUser(uid).ToList();
             //check if (token + ip) hash match one of user refresh tokens 
             var curToken = tokensFromDb
                 .SingleOrDefault(t => (_userManager.PasswordHasher

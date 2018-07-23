@@ -50,6 +50,9 @@ namespace Taxi.Models.MappingProfile
             
             //for now, probably change
             CreateMap<TripCreationDto, Trip>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
+            CreateMap<TripUpdateDto, Trip>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+
         }
     }
 }

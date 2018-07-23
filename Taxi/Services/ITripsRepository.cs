@@ -8,7 +8,7 @@ namespace Taxi.Services
 {
     public interface ITripsRepository
     {
-        bool AddTrip(Trip trip);
+        bool SetTrip(Trip trip);
 
         void RemoveTrip(Guid customerId);
         

@@ -7,11 +7,10 @@ using Taxi.Entities;
 
 namespace Taxi.Models.Trips
 {
-    public class TripCreationDto
+    public class TripUpdateDto
     {
-        [Required]
         public Place From { get; set; }
-        [Required]
+       
         public Place To { get; set; }
     }
 }

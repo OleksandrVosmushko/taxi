@@ -112,13 +112,16 @@ namespace Taxi.Controllers.Accounts
         [HttpPut("{id}")]
         [Authorize (Policy = "Customer")]
         [ProducesResponseType(204)]
-        public async Task <IActionResult> UpdateCustomer(Guid id, CustomerUpdateDto customerDto)
+        public async Task <IActionResult> UpdateCustomer( CustomerUpdateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var customer = _usersRepository.GetCustomerById(id);
+
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(id));
 
             if (customer == null)
             {
@@ -145,15 +148,19 @@ namespace Taxi.Controllers.Accounts
 
         [Authorize (Policy = "Customer")]
         [HttpPost("trip")] 
-        public IActionResult CreateTrip(TripCreationDto tripCreationDto)
+        public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
         {
+            
+
             var tripEntity = Mapper.Map<Trip>(tripCreationDto);
 
             tripEntity.CreationTime = DateTime.UtcNow;
 
             tripEntity.Id = Guid.NewGuid();
 
-            _tripsCashe.AddTrip(tripEntity);
+            tripEntity.CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
+
+            _tripsCashe.SetTrip(tripEntity);
 
             return Ok();
         }
@@ -162,19 +169,42 @@ namespace Taxi.Controllers.Accounts
         [HttpDelete("trip")]
         public IActionResult DeleteTripForCustomer()
         {
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+            var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
             
-            _tripsCashe.RemoveTrip(Guid.Parse(id));
+            if (customerid == null)
+            {
+                return BadRequest();
+            }
+
+            _tripsCashe.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
         }
 
         [Authorize(Policy = "Customer")]
         [HttpPut("trip")]
-        public IActionResult UpdateTrip(TripCreationDto tripCreationDto)
+        public IActionResult UpdateTripForCustomer(TripUpdateDto tripUpdateDto)
         {
-            var TripToUpdate = _tripsCashe.GetTrip(tripCreationDto.CustomerId);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
+            var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+
+            if (customerid == null)
+            {
+                return BadRequest();
+            }
+
+            var tripToUpdate = _tripsCashe.GetTrip(Guid.Parse(customerid));
+
+            if (tripToUpdate == null)
+            {
+                return NotFound();
+            }
+            
+            _mapper.Map(tripUpdateDto, tripToUpdate);
+
+            _tripsCashe.SetTrip(tripToUpdate);
 
             return Ok();
         }

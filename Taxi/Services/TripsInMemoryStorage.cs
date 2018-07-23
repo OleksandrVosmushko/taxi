@@ -18,7 +18,7 @@ namespace Taxi.Services
             _memoryCache = cache;
         }
 
-        public bool AddTrip(Trip trip)
+        public bool SetTrip(Trip trip)
         {
             try
             {

@@ -30,9 +30,12 @@ namespace Taxi.Services
          
             await _dataContext.SaveChangesAsync();
 
-            var claim = new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess);
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess),
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId, customer.Id.ToString())
+            };
 
-            var addClaimRes = await _userManager.AddClaimAsync(customer.Identity, claim);
+            var addClaimRes = await _userManager.AddClaimsAsync(customer.Identity, claims);
         }
 
         public async Task UpdateCustomer(Customer customer)
@@ -50,9 +53,12 @@ namespace Taxi.Services
             await _dataContext.Drivers.AddAsync(driver);
             await _dataContext.SaveChangesAsync();
 
-            var claims = new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess);
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess),
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId, driver.Id.ToString())
+            };
             
-            var addClaimRes = await _userManager.AddClaimAsync(driver.Identity, claims);
+            var addClaimRes = await _userManager.AddClaimsAsync(driver.Identity, claims);
             
         }
 

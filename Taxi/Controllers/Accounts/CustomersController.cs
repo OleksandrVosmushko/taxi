@@ -22,16 +22,19 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
         private IEmailSender _emailSender;
+        private ITripsRepository _tripsCashe;
 
         public CustomersController(UserManager<AppUser> userManager,
             IMapper mapper,
             IUsersRepository usersRepository,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            ITripsRepository tripsCashe)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
             _emailSender = emailSender;
+            _tripsCashe = tripsCashe;
         }
 
         [Produces(contentType: "application/json")]
@@ -140,10 +143,39 @@ namespace Taxi.Controllers.Accounts
             return NoContent();
         }
 
-        [HttpPost] 
+        [Authorize (Policy = "Customer")]
+        [HttpPost("trip")] 
         public IActionResult CreateTrip(TripCreationDto tripCreationDto)
         {
+            var tripEntity = Mapper.Map<Trip>(tripCreationDto);
+
+            tripEntity.CreationTime = DateTime.UtcNow;
+
+            tripEntity.Id = Guid.NewGuid();
+
+            _tripsCashe.AddTrip(tripEntity);
+
+            return Ok();
+        }
+
+        [Authorize(Policy = "Customer")]
+        [HttpDelete("trip")]
+        public IActionResult DeleteTripForCustomer()
+        {
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
             
+            _tripsCashe.RemoveTrip(Guid.Parse(id));
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "Customer")]
+        [HttpPut("trip")]
+        public IActionResult UpdateTrip(TripCreationDto tripCreationDto)
+        {
+            var TripToUpdate = _tripsCashe.GetTrip(tripCreationDto.CustomerId);
+
+
             return Ok();
         }
     }

@@ -43,7 +43,9 @@ namespace Taxi.Auth
             };
             foreach (var claim in claimsIdentity.Claims)
             {
-                if (claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol)
+                if (claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol ||
+                    claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId ||
+                    claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)
                 {
                     claims.Add(claim);
                 }
@@ -73,12 +75,30 @@ namespace Taxi.Auth
             
             var user = await _userManager.FindByIdAsync(id);
 
-            var rolClaims = (await _userManager.GetClaimsAsync(user)).Where(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
+            var allClaims = (await _userManager.GetClaimsAsync(user)).ToList();
+
+            var rolClaims = (allClaims).Where(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol);
+
+            var idClaims = new List<Claim>();
+
+            var customerIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.CustomerId);
+
+            var driverIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId);
+            
+            if (customerIdClaim != null)
+            {
+                idClaims.Add(customerIdClaim);
+            }
+
+            if (driverIdClaim != null)
+            {
+                idClaims.Add(driverIdClaim);
+            }
 
             ClaimsIdentity identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
             {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id)  
-            }.Union(rolClaims)); 
+            }.Union(rolClaims).Union(idClaims)); 
 
             return identity;
         }

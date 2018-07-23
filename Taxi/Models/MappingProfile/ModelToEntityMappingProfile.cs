@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models.Customers;
 using Taxi.Models.Drivers;
+using Taxi.Models.Trips;
 
 namespace Taxi.Models.MappingProfile
 {
@@ -46,6 +47,9 @@ namespace Taxi.Models.MappingProfile
             CreateMap<CustomerDriverUpgradeDto, Driver>();
 
             CreateMap<Driver, Customer>().ForMember(x => x.Id, opt => opt.Ignore());
+            
+            //for now, probably change
+            CreateMap<TripCreationDto, Trip>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
         }
     }
 }

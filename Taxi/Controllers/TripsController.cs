@@ -110,12 +110,12 @@ namespace Taxi.Controllers
             return Ok();
         }
         
-        [Authorize(Policy = "Driver")]
-        [HttpPost]
-        public IActionResult StartTrip()
-        {
+        //[Authorize(Policy = "Driver")]
+        //[HttpPost]
+        //public IActionResult StartTrip()
+        //{
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
     }
 }

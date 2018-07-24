@@ -17,7 +17,7 @@ namespace Taxi.Controllers
         private ITripsRepository _tripsCashe;
         private IMapper _mapper;
 
-        public TripsController(IMapper mapper, 
+        public TripsController(IMapper mapper,
             ITripsRepository tripsCashe)
         {
             _tripsCashe = tripsCashe;
@@ -82,6 +82,38 @@ namespace Taxi.Controllers
             _mapper.Map(tripUpdateDto, tripToUpdate);
 
             _tripsCashe.SetTrip(tripToUpdate);
+
+            return Ok();
+        }
+
+
+        [Authorize(Policy = "Driver")]
+        [HttpPost("taketrip")]
+        public IActionResult AddDriverToTrip(Guid customerId)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var trip = _tripsCashe.GetTrip(customerId);
+           
+            if (trip == null || driverId == null || trip.DriverId != null) 
+                return BadRequest();
+
+            trip.DriverId = Guid.Parse(driverId);
+
+            trip.DriverTakeTripTime = DateTime.UtcNow;
+
+            _tripsCashe.SetTrip(trip);
+
+            return Ok();
+        }
+        
+        [Authorize(Policy = "Driver")]
+        [HttpPost]
+        public IActionResult StartTrip()
+        {
 
             return Ok();
         }

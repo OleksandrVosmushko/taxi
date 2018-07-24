@@ -22,5 +22,12 @@ namespace Taxi.Entities
         public Place To { get; set; }
 
         public DateTime CreationTime { get; set; }
+
+        public DateTime DriverTakeTripTime { get; set; }
+
+        public DateTime StartTime { get; set; }
+
+        public DateTime FinishTime { get; set; }
     }
 }
+ 

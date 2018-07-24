@@ -184,9 +184,9 @@ namespace Taxi
             }
             app.UseMvc(routes =>
             {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller}/{action}/{id?}");
+                //routes.MapRoute(
+                //    name: "default",
+                //    template: "{controller}/{action}/{id?}");
             });
         }
     }

@@ -27,8 +27,7 @@ namespace Taxi.Controllers
         [HttpPost()]
         public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
         {
-
-
+            
             var tripEntity = _mapper.Map<Trip>(tripCreationDto);
 
             tripEntity.CreationTime = DateTime.UtcNow;

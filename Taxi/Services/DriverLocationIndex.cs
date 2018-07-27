@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Taxi.Services
 {
-    class DriverLocationIndex
+    class DriverLocationIndex: IDriverLocationRepository
     {
         private int _level;
         private IntervalTree<UserList> rtree;
@@ -29,10 +29,10 @@ namespace Taxi.Services
             }
         }
 
-        public DriverLocationIndex(int level)
+        public DriverLocationIndex()
         {
             rtree = new IntervalTree<UserList>();
-            _level = level;
+            _level = 13;
             _currentUsersLocations = new ConcurrentDictionary<Guid, S2CellId>();
         }
 

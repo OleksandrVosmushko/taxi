@@ -8,14 +8,14 @@ namespace Taxi.Services
 {
     public interface IDriverLocationRepository
     {
-        bool UpdateUser(Guid uid, double lon, double lat);
+        bool UpdateUser(Guid uid, double lon, double lat, DateTime now);
 
-        bool AddUser(Guid uid, double lon, double lat);
+      //  bool AddUser(Guid uid, double lon, double lat);
 
         List<Guid> Search(double lon, double lat, int radiusMeters);
 
         bool RemoveUser(Guid uid);
 
-        S2LatLng GetDriverLocation(Guid driverId); 
+        DriverLocationIndex.CellUpdateTime GetDriverLocation(Guid driverId); 
     }
 }

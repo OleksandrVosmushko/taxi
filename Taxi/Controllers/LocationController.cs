@@ -20,21 +20,21 @@ namespace Taxi.Controllers
             _driverLocationRepository = driverLocationRepository;
         }
 
-        [Authorize(Policy = "Driver")]
-        [ProducesResponseType(204)]
-        [HttpPost("driver")]
-        public IActionResult AddDriverToMap(LatLonDto latLonDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        //[Authorize(Policy = "Driver")]
+        //[ProducesResponseType(204)]
+        //[HttpPost("driver")]
+        //public IActionResult AddDriverToMap(LatLonDto latLonDto)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
 
-            var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
-            var res  = _driverLocationRepository.AddUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude);
+        //    var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
+        //    var res  = _driverLocationRepository.AddUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude);
 
-            if (res != true)
-                return BadRequest();
-            return NoContent();
-        }
+        //    if (res != true)
+        //        return BadRequest();
+        //    return NoContent();
+        //}
 
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
@@ -45,7 +45,7 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
             var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
 
-            var res = _driverLocationRepository.UpdateUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude);
+            var res = _driverLocationRepository.UpdateUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude, DateTime.Now);
 
             if (res != true)
                 return BadRequest();
@@ -81,13 +81,23 @@ namespace Taxi.Controllers
 
             foreach (var i in ids)
             {
-                var latlon = _driverLocationRepository.GetDriverLocation(i);
-                driverLocationToReturn.Add(new DriverLocationDto()
+                var s2cell = _driverLocationRepository.GetDriverLocation(i);
+
+                if ((DateTime.Now - s2cell.UpdateTime).TotalSeconds < 60)
                 {
-                    DriverId = i,
-                    Latitude = latlon.LatDegrees,
-                    Longitude = latlon.LngDegrees
-                });
+                    var latlon = s2cell.CellId.ToLatLng();
+
+                    driverLocationToReturn.Add(new DriverLocationDto()
+                    {
+                        DriverId = i,
+                        Latitude = latlon.LatDegrees,
+                        Longitude = latlon.LngDegrees
+                    });
+                }
+                else
+                {
+                    _driverLocationRepository.RemoveUser(i);
+                }
             }
             return Ok(driverLocationToReturn);
         }

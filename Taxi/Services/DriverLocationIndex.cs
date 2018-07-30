@@ -7,25 +7,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Taxi.Models.Location;
 
 namespace Taxi.Services
 {
     public class DriverLocationIndex: IDriverLocationRepository
     {
-        private int _level;
-        private IntervalTree<UserList> rtree;
-        private ConcurrentDictionary<Guid, S2CellId> _currentUsersLocations;
-        private ConcurrentDictionary<Guid, CellUpdateTime> _accurateUsersLocations;
+        private static int _level = 13;
+        private static IntervalTree<UserList> rtree = new IntervalTree<UserList>();
+        private static ConcurrentDictionary<Guid, S2CellId> _currentUsersLocations = new ConcurrentDictionary<Guid, S2CellId>();
+        private static ConcurrentDictionary<Guid, CellUpdateTime> _accurateUsersLocations = new ConcurrentDictionary<Guid, CellUpdateTime>();
 
         static object locker = new object();
-
-        public struct CellUpdateTime
-        {
-            public S2CellId CellId;
-
-            public DateTime UpdateTime;
-        }
-
+        
         public struct UserList : IComparable<UserList>
         {
             public S2CellId s2CellId;
@@ -40,10 +34,7 @@ namespace Taxi.Services
 
         public DriverLocationIndex()
         {
-            rtree = new IntervalTree<UserList>();
-            _level = 13;
-            _currentUsersLocations = new ConcurrentDictionary<Guid, S2CellId>();
-            _accurateUsersLocations = new ConcurrentDictionary<Guid, CellUpdateTime>();
+      
         }
 
         public bool UpdateUser(Guid uid, double lon, double lat, DateTime now)
@@ -104,44 +95,6 @@ namespace Taxi.Services
                 return true;
             }
         }
-
-        //public bool AddUser(Guid uid, double lon, double lat)
-        //{
-        //    lock (locker)
-        //    {
-        //        if (_currentUsersLocations.ContainsKey(uid))
-        //            return false;
-
-        //        var lonLat = S2LatLng.FromDegrees(lat, lon);
-
-        //        var cellId = S2CellId.FromLatLng(lonLat);
-
-        //        var cellIdStorageLevel = cellId.ParentForLevel(_level);
-
-        //        _currentUsersLocations[uid] = cellIdStorageLevel;
-
-        //        _accurateUsersLocations[uid] = cellId;
-
-        //        var query_res = rtree.Search(new UserList() { s2CellId = cellIdStorageLevel });
-
-        //        var users = new List<Guid>();
-        //        if (query_res.Count > 0)
-        //        {
-        //            foreach (var item in query_res)
-        //            {
-        //                item.Start.list.Add(uid);
-        //            }
-        //            return true;
-        //        }
-        //        users.Add(uid);
-
-        //        var toinsert = new UserList() { s2CellId = cellIdStorageLevel, list = users };
-
-        //        rtree.Add(new Interval<UserList>() { Start = toinsert, End = toinsert });
-        //        return true;
-        //    }
-        //}
-        
 
         public List<Guid> Search(double lon, double lat, int radius)
         {

@@ -10,9 +10,7 @@ namespace Taxi.Services
     public class TripsInMemoryStorage : ITripsRepository
     {
         private IMemoryCache _memoryCache;
-
-
-
+        
         public TripsInMemoryStorage(IMemoryCache cache)
         {
             _memoryCache = cache;
@@ -44,6 +42,5 @@ namespace Taxi.Services
         {
             return "trip" + customerId.ToString();
         }
-        
     }
 }

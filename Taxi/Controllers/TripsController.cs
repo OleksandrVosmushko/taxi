@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
 
@@ -26,8 +27,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Customer")]
         [HttpPost()]
         public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
-        {
-            
+        {   
             var tripEntity = _mapper.Map<Trip>(tripCreationDto);
 
             tripEntity.CreationTime = DateTime.UtcNow;
@@ -109,12 +109,19 @@ namespace Taxi.Controllers
             return Ok();
         }
         
-        //[Authorize(Policy = "Driver")]
-        //[HttpPost]
-        //public IActionResult StartTrip()
-        //{
+        
+        [Authorize (Policy = "Driver")]
+        [HttpPost("starttrip")]
+        public IActionResult StartTrip(LatLonDto location)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        //    return Ok();
-        //}
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+            
+
+            
+            return Ok();
+        }   
     }
 }

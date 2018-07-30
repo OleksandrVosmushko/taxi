@@ -16,10 +16,8 @@ namespace Taxi.Entities
         public Guid DriverId { get; set; }
 
         public Driver Driver{ get; set; }
-
-        public Place From { get; set; }
-
-        public Place To { get; set; }
+        
+        public List<Place> Places { get; set; }
 
         public DateTime CreationTime { get; set; }
 

@@ -14,5 +14,7 @@ namespace Taxi.Services
         void SetLastTripLocation(Guid customerId, Trip location);
 
         void RemoveTripLocation(Guid customerId);
+
+        List<TripDto> GetNearTrips(double lon, double lat);
     }
 }

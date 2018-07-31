@@ -48,7 +48,7 @@ namespace Taxi
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ITripsRepository, TripsRepository>();
             services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
-            services.AddTransient<ITripsLocationRepository, TripsLocationInMemoryStorage>();
+            services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
                 
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>

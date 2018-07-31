@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Taxi.Data;
 using Taxi.Entities;
+using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
@@ -16,6 +18,12 @@ namespace Taxi.Services
             _dataContext = dataContext;
             _locationRepository = locationRepository;
         }
+
+        public List<TripDto> GetNearTrips(double lon, double lat)
+        {
+            return _locationRepository.GetNearTrips(lon, lat);
+        }
+
         public Trip GetTrip(Guid customerId)
         {
             var trip = _locationRepository.GetTripStartLocation(customerId);
@@ -44,9 +52,12 @@ namespace Taxi.Services
         {
             try
             {
-                _dataContext.Entry(trip).State = trip.Id == default(Guid) ?
-                                   EntityState.Added :
-                                   EntityState.Modified;
+                if (trip.Id == default(Guid))
+                {
+                    _dataContext.Add(trip);
+                }
+                else _dataContext.Update(trip);
+
                 _dataContext.SaveChanges();
 
                 _locationRepository.SetLastTripLocation(trip.CustomerId, trip);   

@@ -15,13 +15,13 @@ namespace Taxi.Controllers
     [Route("api/[controller]")]
     public class TripsController : Controller
     {
-        private ITripsRepository _tripsCashe;
+        private ITripsRepository _tripsRepo;
         private IMapper _mapper;
 
         public TripsController(IMapper mapper,
-            ITripsRepository tripsCashe)
+            ITripsRepository tripsRepo)
         {
-            _tripsCashe = tripsCashe;
+            _tripsRepo = tripsRepo;
             _mapper = mapper;
         }
         [Authorize(Policy = "Customer")]
@@ -42,6 +42,7 @@ namespace Taxi.Controllers
                     {
                         Latitude = tripCreationDto.From.Latitude,
                         Longitude = tripCreationDto.From.Longitude ,
+                        
                         IsFrom = true
                     },
                     new Place()
@@ -53,7 +54,7 @@ namespace Taxi.Controllers
                 }
             };
 
-            _tripsCashe.SetTrip(tripEntity);
+            _tripsRepo.SetTrip(tripEntity);
 
             return NoContent();
         }
@@ -70,7 +71,7 @@ namespace Taxi.Controllers
                 return BadRequest();
             }
 
-            _tripsCashe.RemoveTrip(Guid.Parse(customerid));
+            _tripsRepo.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
         }
@@ -82,14 +83,21 @@ namespace Taxi.Controllers
         {
             var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
-            var res = _tripsCashe.UpdateTripLocation(location.Longitude, location.Latitude, customerId);
+            var res = _tripsRepo.UpdateTripLocation(location.Longitude, location.Latitude, customerId);
 
             if (res == false)
                 return BadRequest();
 
             return NoContent();
         }
-
+        
+        [HttpGet()]
+        [Authorize(Policy = "Driver")]
+        [ProducesResponseType(200)]
+        public IActionResult GetNearTrips(LatLonDto driverLocation)
+        {
+            return Ok(_tripsRepo.GetNearTrips(driverLocation.Longitude, driverLocation.Latitude));
+        }
 
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
@@ -101,7 +109,7 @@ namespace Taxi.Controllers
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
-            var trip = _tripsCashe.GetTrip(customerId);
+            var trip = _tripsRepo.GetTrip(customerId);
            
             if (trip == null || driverId == null || trip.DriverId != null) 
                 return BadRequest();
@@ -110,12 +118,10 @@ namespace Taxi.Controllers
 
             trip.DriverTakeTripTime = DateTime.UtcNow;
 
-            _tripsCashe.SetTrip(trip);
+            _tripsRepo.SetTrip(trip);
 
             return NoContent();
         }
-        
-        
         
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
@@ -128,6 +134,7 @@ namespace Taxi.Controllers
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
             
             return NoContent();
-        }   
+        }  
+        
     }
 }

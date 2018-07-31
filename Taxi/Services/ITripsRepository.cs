@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
@@ -15,5 +16,7 @@ namespace Taxi.Services
         Trip GetTrip(Guid customerId);
 
         bool UpdateTripLocation(double lon, double lat, Guid customerId);
+
+        List<TripDto> GetNearTrips(double lon, double lat);
     }
 }

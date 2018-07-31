@@ -113,13 +113,13 @@ namespace Taxi.Controllers.Accounts
         [HttpPut("{id}")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> UpdateDriver(DriverUpdateDto driverDto)
+        public async Task<IActionResult> UpdateDriver([FromBody]DriverUpdateDto driverDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
             var driver = _usersRepository.GetDriverById(Guid.Parse(id));
 

@@ -39,7 +39,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
         [HttpPut("driver")]
-        public IActionResult UpdateDriverLocation(LatLonDto latLonDto)
+        public IActionResult UpdateDriverLocation([FromBody]LatLonDto latLonDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

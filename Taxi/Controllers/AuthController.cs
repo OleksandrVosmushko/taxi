@@ -88,7 +88,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Customer")]
         [HttpPost("customerdriver")]
         [ProducesResponseType(201)]
-        public async Task<IActionResult> MakeCustomerDriver(CustomerDriverUpgradeDto customerDriverUpgradeDto )
+        public async Task<IActionResult> MakeCustomerDriver([FromBody]CustomerDriverUpgradeDto customerDriverUpgradeDto )
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -209,7 +209,7 @@ namespace Taxi.Controllers
         [Produces(contentType: "application/json")]
         [ProducesResponseType(204)]
         [HttpPost("restore", Name = "RestorePassword")]
-        public async Task<IActionResult> RestorePassword(RestorePasswordDto model)
+        public async Task<IActionResult> RestorePassword([FromBody]RestorePasswordDto model)
         {
             if (!ModelState.IsValid)
             {
@@ -237,7 +237,7 @@ namespace Taxi.Controllers
         }
         [Produces(contentType: "application/json")]
         [HttpPost("reset")]
-        public async Task<IActionResult> ResetPassword(SetPasswordDto setPasswordDto)
+        public async Task<IActionResult> ResetPassword([FromBody]SetPasswordDto setPasswordDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest();

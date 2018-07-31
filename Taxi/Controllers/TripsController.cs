@@ -27,7 +27,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Customer")]
         [HttpPost()]
         [ProducesResponseType(204)]
-        public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
+        public IActionResult CreateTripForCustomer([FromBody]TripCreationDto tripCreationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -79,7 +79,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Customer")]
         [HttpPut("from")]
         [ProducesResponseType(204)]
-        public IActionResult UpdateTripStartLocation(LatLonDto location)
+        public IActionResult UpdateTripStartLocation([FromBody]LatLonDto location)
         {
             var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
@@ -126,7 +126,7 @@ namespace Taxi.Controllers
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
         [ProducesResponseType(204)]
-        public IActionResult StartTrip(LatLonDto location)
+        public IActionResult StartTrip([FromBody]LatLonDto location)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);

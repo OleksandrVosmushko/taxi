@@ -11,9 +11,10 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180730140306_migration1")]
+    partial class migration1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,7 +265,7 @@ namespace Taxi.Migrations
 
                     b.Property<Guid>("CustomerId");
 
-                    b.Property<Guid?>("DriverId");
+                    b.Property<Guid>("DriverId");
 
                     b.Property<DateTime>("DriverTakeTripTime");
 
@@ -278,8 +279,7 @@ namespace Taxi.Migrations
                         .IsUnique();
 
                     b.HasIndex("DriverId")
-                        .IsUnique()
-                        .HasFilter("[DriverId] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Trips");
                 });
@@ -367,7 +367,8 @@ namespace Taxi.Migrations
 
                     b.HasOne("Taxi.Entities.Driver", "Driver")
                         .WithOne("CurrentTrip")
-                        .HasForeignKey("Taxi.Entities.Trip", "DriverId");
+                        .HasForeignKey("Taxi.Entities.Trip", "DriverId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

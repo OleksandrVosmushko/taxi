@@ -13,6 +13,7 @@ namespace Taxi.Entities
 
         public AppUser Identity { get; set; }
 
-
+        public Trip CurrentTrip { get; set; }
+        
     }
 }

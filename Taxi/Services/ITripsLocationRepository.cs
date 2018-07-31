@@ -7,15 +7,13 @@ using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
-    public interface ITripsRepository
+    public interface ITripsLocationRepository
     {
-        bool SetTrip(Trip trip);
+        Trip  GetTripStartLocation(Guid customerId);
 
-        void RemoveTrip(Guid customerId);
-        
-        Trip GetTrip(Guid customerId);
+        void SetLastTripLocation(Guid customerId, Trip location);
 
-        bool UpdateTripLocation(double lon, double lat, Guid customerId);
+        void RemoveTripLocation(Guid customerId);
 
         List<TripDto> GetNearTrips(double lon, double lat);
     }

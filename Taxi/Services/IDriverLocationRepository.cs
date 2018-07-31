@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Taxi.Models.Location;
 
 namespace Taxi.Services
 {
@@ -16,6 +17,6 @@ namespace Taxi.Services
 
         bool RemoveUser(Guid uid);
 
-        DriverLocationIndex.CellUpdateTime GetDriverLocation(Guid driverId); 
+        CellUpdateTime GetDriverLocation(Guid driverId); 
     }
 }

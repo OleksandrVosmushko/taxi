@@ -1,26 +1,82 @@
 ﻿using Google.Common.Geometry;
 using IntervalTree;
-using RangeTree;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Taxi.Models.Location;
+using Taxi.Entities;
+using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
-    public class DriverLocationIndex: IDriverLocationRepository
+    public class TripsLocationInMemoryStorage : ITripsLocationRepository
     {
+
         private static int _level = 13;
         private static IntervalTree<UserList> rtree = new IntervalTree<UserList>();
         private static ConcurrentDictionary<Guid, S2CellId> _currentUsersLocations = new ConcurrentDictionary<Guid, S2CellId>();
-        private static ConcurrentDictionary<Guid, CellUpdateTime> _accurateUsersLocations = new ConcurrentDictionary<Guid, CellUpdateTime>();
+        private static ConcurrentDictionary<Guid, S2CellId> _accurateUsersLocations = new ConcurrentDictionary<Guid, S2CellId>();
 
         static object locker = new object();
+
+        private static ConcurrentDictionary<Guid, Trip> _accurateTripsLocations = 
+            new ConcurrentDictionary<Guid, Trip>();
+
+        public TripsLocationInMemoryStorage()
+        {
+
+        }
+
+        public Trip GetTripStartLocation(Guid customerId)
+        {
+            return _accurateTripsLocations[customerId];
+        }
+
+        public void RemoveTripLocation(Guid customerId)
+        {
+            lock (locker)
+            {
+                var removeOutParameter = new Trip();
+                _accurateTripsLocations.TryRemove(customerId, out removeOutParameter);
+                RemoveUser(customerId);
+            }
+        }
+
+        public void SetLastTripLocation(Guid customerId, Trip location)
+        {
+            lock (locker) {
+                var from = location.Places.FirstOrDefault(p => p.IsFrom == true);
+                bool res = UpdateUser(customerId, from.Longitude, from.Latitude);
+                _accurateTripsLocations[customerId] = location;
+            }
+        }
         
-        public struct UserList : IComparable<UserList>
+        public List<TripDto> GetNearTrips(double lon, double lat)
+        {
+            lock (locker)
+            {
+                var res = new List<TripDto>();
+                var qres = Search(lon, lat, 5000);
+
+                foreach (var r in qres)
+                {
+                    var curTrip = _accurateTripsLocations[r];
+                    var from = curTrip.Places.FirstOrDefault(c => c.IsFrom == true);
+                    var to = curTrip.Places.FirstOrDefault(c => c.IsTo == true);
+                    res.Add(new TripDto
+                    {
+                        CustomerId = r,
+                        From = new PlaceDto { Latitude = from.Latitude, Longitude = from.Longitude},
+                        To = new PlaceDto { Latitude = to.Latitude, Longitude = to.Longitude }
+                    });
+                }
+                return res;
+            }
+        }
+
+        private struct UserList : IComparable<UserList>
         {
             public S2CellId s2CellId;
 
@@ -32,12 +88,7 @@ namespace Taxi.Services
             }
         }
 
-        public DriverLocationIndex()
-        {
-      
-        }
-
-        public bool UpdateUser(Guid uid, double lon, double lat, DateTime now)
+        private bool UpdateUser(Guid uid, double lon, double lat)
         {
             lock (locker)
             {
@@ -47,7 +98,7 @@ namespace Taxi.Services
 
                 var cellIdStorageLevel = cellId.ParentForLevel(_level);
 
-                _accurateUsersLocations[uid] = new CellUpdateTime() { CellId = cellId, UpdateTime = now };
+                _accurateUsersLocations[uid] = cellId;
 
                 if (_currentUsersLocations.ContainsKey(uid))
                 {
@@ -96,7 +147,7 @@ namespace Taxi.Services
             }
         }
 
-        public List<Guid> Search(double lon, double lat, int radius)
+        private List<Guid> Search(double lon, double lat, int radius)
         {
             lock (locker)
             {
@@ -111,21 +162,11 @@ namespace Taxi.Services
                 var regionCoverer = new S2RegionCoverer();
 
                 regionCoverer.MaxLevel = 13;
-
-                //  regionCoverer.MinLevel = 13;
-
-
-                //regionCoverer.MaxCells = 1000;
-                // regionCoverer.LevelMod = 0;
-
-
+                
                 var covering = regionCoverer.GetCovering(cap);
-
-
-
+                
                 var res = new List<Guid>();
-
-
+                
                 foreach (var u in covering)
                 {
                     var sell = new S2CellId(u.Id);
@@ -161,14 +202,14 @@ namespace Taxi.Services
         }
 
 
-        public bool RemoveUser(Guid uid)
+        private bool RemoveUser(Guid uid)
         {
             lock (locker)
             {
                 if (!_currentUsersLocations.ContainsKey(uid))
                     return false;
                 var cell = _currentUsersLocations[uid];
-                
+
                 var qres = rtree.Search(new Interval<UserList>(new UserList() { s2CellId = cell }, new UserList() { s2CellId = cell }));
 
                 foreach (var q in qres)
@@ -180,7 +221,7 @@ namespace Taxi.Services
                     q.Start.list.Remove(toremove);
 
                     var removeOutParameter = new S2CellId();
-                    var onemoreOutParameter = new CellUpdateTime();
+                    var onemoreOutParameter = new S2CellId();
                     _currentUsersLocations.TryRemove(toremove, out removeOutParameter);
                     _accurateUsersLocations.TryRemove(toremove, out onemoreOutParameter);
 
@@ -192,15 +233,7 @@ namespace Taxi.Services
                 return true;
             }
         }
-
-
-        public CellUpdateTime GetDriverLocation(Guid driverId)
-        {
-            lock (locker)
-            {
-                return _accurateUsersLocations[driverId];
-            }
-        }
+        
 
         static S2Point pointFromLatLng(double lat, double lon)
         {
@@ -217,6 +250,4 @@ namespace Taxi.Services
 
         const double EarthRadiusM = 6371010.0;
     }
-
 }
-

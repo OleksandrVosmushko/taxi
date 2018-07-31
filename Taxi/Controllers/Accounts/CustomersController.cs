@@ -109,14 +109,14 @@ namespace Taxi.Controllers.Accounts
         [HttpPut("{id}")]
         [Authorize (Policy = "Customer")]
         [ProducesResponseType(204)]
-        public async Task <IActionResult> UpdateCustomer( CustomerUpdateDto customerDto)
+        public async Task <IActionResult> UpdateCustomer([FromBody] CustomerUpdateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
 
             var customer = _usersRepository.GetCustomerById(Guid.Parse(id));
 

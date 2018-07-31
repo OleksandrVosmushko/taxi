@@ -14,5 +14,8 @@ namespace Taxi.Entities
         public AppUser Identity { get; set; }
 
         public string City { get; set; }
+
+        public Trip CurrentTrip { get; set; }
+        
     }
 }

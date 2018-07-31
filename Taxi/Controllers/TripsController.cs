@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
 
@@ -14,35 +15,53 @@ namespace Taxi.Controllers
     [Route("api/[controller]")]
     public class TripsController : Controller
     {
-        private ITripsRepository _tripsCashe;
+        private ITripsRepository _tripsRepo;
         private IMapper _mapper;
 
         public TripsController(IMapper mapper,
-            ITripsRepository tripsCashe)
+            ITripsRepository tripsRepo)
         {
-            _tripsCashe = tripsCashe;
+            _tripsRepo = tripsRepo;
             _mapper = mapper;
         }
         [Authorize(Policy = "Customer")]
         [HttpPost()]
-        public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
+        [ProducesResponseType(204)]
+        public IActionResult CreateTripForCustomer([FromBody]TripCreationDto tripCreationDto)
         {
-            
-            var tripEntity = _mapper.Map<Trip>(tripCreationDto);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            tripEntity.CreationTime = DateTime.UtcNow;
+            var tripEntity = new Trip()
+            {
+                CreationTime = DateTime.UtcNow,
+                CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value),
+                Places = new List<Place>
+                {
+                    new Place()
+                    {
+                        Latitude = tripCreationDto.From.Latitude,
+                        Longitude = tripCreationDto.From.Longitude ,
+                        
+                        IsFrom = true
+                    },
+                    new Place()
+                    {
+                        Latitude = tripCreationDto.To.Latitude,
+                        Longitude = tripCreationDto.To.Longitude,
+                        IsTo = true
+                    }
+                }
+            };
 
-            tripEntity.Id = Guid.NewGuid();
+            _tripsRepo.SetTrip(tripEntity);
 
-            tripEntity.CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
-
-            _tripsCashe.SetTrip(tripEntity);
-
-            return Ok();
+            return NoContent();
         }
 
         [Authorize(Policy = "Customer")]
         [HttpDelete()]
+        [ProducesResponseType(204)]
         public IActionResult DeleteTripForCustomer()
         {
             var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
@@ -52,42 +71,37 @@ namespace Taxi.Controllers
                 return BadRequest();
             }
 
-            _tripsCashe.RemoveTrip(Guid.Parse(customerid));
+            _tripsRepo.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
         }
 
         [Authorize(Policy = "Customer")]
-        [HttpPut()]
-        public IActionResult UpdateTripForCustomer(TripUpdateDto tripUpdateDto)
+        [HttpPut("from")]
+        [ProducesResponseType(204)]
+        public IActionResult UpdateTripStartLocation([FromBody]LatLonDto location)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
-            var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+            var res = _tripsRepo.UpdateTripLocation(location.Longitude, location.Latitude, customerId);
 
-            if (customerid == null)
-            {
+            if (res == false)
                 return BadRequest();
-            }
 
-            var tripToUpdate = _tripsCashe.GetTrip(Guid.Parse(customerid));
-
-            if (tripToUpdate == null)
-            {
-                return NotFound();
-            }
-
-            _mapper.Map(tripUpdateDto, tripToUpdate);
-
-            _tripsCashe.SetTrip(tripToUpdate);
-
-            return Ok();
+            return NoContent();
         }
-
+        
+        [HttpGet()]
+        [Authorize(Policy = "Driver")]
+        [ProducesResponseType(200)]
+        public IActionResult GetNearTrips(LatLonDto driverLocation)
+        {
+            return Ok(_tripsRepo.GetNearTrips(driverLocation.Longitude, driverLocation.Latitude));
+        }
 
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
+        [ProducesResponseType(204)]
         public IActionResult AddDriverToTrip(Guid customerId)
         {
             if (!ModelState.IsValid)
@@ -95,7 +109,7 @@ namespace Taxi.Controllers
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
-            var trip = _tripsCashe.GetTrip(customerId);
+            var trip = _tripsRepo.GetTrip(customerId);
            
             if (trip == null || driverId == null || trip.DriverId != null) 
                 return BadRequest();
@@ -104,17 +118,23 @@ namespace Taxi.Controllers
 
             trip.DriverTakeTripTime = DateTime.UtcNow;
 
-            _tripsCashe.SetTrip(trip);
+            _tripsRepo.SetTrip(trip);
 
-            return Ok();
+            return NoContent();
         }
         
-        //[Authorize(Policy = "Driver")]
-        //[HttpPost]
-        //public IActionResult StartTrip()
-        //{
+        [Authorize (Policy = "Driver")]
+        [HttpPost("starttrip")]
+        [ProducesResponseType(204)]
+        public IActionResult StartTrip([FromBody]LatLonDto location)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        //    return Ok();
-        //}
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+            
+            return NoContent();
+        }  
+        
     }
 }

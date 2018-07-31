@@ -13,7 +13,7 @@ namespace Taxi.Entities
 
         public Customer Customer { get; set; }
 
-        public Guid DriverId { get; set; }
+        public Guid? DriverId { get; set; }
 
         public Driver Driver{ get; set; }
         

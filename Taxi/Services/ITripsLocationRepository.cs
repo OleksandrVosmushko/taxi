@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Taxi.Entities;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
     public interface ITripsLocationRepository
     {
-        LastTripLocation  GetTripStartLocation(Guid customerId);
+        Trip  GetTripStartLocation(Guid customerId);
 
-        void SetLastTripLocation(Guid customerId, LastTripLocation location);
-        
-        
+        void SetLastTripLocation(Guid customerId, Trip location);
+
+        void RemoveTripLocation(Guid customerId);
     }
 }

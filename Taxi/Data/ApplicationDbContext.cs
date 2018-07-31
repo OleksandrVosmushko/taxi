@@ -22,6 +22,7 @@ namespace Taxi.Data
             .WithOne(a => a.Trip)
             .OnDelete(DeleteBehavior.Cascade);
             
+
             base.OnModelCreating(modelBuilder);
         }
         public DbSet<Customer> Customers { get; set; }

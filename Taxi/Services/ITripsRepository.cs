@@ -13,6 +13,7 @@ namespace Taxi.Services
         void RemoveTrip(Guid customerId);
         
         Trip GetTrip(Guid customerId);
-        
+
+        bool UpdateTripLocation(double lon, double lat, Guid customerId);
     }
 }

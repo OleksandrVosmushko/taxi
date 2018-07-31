@@ -26,23 +26,41 @@ namespace Taxi.Controllers
         }
         [Authorize(Policy = "Customer")]
         [HttpPost()]
+        [ProducesResponseType(204)]
         public IActionResult CreateTripForCustomer(TripCreationDto tripCreationDto)
-        {   
-            var tripEntity = _mapper.Map<Trip>(tripCreationDto);
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            tripEntity.CreationTime = DateTime.UtcNow;
-
-            tripEntity.Id = Guid.NewGuid();
-
-            tripEntity.CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
+            var tripEntity = new Trip()
+            {
+                CreationTime = DateTime.UtcNow,
+                CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value),
+                Places = new List<Place>
+                {
+                    new Place()
+                    {
+                        Latitude = tripCreationDto.From.Latitude,
+                        Longitude = tripCreationDto.From.Longitude ,
+                        IsFrom = true
+                    },
+                    new Place()
+                    {
+                        Latitude = tripCreationDto.To.Latitude,
+                        Longitude = tripCreationDto.To.Longitude,
+                        IsTo = true
+                    }
+                }
+            };
 
             _tripsCashe.SetTrip(tripEntity);
 
-            return Ok();
+            return NoContent();
         }
 
         [Authorize(Policy = "Customer")]
         [HttpDelete()]
+        [ProducesResponseType(204)]
         public IActionResult DeleteTripForCustomer()
         {
             var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
@@ -58,36 +76,24 @@ namespace Taxi.Controllers
         }
 
         [Authorize(Policy = "Customer")]
-        [HttpPut()]
-        public IActionResult UpdateTripForCustomer(TripUpdateDto tripUpdateDto)
+        [HttpPut("from")]
+        [ProducesResponseType(204)]
+        public IActionResult UpdateTripStartLocation(LatLonDto location)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
-            var customerid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+            var res = _tripsCashe.UpdateTripLocation(location.Longitude, location.Latitude, customerId);
 
-            if (customerid == null)
-            {
+            if (res == false)
                 return BadRequest();
-            }
 
-            var tripToUpdate = _tripsCashe.GetTrip(Guid.Parse(customerid));
-
-            if (tripToUpdate == null)
-            {
-                return NotFound();
-            }
-
-            _mapper.Map(tripUpdateDto, tripToUpdate);
-
-            _tripsCashe.SetTrip(tripToUpdate);
-
-            return Ok();
+            return NoContent();
         }
 
 
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
+        [ProducesResponseType(204)]
         public IActionResult AddDriverToTrip(Guid customerId)
         {
             if (!ModelState.IsValid)
@@ -106,12 +112,14 @@ namespace Taxi.Controllers
 
             _tripsCashe.SetTrip(trip);
 
-            return Ok();
+            return NoContent();
         }
+        
         
         
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
+        [ProducesResponseType(204)]
         public IActionResult StartTrip(LatLonDto location)
         {
             if (!ModelState.IsValid)
@@ -119,9 +127,7 @@ namespace Taxi.Controllers
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
             
-
-            
-            return Ok();
+            return NoContent();
         }   
     }
 }

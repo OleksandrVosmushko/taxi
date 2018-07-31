@@ -9,15 +9,22 @@ namespace Taxi.Services
     public class TripsRepository : ITripsRepository
     {
         private ApplicationDbContext _dataContext;
-        
-        public TripsRepository(ApplicationDbContext dataContext)
+        private ITripsLocationRepository _locationRepository;
+
+        public TripsRepository(ApplicationDbContext dataContext, ITripsLocationRepository locationRepository)
         {
             _dataContext = dataContext;
+            _locationRepository = locationRepository;
         }
         public Trip GetTrip(Guid customerId)
         {
-            var trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
+            var trip = _locationRepository.GetTripStartLocation(customerId);
 
+            if (trip != null)
+                return trip;
+
+            trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
+            
             return trip;
         }
 
@@ -26,7 +33,10 @@ namespace Taxi.Services
             var tripToRemove = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
 
             if (tripToRemove != null)
+            {
                 _dataContext.Trips.Remove(tripToRemove);
+                _locationRepository.RemoveTripLocation(customerId);
+            }
             _dataContext.SaveChanges();
         }
 
@@ -38,13 +48,32 @@ namespace Taxi.Services
                                    EntityState.Added :
                                    EntityState.Modified;
                 _dataContext.SaveChanges();
-            } catch
+
+                _locationRepository.SetLastTripLocation(trip.CustomerId, trip);   
+            } catch (Exception e)
             {
+
                 return false;
             }
             return true;
         }
-        
 
+        public bool UpdateTripLocation(double lon, double lat, Guid customerId)
+        {
+            var trip = _locationRepository.GetTripStartLocation(customerId);
+            if (trip == null)
+            {
+                trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
+            }
+
+            if (trip == null)
+                return false;
+        
+            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
+            from.Latitude = lat;
+            from.Longitude = lon;
+            _locationRepository.SetLastTripLocation(customerId, trip);
+            return true;
+        }
     }
 }

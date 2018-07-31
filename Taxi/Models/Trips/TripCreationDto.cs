@@ -10,8 +10,8 @@ namespace Taxi.Models.Trips
     public class TripCreationDto
     {
         [Required]
-        public Place From { get; set; }
+        public PlaceDto From { get; set; }
         [Required]
-        public Place To { get; set; }
+        public PlaceDto To { get; set; }
     }
 }

@@ -18,5 +18,7 @@ namespace Taxi.Services
         bool UpdateTripLocation(double lon, double lat, Guid customerId);
 
         List<TripDto> GetNearTrips(double lon, double lat);
+
+        Trip GetTripByDriver(Guid driverId);
     }
 }

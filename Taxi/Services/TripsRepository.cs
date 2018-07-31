@@ -36,6 +36,13 @@ namespace Taxi.Services
             return trip;
         }
 
+        public Trip GetTripByDriver(Guid driverId)
+        {
+            var trip = _dataContext.Trips.FirstOrDefault(t => t.DriverId == driverId);
+
+            return trip;
+        }
+
         public void RemoveTrip(Guid customerId)
         {
             var tripToRemove = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);

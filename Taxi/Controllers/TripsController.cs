@@ -125,15 +125,48 @@ namespace Taxi.Controllers
         
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
-        [ProducesResponseType(204)]
+        [ProducesResponseType(200)]
         public IActionResult StartTrip([FromBody]LatLonDto location)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
-            
-            return NoContent();
+
+            var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
+
+            if (trip == null)
+                return BadRequest();
+
+            trip.StartTime = DateTime.UtcNow;
+
+            var startpoint = trip.Places.FirstOrDefault(p => p.IsFrom == true);
+
+            startpoint.Latitude = location.Latitude;
+
+            startpoint.Longitude = location.Longitude;
+
+            _tripsRepo.SetTrip(trip);
+
+            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
+            var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
+
+            var toReturn = new TripDto()
+            {
+                CustomerId = trip.CustomerId,
+                From = new PlaceDto
+                {
+                    Longitude = from.Longitude,
+                    Latitude = from.Latitude
+                },
+                To = new PlaceDto
+                {
+                    Longitude = to.Longitude,
+                    Latitude = to.Latitude
+                }
+            };
+
+            return Ok(toReturn);
         }  
         
     }

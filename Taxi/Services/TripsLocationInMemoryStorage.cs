@@ -63,6 +63,8 @@ namespace Taxi.Services
                 foreach (var r in qres)
                 {
                     var curTrip = _accurateTripsLocations[r];
+                    if (curTrip.DriverId != null || curTrip.DriverId != default(Guid))
+                        continue;
                     var from = curTrip.Places.FirstOrDefault(c => c.IsFrom == true);
                     var to = curTrip.Places.FirstOrDefault(c => c.IsTo == true);
                     res.Add(new TripDto

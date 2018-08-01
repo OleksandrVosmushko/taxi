@@ -75,12 +75,14 @@ namespace Taxi.Controllers
 
             return NoContent();
         }
-
+        //ToDo : check if no exceptions
         [Authorize(Policy = "Customer")]
         [HttpPut("from")]
         [ProducesResponseType(204)]
         public IActionResult UpdateTripStartLocation([FromBody]LatLonDto location)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
             var res = _tripsRepo.UpdateTripLocation(location.Longitude, location.Latitude, customerId);

@@ -18,7 +18,7 @@ namespace Taxi.Services
             _s3 = amazonS3;
         }
 
-        public async Task PutObjectToStorage(string key)
+        public async Task PutObjectToStorage(string key, object Data)
         {
             try
             {

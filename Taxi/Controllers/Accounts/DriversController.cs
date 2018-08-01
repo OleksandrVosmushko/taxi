@@ -105,13 +105,7 @@ namespace Taxi.Controllers.Accounts
 
             return Ok(driverDto);
         }
-
-        //[HttpGet]
-        //public IActionResult GetDrivers()
-        //{
-        //    return Ok(_usersRepository.GetDrivers());
-        //}
-
+        
         [HttpPut("{id}")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
@@ -145,13 +139,6 @@ namespace Taxi.Controllers.Accounts
             await _usersRepository.UpdateDriver(driver);
 
             return NoContent();
-        }
-
-        [HttpPost("up")]
-        public async Task<IActionResult> Upload()
-        {
-            await _uploadService.PutObjectToStorage("1");
-            return Ok();
         }
     }
 }

@@ -7,6 +7,6 @@ namespace Taxi.Services
 {
     public interface IUploadService
     {
-        Task PutObjectToStorage(string key);
+        Task PutObjectToStorage(string key, object data);
     }
 }

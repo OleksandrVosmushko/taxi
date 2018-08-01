@@ -137,5 +137,29 @@ namespace Taxi.Services
         {
             return _dataContext.RefreshTokens.Where(t => t.IdentityId == userId).ToList();
         }
+
+        public async Task<bool> AddVehicleToDriver(Vehicle vehicle)
+        {
+            try
+            {
+                await _dataContext.Vehicles.AddAsync(vehicle);
+                await _dataContext.SaveChangesAsync();
+            } catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public async Task RemoveVehicle(Vehicle vehicle)
+        {
+            _dataContext.Remove(vehicle);
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task<Vehicle> GetVehicle(Guid vehicleId)
+        {
+            return await _dataContext.Vehicles.FirstOrDefaultAsync(v => v.Id == vehicleId);
+        }
     }
 }

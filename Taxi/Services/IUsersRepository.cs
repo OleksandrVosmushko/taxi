@@ -36,5 +36,11 @@ namespace Taxi.Services
         Task<bool> AddRefreshToken(RefreshToken token);
 
         IEnumerable<RefreshToken> GetTokensForUser(string userId);
+
+        Task<bool> AddVehicleToDriver(Vehicle vehicle);
+
+        Task<Vehicle> GetVehicle(Guid vehicleId);
+
+        Task RemoveVehicle(Vehicle vehicle);
    }
 }

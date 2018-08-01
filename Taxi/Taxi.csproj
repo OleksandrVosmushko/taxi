@@ -25,4 +25,8 @@
     <ProjectReference Include="..\IntervalTree\IntervalTree.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
 </Project>

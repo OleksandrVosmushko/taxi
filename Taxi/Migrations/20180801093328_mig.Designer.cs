@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180731093958_trip")]
-    partial class trip
+    [Migration("20180801093328_mig")]
+    partial class mig
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -214,6 +214,22 @@ namespace Taxi.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Picture", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Path");
+
+                    b.Property<Guid?>("VehicleId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("Pictures");
+                });
+
             modelBuilder.Entity("Taxi.Entities.Place", b =>
                 {
                     b.Property<Guid>("id")
@@ -285,6 +301,29 @@ namespace Taxi.Migrations
                     b.ToTable("Trips");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Vehicle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("Brand");
+
+                    b.Property<string>("Color");
+
+                    b.Property<Guid>("DriverId");
+
+                    b.Property<string>("Model");
+
+                    b.Property<string>("Number");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId")
+                        .IsUnique();
+
+                    b.ToTable("Vehicles");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
@@ -344,6 +383,13 @@ namespace Taxi.Migrations
                         .HasForeignKey("IdentityId");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Picture", b =>
+                {
+                    b.HasOne("Taxi.Entities.Vehicle")
+                        .WithMany("Pictures")
+                        .HasForeignKey("VehicleId");
+                });
+
             modelBuilder.Entity("Taxi.Entities.Place", b =>
                 {
                     b.HasOne("Taxi.Entities.Trip", "Trip")
@@ -369,6 +415,14 @@ namespace Taxi.Migrations
                     b.HasOne("Taxi.Entities.Driver", "Driver")
                         .WithOne("CurrentTrip")
                         .HasForeignKey("Taxi.Entities.Trip", "DriverId");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.Vehicle", b =>
+                {
+                    b.HasOne("Taxi.Entities.Driver", "Driver")
+                        .WithOne("Vehicle")
+                        .HasForeignKey("Taxi.Entities.Vehicle", "DriverId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

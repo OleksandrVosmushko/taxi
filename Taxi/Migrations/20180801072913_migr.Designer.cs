@@ -11,7 +11,7 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180720080338_migr")]
+    [Migration("20180801072913_migr")]
     partial class migr
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -214,6 +214,28 @@ namespace Taxi.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Place", b =>
+                {
+                    b.Property<Guid>("id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<bool>("IsFrom");
+
+                    b.Property<bool>("IsTo");
+
+                    b.Property<double>("Latitude");
+
+                    b.Property<double>("Longitude");
+
+                    b.Property<Guid>("TripId");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("Places");
+                });
+
             modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>
                 {
                     b.Property<string>("Token")
@@ -232,6 +254,35 @@ namespace Taxi.Migrations
                     b.HasIndex("IdentityId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.Trip", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<DateTime>("CreationTime");
+
+                    b.Property<Guid>("CustomerId");
+
+                    b.Property<Guid?>("DriverId");
+
+                    b.Property<DateTime>("DriverTakeTripTime");
+
+                    b.Property<DateTime>("FinishTime");
+
+                    b.Property<DateTime>("StartTime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.HasIndex("DriverId")
+                        .IsUnique()
+                        .HasFilter("[DriverId] IS NOT NULL");
+
+                    b.ToTable("Trips");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -293,11 +344,31 @@ namespace Taxi.Migrations
                         .HasForeignKey("IdentityId");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Place", b =>
+                {
+                    b.HasOne("Taxi.Entities.Trip", "Trip")
+                        .WithMany("Places")
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>
                 {
                     b.HasOne("Taxi.Entities.AppUser", "Identity")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("IdentityId");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.Trip", b =>
+                {
+                    b.HasOne("Taxi.Entities.Customer", "Customer")
+                        .WithOne("CurrentTrip")
+                        .HasForeignKey("Taxi.Entities.Trip", "CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Taxi.Entities.Driver", "Driver")
+                        .WithOne("CurrentTrip")
+                        .HasForeignKey("Taxi.Entities.Trip", "DriverId");
                 });
 #pragma warning restore 612, 618
         }

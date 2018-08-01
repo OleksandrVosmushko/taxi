@@ -16,6 +16,7 @@ namespace Taxi.Entities
         public string City { get; set; }
 
         public Trip CurrentTrip { get; set; }
-        
+
+        public Vehicle Vehicle { get; set; }
     }
 }

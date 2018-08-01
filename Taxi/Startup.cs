@@ -22,6 +22,10 @@ using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
 using Microsoft.AspNetCore.HttpOverrides;
+using Amazon.S3;
+using Amazon.Extensions.NETCore.Setup;
+using Amazon.Runtime;
+using Amazon.Runtime.CredentialManagement;
 
 namespace Taxi
 {
@@ -49,7 +53,12 @@ namespace Taxi
             services.AddScoped<ITripsRepository, TripsRepository>();
             services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
             services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
-                
+            services.AddScoped<IUploadService, UploadSevice>();
+
+            services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
+            
+            services.AddAWSService<IAmazonS3>();
+
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
             {

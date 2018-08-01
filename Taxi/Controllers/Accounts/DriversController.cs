@@ -20,13 +20,15 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
         private IEmailSender _emailSender;
+        private IUploadService _uploadService;
 
-        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IEmailSender emailSender)
+        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IEmailSender emailSender, IUploadService uploadService)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
             _emailSender = emailSender;
+            _uploadService = uploadService;
         }
 
         [ProducesResponseType(201)]
@@ -145,5 +147,11 @@ namespace Taxi.Controllers.Accounts
             return NoContent();
         }
 
+        [HttpPost("up")]
+        public async Task<IActionResult> Upload()
+        {
+            await _uploadService.PutObjectToStorage("1");
+            return Ok();
+        }
     }
 }

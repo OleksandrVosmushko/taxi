@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,6 +72,12 @@ namespace Taxi.Services
             {
                 if (trip.Id == default(Guid))
                 {
+                    var tr = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == trip.CustomerId);
+                    if (tr != null)
+                    {
+                        _dataContext.Remove(tr);
+                        _dataContext.Add(trip);
+                    } else
                     _dataContext.Add(trip);
                 }
                 else _dataContext.Update(trip);

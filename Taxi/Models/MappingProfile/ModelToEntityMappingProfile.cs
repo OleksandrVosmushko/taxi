@@ -51,6 +51,7 @@ namespace Taxi.Models.MappingProfile
             CreateMap<AddVehicleDto, Vehicle>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
 
             CreateMap<Vehicle, VehicleToReturnDto>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
+            
         }
     }
 }

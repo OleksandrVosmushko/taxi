@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -86,12 +87,33 @@ namespace Taxi.Controllers
             var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicle);
             return Ok(vehicleToReturn);
         }
-
+        [HttpPost("up")]
+        public async Task<IActionResult> Upload()
+        {
+            await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString(), "2");
+            return Ok();
+        }
         [HttpPost("images")]
         [Authorize(Policy = "Driver")]
+        [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload(List<IFormFile> files)
         {
+            //var files = new List<IFormFile>();
+
+            //files.Add(file);
+
             long size = files.Sum(f => f.Length);
+
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+           
+            //if (driver.Vehicle == null)
+            //{
+            //    ModelState.AddModelError(nameof(driver.Vehicle), "Driver has no vehicle to add images");
+
+            //    return BadRequest(ModelState);
+            //}
             foreach (var formFile in files)
             {
                 if (formFile.Length > 0)
@@ -110,11 +132,20 @@ namespace Taxi.Controllers
 
                     await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString(), filename);//this is the method to upload saved file to S3
 
+                //    System.IO.File.Delete(filename);
                 }
             }
             return Ok();
         }
 
+        [HttpGet("images")]
+ 
+        public async Task<IActionResult> Get()
+        {
+            FileDto res = await _uploadService.GetObjectAsync("8c6ac8ba-dd3e-403d-a75b-4d4ad90eba1f");
+            
+            return File(res.Stream, res.ContentType);
+        }
 
 
     }

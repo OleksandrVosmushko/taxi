@@ -146,6 +146,7 @@ namespace Taxi
                 {
                     {"Bearer", Enumerable.Empty<string>()}
                 });
+                c.OperationFilter<FileUploadOperation>();
             });
             services.AddMemoryCache();
             services.AddAutoMapper();

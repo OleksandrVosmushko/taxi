@@ -12,16 +12,26 @@ namespace Taxi.Services
     {
         private ApplicationDbContext _dataContext;
         private ITripsLocationRepository _locationRepository;
+        private IUsersRepository _userRepository;
 
-        public TripsRepository(ApplicationDbContext dataContext, ITripsLocationRepository locationRepository)
+        public TripsRepository(ApplicationDbContext dataContext, ITripsLocationRepository locationRepository, IUsersRepository usersRepository)
         {
             _dataContext = dataContext;
             _locationRepository = locationRepository;
+            _userRepository = usersRepository;
         }
 
         public List<TripDto> GetNearTrips(double lon, double lat)
         {
-            return _locationRepository.GetNearTrips(lon, lat);
+            var trips =_locationRepository.GetNearTrips(lon, lat);
+            foreach (var t in trips)
+            {
+                var customer = _userRepository.GetCustomerById(t.CustomerId);
+
+                t.LastName = customer.Identity.LastName;
+                t.FirstName = customer.Identity.FirstName;
+            }
+            return trips;
         }
 
         public Trip GetTrip(Guid customerId)
@@ -70,7 +80,6 @@ namespace Taxi.Services
                 _locationRepository.SetLastTripLocation(trip.CustomerId, trip);   
             } catch (Exception e)
             {
-
                 return false;
             }
             return true;

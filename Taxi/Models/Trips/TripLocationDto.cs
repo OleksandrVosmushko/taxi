@@ -12,6 +12,9 @@ namespace Taxi.Models.Trips
         public PlaceDto To { get; set; }
         
         public Guid  CustomerId { get; set; }
-        
+
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
     }
 }

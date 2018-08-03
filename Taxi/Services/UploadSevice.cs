@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Taxi.Models.Drivers;
 
@@ -65,7 +66,7 @@ namespace Taxi.Services
 
         public async Task<FileDto> GetObjectAsync(string key)
         {
-    
+            string responseBody = "";
             try
             {
                 GetObjectRequest request = new GetObjectRequest
@@ -73,29 +74,27 @@ namespace Taxi.Services
                     BucketName = bucketName,
                     Key = key
                 };
-                MemoryStream file = new MemoryStream();
                 using (GetObjectResponse response = await _s3.GetObjectAsync(request))
+                using (Stream responseStream = response.ResponseStream)
+                using (StreamReader reader = new StreamReader(responseStream))
                 {
-                    try
-                    {
-                        BufferedStream stream2 = new BufferedStream(response.ResponseStream);
-                        byte[] buffer = new byte[0x2000];
-                        int count = 0;
-                        while ((count = stream2.Read(buffer, 0, buffer.Length)) > 0)
-                        {
-                            file.Write(buffer, 0, count);
-                        }
-                    }
-                    finally
-                    {
-                    }
+                    //string title = response.Metadata["x-amz-meta-title"]; // Assume you have "title" as medata added to the object.
                     string contentType = response.Headers["Content-Type"];
+                    //Console.WriteLine("Object metadata, Title: {0}", title);
+                    //Console.WriteLine("Content type: {0}", contentType);
+                    
+                    responseBody = reader.ReadToEnd(); // Now you process the response body.
+
+
+
+               //     var path = $"C:\\dev\\{key}";
+
+                    //await response.WriteResponseStreamToFileAsync(path,false,new CancellationToken());
                     return new FileDto
                     {
-                        ContentType = contentType,
-                        Stream = file
-                    }; 
-                    
+                        Stream = responseBody,
+                        ContentType = contentType
+                    };
                 }
             }
             catch (AmazonS3Exception e)
@@ -109,5 +108,6 @@ namespace Taxi.Services
                 return null;
             }
         }
+        
     }
 }

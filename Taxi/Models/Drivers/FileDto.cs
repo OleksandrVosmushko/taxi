@@ -8,7 +8,7 @@ namespace Taxi.Models.Drivers
 {
     public class FileDto
     {
-        public MemoryStream Stream { get; set; }
+        public string Stream { get; set; }
 
         public string ContentType { get; set; }
     }

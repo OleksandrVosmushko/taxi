@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models.Drivers;
@@ -143,8 +144,12 @@ namespace Taxi.Controllers
         public async Task<IActionResult> Get()
         {
             FileDto res = await _uploadService.GetObjectAsync("8c6ac8ba-dd3e-403d-a75b-4d4ad90eba1f");
-            
-            return File(res.Stream, res.ContentType);
+
+        //    MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(res.Stream));
+
+         //   return Ok();
+              return File(Encoding.UTF8.GetBytes(res.Stream), res.ContentType);
+
         }
 
 

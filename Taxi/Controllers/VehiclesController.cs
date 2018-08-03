@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using Amazon.S3;
+using Amazon.S3.Model;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -25,14 +27,18 @@ namespace Taxi.Controllers
         private IUsersRepository _usersRepository;
         private IUploadService _uploadService;
         private IHostingEnvironment _hostingEnvironment;
-
-        public VehiclesController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IUploadService uploadService, IHostingEnvironment env )
+        private IAmazonS3 _s3;
+        private const string bucketName = "taxi-storage-v1";
+        public VehiclesController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, 
+            IUploadService uploadService, IHostingEnvironment env, IAmazonS3 amazonS3
+            )
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
             _uploadService = uploadService;
             _hostingEnvironment = env;
+            _s3 = amazonS3;
         }
 
         [HttpPost()]
@@ -131,7 +137,7 @@ namespace Taxi.Controllers
                         fs.Flush();
                     }//these code snippets saves the uploaded files to the project directory
 
-                    await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString(), filename);//this is the method to upload saved file to S3
+                    await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString() + Path.GetExtension(filename), filename);//this is the method to upload saved file to S3
 
                 //    System.IO.File.Delete(filename);
                 }
@@ -143,12 +149,17 @@ namespace Taxi.Controllers
  
         public async Task<IActionResult> Get()
         {
-            FileDto res = await _uploadService.GetObjectAsync("8c6ac8ba-dd3e-403d-a75b-4d4ad90eba1f");
+         //   FileDto res = await _uploadService.GetObjectAsync("a8fb9cf4-56f8-4319-87ac-426f27a4cfac.jpg");
 
-        //    MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(res.Stream));
+            //    MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(res.Stream));
+            //   return Ok();
+            GetObjectResponse response = await _s3.GetObjectAsync(new GetObjectRequest
+            {
+                BucketName = bucketName,
+                Key = "a8fb9cf4-56f8-4319-87ac-426f27a4cfac.jpg"
+            });
 
-         //   return Ok();
-              return File(Encoding.UTF8.GetBytes(res.Stream), res.ContentType);
+            return File(response.ResponseStream, response.Headers["Content-Type"]);
 
         }
 

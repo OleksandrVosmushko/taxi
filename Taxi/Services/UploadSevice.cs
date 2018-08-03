@@ -78,21 +78,17 @@ namespace Taxi.Services
                 using (Stream responseStream = response.ResponseStream)
                 using (StreamReader reader = new StreamReader(responseStream))
                 {
-                    //string title = response.Metadata["x-amz-meta-title"]; // Assume you have "title" as medata added to the object.
                     string contentType = response.Headers["Content-Type"];
-                    //Console.WriteLine("Object metadata, Title: {0}", title);
-                    //Console.WriteLine("Content type: {0}", contentType);
                     
-                    responseBody = reader.ReadToEnd(); // Now you process the response body.
+                    MemoryStream stream = new MemoryStream();
 
+                    responseStream.CopyTo(stream);
 
-
-               //     var path = $"C:\\dev\\{key}";
-
+                    //var path = $"C:\\dev\\{key}";
                     //await response.WriteResponseStreamToFileAsync(path,false,new CancellationToken());
                     return new FileDto
                     {
-                        Stream = responseBody,
+                        Stream = stream,
                         ContentType = contentType
                     };
                 }

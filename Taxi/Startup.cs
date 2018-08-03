@@ -44,7 +44,7 @@ namespace Taxi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("DbConnection"),
+                options.UseNpgsql(Configuration.GetConnectionString("DbConnectionPost"),
                 b=> b.MigrationsAssembly("Taxi")));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();

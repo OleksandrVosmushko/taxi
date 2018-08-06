@@ -9,7 +9,7 @@ namespace Taxi.Entities
     {
         public Guid Id { get; set; }
 
-        public List<Picture>  Pictures { get; set; }
+        public List<Picture> Pictures { get; set; } = new List<Picture>();
 
         public string Number { get; set; }
 

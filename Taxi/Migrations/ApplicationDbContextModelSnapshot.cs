@@ -215,12 +215,10 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Path");
-
-                    b.Property<Guid?>("VehicleId");
+                    b.Property<Guid>("VehicleId");
 
                     b.HasKey("Id");
 
@@ -249,6 +247,22 @@ namespace Taxi.Migrations
                     b.HasIndex("TripId");
 
                     b.ToTable("Places");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.ProfilePicture", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<string>("IdentityId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IdentityId")
+                        .IsUnique()
+                        .HasFilter("[IdentityId] IS NOT NULL");
+
+                    b.ToTable("ProfilePictures");
                 });
 
             modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>
@@ -384,9 +398,10 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
-                    b.HasOne("Taxi.Entities.Vehicle")
+                    b.HasOne("Taxi.Entities.Vehicle", "Vehicle")
                         .WithMany("Pictures")
-                        .HasForeignKey("VehicleId");
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Taxi.Entities.Place", b =>
@@ -395,6 +410,13 @@ namespace Taxi.Migrations
                         .WithMany("Places")
                         .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Taxi.Entities.ProfilePicture", b =>
+                {
+                    b.HasOne("Taxi.Entities.AppUser", "Identity")
+                        .WithOne("ProfilePicture")
+                        .HasForeignKey("Taxi.Entities.ProfilePicture", "IdentityId");
                 });
 
             modelBuilder.Entity("Taxi.Entities.RefreshToken", b =>

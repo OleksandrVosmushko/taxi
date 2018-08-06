@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180801093328_mig")]
-    partial class mig
+    [Migration("20180806092719_str")]
+    partial class str
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -216,12 +216,10 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Path");
-
-                    b.Property<Guid?>("VehicleId");
+                    b.Property<Guid>("VehicleId");
 
                     b.HasKey("Id");
 
@@ -385,9 +383,10 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
-                    b.HasOne("Taxi.Entities.Vehicle")
+                    b.HasOne("Taxi.Entities.Vehicle", "Vehicle")
                         .WithMany("Pictures")
-                        .HasForeignKey("VehicleId");
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Taxi.Entities.Place", b =>

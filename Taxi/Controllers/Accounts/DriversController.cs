@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -85,7 +86,6 @@ namespace Taxi.Controllers.Accounts
         [HttpGet("{id}",Name = "GetDriver")]
         public async Task<IActionResult> GetDriver(Guid id)
         {
-            
             var driver = _usersRepository.GetDriverById(id);
 
             if (driver == null)
@@ -93,7 +93,7 @@ namespace Taxi.Controllers.Accounts
                 return NotFound();
             }
 
-            var driverIdentity = await _userManager.FindByIdAsync(driver.IdentityId);
+            var driverIdentity = await _userManager.Users.Include(o => o.ProfilePicture).FirstOrDefaultAsync(p => p.Id == driver.IdentityId);
 
             if (driverIdentity == null)
             {
@@ -102,6 +102,10 @@ namespace Taxi.Controllers.Accounts
             var driverDto =_mapper.Map<DriverDto>(driverIdentity);
 
             _mapper.Map(driver, driverDto);
+
+            driverDto.VehicleId = driver.Vehicle?.Id;
+
+            driverDto.ProfilePictureId = driverIdentity?.ProfilePicture?.Id;
 
             return Ok(driverDto);
         }

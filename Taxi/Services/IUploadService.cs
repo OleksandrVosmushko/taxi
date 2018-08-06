@@ -11,5 +11,7 @@ namespace Taxi.Services
         Task PutObjectToStorage(string key, string data);
 
         Task<FileDto> GetObjectAsync(string key);
+
+        Task<bool> DeleteObjectAsync(string keyName);
     }
 }

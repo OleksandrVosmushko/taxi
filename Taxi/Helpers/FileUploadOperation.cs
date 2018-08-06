@@ -11,7 +11,8 @@ namespace Taxi.Helpers
     {
         public void Apply(Operation operation, OperationFilterContext context)
         {
-            if (operation.OperationId.ToLower() == "apivehiclesimagespost")
+            if (operation.OperationId.ToLower() == "apivehiclesimagespost" ||
+                operation.OperationId.ToLower() == "apiprofilepicturepost")
             {
                 operation.Parameters.Clear();
                 operation.Parameters.Add(new NonBodyParameter

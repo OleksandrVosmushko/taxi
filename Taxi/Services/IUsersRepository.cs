@@ -37,10 +37,16 @@ namespace Taxi.Services
 
         IEnumerable<RefreshToken> GetTokensForUser(string userId);
 
-        Task<bool> AddVehicleToDriver(Vehicle vehicle);
+        Task<bool> AddVehicleToDriver(Guid id, Vehicle vehicle);
 
         Task<Vehicle> GetVehicle(Guid vehicleId);
 
         Task RemoveVehicle(Vehicle vehicle);
-   }
+
+        Task AddPictureToVehicle(Vehicle v,string id);
+
+        Task<bool> RemoveProfilePicture(AppUser user);
+
+        Task<bool> AddProfilePicture(AppUser user, ProfilePicture picture);
+    }
 }

@@ -17,6 +17,8 @@ namespace Taxi.Models.Drivers
 
         public string Color { get; set; }
 
+        public List<string> Pictures { get; set; }
+
         public Guid DriverId { get; set; }
     }
 }

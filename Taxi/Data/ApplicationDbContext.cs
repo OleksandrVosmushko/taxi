@@ -37,5 +37,7 @@ namespace Taxi.Data
         public DbSet<Vehicle> Vehicles { get; set; }
 
         public DbSet<Picture> Pictures { get; set; }
+
+        public DbSet<ProfilePicture> ProfilePictures { get; set; }
     }
 }

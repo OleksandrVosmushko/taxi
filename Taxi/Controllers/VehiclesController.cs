@@ -14,6 +14,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
+using Taxi.Models;
 using Taxi.Models.Drivers;
 using Taxi.Services;
 
@@ -27,8 +29,7 @@ namespace Taxi.Controllers
         private IUsersRepository _usersRepository;
         private IUploadService _uploadService;
         private IHostingEnvironment _hostingEnvironment;
-        private IAmazonS3 _s3;
-        private const string bucketName = "taxi-storage-v1";
+   
         public VehiclesController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, 
             IUploadService uploadService, IHostingEnvironment env, IAmazonS3 amazonS3
             )
@@ -38,13 +39,12 @@ namespace Taxi.Controllers
             _usersRepository = usersRepository;
             _uploadService = uploadService;
             _hostingEnvironment = env;
-            _s3 = amazonS3;
         }
 
         [HttpPost()]
         [Authorize(Policy = "Driver")]
-        [ProducesResponseType(204)]
-        public async Task<IActionResult> AddVehicleToDriver(AddVehicleDto vehicle)
+        [ProducesResponseType(201)]
+        public async Task<IActionResult> AddVehicleToDriver([FromBody]AddVehicleDto vehicle)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -52,7 +52,7 @@ namespace Taxi.Controllers
 
             var vehicleEntity = _mapper.Map<Vehicle>(vehicle);
 
-            var res = await _usersRepository.AddVehicleToDriver(vehicleEntity);
+            var res = await _usersRepository.AddVehicleToDriver(Guid.Parse(driverId), vehicleEntity);
 
             if (res != true)
             {
@@ -62,12 +62,19 @@ namespace Taxi.Controllers
             return CreatedAtRoute("GetVehicle", new { id = vehicleEntity.Id }, vehicleToReturn);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete()]
         [Authorize(Policy = "Driver")]
-        public async Task<IActionResult> RemoveVehicle(Guid id)
+        public async Task<IActionResult> RemoveVehicle()
         {
-            var vehicle = await _usersRepository.GetVehicle(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+            var vehicle = driver?.Vehicle;
+            
             if (vehicle == null)
             {
                 return NotFound();
@@ -92,14 +99,41 @@ namespace Taxi.Controllers
                 return NotFound();
             }
             var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicle);
+            vehicleToReturn.Pictures = new List<string>();
+            foreach (var p in vehicle.Pictures)
+            {
+                vehicleToReturn.Pictures.Add(p.Id);
+            }
+
             return Ok(vehicleToReturn);
         }
-        [HttpPost("up")]
-        public async Task<IActionResult> Upload()
+
+        [HttpGet( Name = "GetDriverVehicle")]
+        [Authorize(Policy = "Driver")]
+        public IActionResult GetDriverVehicle()
         {
-            await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString(), "2");
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+            var vehicle = driver?.Vehicle;
+            if (vehicle == null)
+            {
+                return NotFound();
+            }
+            var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicle);
+            vehicleToReturn.Pictures = new List<string>();
+            foreach (var p in vehicle.Pictures)
+            {
+                vehicleToReturn.Pictures.Add(p.Id);
+            }
+
+            return Ok(vehicleToReturn);
         }
+
         [HttpPost("images")]
         [Authorize(Policy = "Driver")]
         [Consumes("multipart/form-data")]
@@ -114,15 +148,20 @@ namespace Taxi.Controllers
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
             var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
-           
-            //if (driver.Vehicle == null)
-            //{
-            //    ModelState.AddModelError(nameof(driver.Vehicle), "Driver has no vehicle to add images");
 
-            //    return BadRequest(ModelState);
-            //}
+            if (driver?.Vehicle == null)
+            {
+                ModelState.AddModelError(nameof(driver.Vehicle), "Driver has no vehicle to add images");
+
+                return BadRequest(ModelState);
+            }
+            var toReturn = new List<ImageToReturnDto>();
             foreach (var formFile in files)
             {
+                if (!formFile.IsImage())
+                {
+                    return BadRequest();
+                }
                 if (formFile.Length > 0)
                 {
                     var filename = ContentDispositionHeaderValue
@@ -136,33 +175,14 @@ namespace Taxi.Controllers
                         await formFile.CopyToAsync(fs);
                         fs.Flush();
                     }//these code snippets saves the uploaded files to the project directory
-
-                    await _uploadService.PutObjectToStorage(Guid.NewGuid().ToString() + Path.GetExtension(filename), filename);//this is the method to upload saved file to S3
-
-                //    System.IO.File.Delete(filename);
+                    var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
+                    await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
+                    await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    System.IO.File.Delete(filename);
+                    toReturn.Add(new ImageToReturnDto() { ImageId = imageId});
                 }
             }
-            return Ok();
+            return Ok(toReturn);
         }
-
-        [HttpGet("images")]
- 
-        public async Task<IActionResult> Get()
-        {
-         //   FileDto res = await _uploadService.GetObjectAsync("a8fb9cf4-56f8-4319-87ac-426f27a4cfac.jpg");
-
-            //    MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(res.Stream));
-            //   return Ok();
-            GetObjectResponse response = await _s3.GetObjectAsync(new GetObjectRequest
-            {
-                BucketName = bucketName,
-                Key = "a8fb9cf4-56f8-4319-87ac-426f27a4cfac.jpg"
-            });
-
-            return File(response.ResponseStream, response.Headers["Content-Type"]);
-
-        }
-
-
     }
 }

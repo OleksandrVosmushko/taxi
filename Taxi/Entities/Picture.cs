@@ -7,8 +7,10 @@ namespace Taxi.Entities
 {
     public class Picture
     {
-        public Guid Id { get; set; }
+        public string Id { get; set; } 
 
-        public string Path { get; set; }
+        public Guid VehicleId { get; set; }
+
+        public Vehicle Vehicle { get; set; }
     }
 }

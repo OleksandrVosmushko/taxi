@@ -64,9 +64,37 @@ namespace Taxi.Services
             }
         }
 
+        public async Task<bool> DeleteObjectAsync(string keyName)
+        {
+            try
+            {
+                var deleteObjectRequest = new DeleteObjectRequest
+                {
+                    BucketName = bucketName,
+                    Key = keyName
+                };
+                
+                await _s3.DeleteObjectAsync(deleteObjectRequest);
+                return true;
+            }
+            catch (AmazonS3Exception e)
+            {
+                Console.WriteLine("Error encountered on server. Message:'{0}' when writing an object", e.Message);
+
+                return false;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unknown encountered on server. Message:'{0}' when writing an object", e.Message);
+
+                return false;
+            }
+        }
+
         public async Task<FileDto> GetObjectAsync(string key)
         {
-            string responseBody = "";
+            Stream stream = new MemoryStream();
+            string contentType;
             try
             {
                 GetObjectRequest request = new GetObjectRequest
@@ -78,10 +106,8 @@ namespace Taxi.Services
                 using (Stream responseStream = response.ResponseStream)
                 using (StreamReader reader = new StreamReader(responseStream))
                 {
-                    string contentType = response.Headers["Content-Type"];
+                    contentType = response.Headers["Content-Type"];
                     
-                    MemoryStream stream = new MemoryStream();
-
                     responseStream.CopyTo(stream);
 
                     //var path = $"C:\\dev\\{key}";

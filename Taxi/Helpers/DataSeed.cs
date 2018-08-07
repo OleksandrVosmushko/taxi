@@ -16,7 +16,7 @@ namespace Taxi.Helpers
         public static void Initialize(IServiceProvider serviceProvider, UserManager<AppUser> userManager)
         {
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-          //  context.Database.EnsureDeleted();
+            //context.Database.EnsureDeleted();
             //  context.Database.EnsureCreated();
             context.Database.Migrate();
             if (userManager.FindByNameAsync("1@mail.ru").Result == null)

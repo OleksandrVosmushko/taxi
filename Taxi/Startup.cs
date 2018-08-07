@@ -47,17 +47,17 @@ namespace Taxi
             string username = Configuration.GetValue<string>("RDS_USERNAME");
             string password = Configuration.GetValue<string>("RDS_PASSWORD");
 
-            return $"Data Source={hostname},{port};Initial Catalog={dbname};User ID={username};Password={password};";
+            return "Data Source=" + hostname + ";Initial Catalog=" + dbname + ";User ID=" + username + ";Password=" + password + ";";
         }
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             var conString = Configuration.GetConnectionString("DbConnectionPost");
 
-            if (CurrentEnvironment.IsProduction())
-            {
-                conString = GetRDSConnectionString();
-            }
+            //if (CurrentEnvironment.IsProduction())
+            //{
+            //    conString = GetRDSConnectionString();
+            //}
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(conString,
@@ -208,7 +208,7 @@ namespace Taxi
             {
                 var context = serviceScope.ServiceProvider.GetService<ApplicationDbContext>();
                
-                context.Database.Migrate();
+               // context.Database.Migrate();
             }
             app.UseMvc(routes =>
             {

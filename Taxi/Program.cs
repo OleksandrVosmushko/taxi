@@ -28,7 +28,7 @@ namespace Taxi
                         GetRequiredService<UserManager<AppUser>>();
 
                     DataSeed.Initialize(serviceProvider, userManager);
-                     
+
                 }
                 catch
                 {

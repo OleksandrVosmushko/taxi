@@ -204,5 +204,19 @@ namespace Taxi.Services
 
             return true;
         }
+
+        public async Task<bool> RemoveVehicleImage(Driver driver, string imageId)
+        {
+            var res = driver.Vehicle.Pictures.RemoveAll(p => p.Id == imageId);
+
+            if (res == 0)
+                return false;
+
+            await _uploadService.DeleteObjectAsync(imageId);
+
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

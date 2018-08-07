@@ -134,6 +134,22 @@ namespace Taxi.Controllers
             return Ok(vehicleToReturn);
         }
 
+        [HttpDelete("images/{id}")]
+        [Authorize(Policy = "Driver")]
+        public async Task<IActionResult> RemoveVehicleImage(string id)
+        {
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+
+            var res = await _usersRepository.RemoveVehicleImage(driver, id);
+
+            if (res == false)
+                return NotFound();
+            return NoContent();
+        }
+
+
         [HttpPost("images")]
         [Authorize(Policy = "Driver")]
         [Consumes("multipart/form-data")]

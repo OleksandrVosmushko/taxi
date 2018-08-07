@@ -37,7 +37,6 @@ namespace Taxi.Controllers
             _hostingEnvironment = env;
         }
 
-
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> GetProfilePicture()

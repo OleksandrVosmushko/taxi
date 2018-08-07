@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -21,30 +20,47 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
-using Microsoft.AspNetCore.HttpOverrides;
 using Amazon.S3;
-using Amazon.Extensions.NETCore.Setup;
-using Amazon.Runtime;
-using Amazon.Runtime.CredentialManagement;
+
 
 namespace Taxi
 {
     public class Startup
     {
         private readonly SymmetricSecurityKey _signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("LCJuYmYiOjE1MzExMzU5OTEsImV4cCI6"));
-                                                                                                              
-        public Startup(IConfiguration configuration)
+        
+        private IHostingEnvironment CurrentEnvironment { get; set; }
+
+        public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
+            CurrentEnvironment = env;
         }
 
         public IConfiguration Configuration { get; }
 
+        private string GetRDSConnectionString()
+        {
+            string hostname = Configuration.GetValue<string>("RDS_HOSTNAME");
+            string port = Configuration.GetValue<string>("RDS_PORT");
+            string dbname = Configuration.GetValue<string>("RDS_DB_NAME");
+            string username = Configuration.GetValue<string>("RDS_USERNAME");
+            string password = Configuration.GetValue<string>("RDS_PASSWORD");
+
+            return $"Data Source={hostname},{port};Initial Catalog={dbname};User ID={username};Password={password};";
+        }
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var conString = Configuration.GetConnectionString("DbConnectionPost");
+
+            if (CurrentEnvironment.IsProduction())
+            {
+                conString = GetRDSConnectionString();
+            }
+
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("DbConnectionPost"),
+                options.UseNpgsql(conString,
                 b=> b.MigrationsAssembly("Taxi")));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();

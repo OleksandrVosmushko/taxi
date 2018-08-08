@@ -105,7 +105,7 @@ namespace Taxi.Controllers
         [Authorize]
         [HttpDelete]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> RemoveProfilePicture ()
+        public async Task<IActionResult> RemoveProfilePicture()
         {
             var uid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
 

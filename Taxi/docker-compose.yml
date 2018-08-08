@@ -21,7 +21,7 @@ services:
     taxi:
         depends_on:
           - db
-        image: vosmushko/taxi:car3
+        image: vosmushko/taxi:post
         restart: always
         ports:
           - "8080:80"

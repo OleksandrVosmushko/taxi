@@ -21,7 +21,7 @@ using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
 using Amazon.S3;
-
+using Amazon.Runtime;
 
 namespace Taxi
 {
@@ -71,8 +71,10 @@ namespace Taxi
             services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
             services.AddScoped<IUploadService, UploadSevice>();
 
-            services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
+            var awsopt = Configuration.GetAWSOptions();
             
+            services.AddDefaultAWSOptions(awsopt);
+
             services.AddAWSService<IAmazonS3>();
 
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));

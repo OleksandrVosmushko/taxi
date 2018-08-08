@@ -40,8 +40,39 @@ namespace Taxi.Controllers
             _uploadService = uploadService;
             _hostingEnvironment = env;
         }
+        //addVehicleToDriverById
+        [HttpPost("driver/{id}")]
+        [ProducesResponseType(201)]
+        public async  Task<IActionResult> AddVehicleToDriverById([FromRoute] Guid id ,[FromBody] AddVehicleDto vehicle)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        [HttpPost()]
+            var driver = _usersRepository.GetDriverById(id);
+
+            if (driver == null)
+                return NotFound();
+            
+            if (driver.Vehicle != null)
+            {
+                ModelState.AddModelError(nameof(driver.Vehicle), "Driver already has vehicle.");
+                return BadRequest();
+            }
+            var vehicleEntity = _mapper.Map<Vehicle>(vehicle);
+
+            var res = await _usersRepository.AddVehicleToDriver(id, vehicleEntity);
+
+            if (res != true)
+            {
+                return BadRequest();
+            }
+
+            var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicleEntity);
+
+            return CreatedAtRoute("GetVehicle", new { id = vehicleEntity.Id }, vehicleToReturn);
+        }
+
+        [HttpPut()]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(201)]
         public async Task<IActionResult> AddVehicleToDriver([FromBody]AddVehicleDto vehicle)
@@ -149,6 +180,62 @@ namespace Taxi.Controllers
             return NoContent();
         }
 
+        [HttpPut("images")]
+        [Authorize(Policy = "Driver")]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UploadPut(List<IFormFile> files)
+        {
+            //var files = new List<IFormFile>();
+
+            //files.Add(file);
+
+            long size = files.Sum(f => f.Length);
+
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+
+            if (driver?.Vehicle == null)
+            {
+                ModelState.AddModelError(nameof(driver.Vehicle), "Driver has no vehicle to add images");
+
+                return BadRequest(ModelState);
+            }
+
+            foreach(var v in driver.Vehicle.Pictures.ToList())
+            {
+                await _usersRepository.RemoveVehicleImage(driver, v.Id);
+            }
+
+            var toReturn = new List<ImageToReturnDto>();
+            foreach (var formFile in files)
+            {
+                if (!formFile.IsImage())
+                {
+                    return BadRequest();
+                }
+                if (formFile.Length > 0)
+                {
+                    var filename = ContentDispositionHeaderValue
+                            .Parse(formFile.ContentDisposition)
+                            .FileName
+                            .TrimStart().ToString();
+                    filename = _hostingEnvironment.WebRootPath + $@"\uploads" + $@"\{formFile.FileName}";
+                    size += formFile.Length;
+                    using (var fs = System.IO.File.Create(filename))
+                    {
+                        await formFile.CopyToAsync(fs);
+                        fs.Flush();
+                    }//these code snippets saves the uploaded files to the project directory
+                    var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
+                    await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
+                    await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    System.IO.File.Delete(filename);
+                    toReturn.Add(new ImageToReturnDto() { ImageId = imageId });
+                }
+            }
+            return Ok(toReturn);
+        }
 
         [HttpPost("images")]
         [Authorize(Policy = "Driver")]

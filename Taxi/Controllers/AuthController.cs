@@ -289,5 +289,17 @@ namespace Taxi.Controllers
             return NoContent();
         }
 
+        //[HttpPost("resendemail")]
+        //[ProducesResponseType(204)]
+        //public async Task<IActionResult> ResendEmail([FromBody]CreditionalsDto creditionals)
+        //{
+        //    var user = await _userManager.FindByNameAsync(creditionals.UserName);
+
+        //    if (user == null)
+        //        return NotFound();
+        //    await _userManager.IsEmailConfirmedAsync(user)
+
+        //    return NoContent();
+        //}
     }
 }

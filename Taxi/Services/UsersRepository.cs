@@ -152,8 +152,10 @@ namespace Taxi.Services
             try
             {
                 var driver = GetDriverById(DriverId);
-                if (driver == null || driver.Vehicle != null)
+                if (driver == null)
                     return false;
+                if (driver.Vehicle != null)
+                    await RemoveVehicle(driver.Vehicle);
                 driver.Vehicle = vehicle;
                 await _dataContext.SaveChangesAsync();
             } catch

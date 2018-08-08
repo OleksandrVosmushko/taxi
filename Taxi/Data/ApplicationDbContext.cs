@@ -15,11 +15,29 @@ namespace Taxi.Data
             
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Trip>()
+            .HasMany(c => c.Places)
+            .WithOne(a => a.Trip)
+            .OnDelete(DeleteBehavior.Cascade);
 
+            base.OnModelCreating(modelBuilder);
+        }
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Driver> Drivers { get; set; }
 
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+
+        public DbSet<Trip> Trips { get; set; }
+
+        public DbSet<Place> Places { get; set; }
+
+        public DbSet<Vehicle> Vehicles { get; set; }
+
+        public DbSet<Picture> Pictures { get; set; }
+
+        public DbSet<ProfilePicture> ProfilePictures { get; set; }
     }
 }

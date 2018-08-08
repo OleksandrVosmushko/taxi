@@ -9,8 +9,8 @@ namespace Taxi.Models.Trips
 {
     public class TripUpdateDto
     {
-        public Place From { get; set; }
+        public PlaceDto From { get; set; }
        
-        public Place To { get; set; }
+        public PlaceDto To { get; set; }
     }
 }

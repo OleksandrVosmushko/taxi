@@ -18,5 +18,9 @@ namespace Taxi.Models
         public string LastName { get; set; }
 
         public string City { get; set; }
+
+        public Guid? VehicleId { get; set; }
+        
+        public string ProfilePictureId { get; set; }
     }
 }

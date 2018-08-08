@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,13 +21,15 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
         private IEmailSender _emailSender;
+        private IUploadService _uploadService;
 
-        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IEmailSender emailSender)
+        public DriversController(UserManager<AppUser> userManager, IMapper mapper, IUsersRepository usersRepository, IEmailSender emailSender, IUploadService uploadService)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
             _emailSender = emailSender;
+            _uploadService = uploadService;
         }
 
         [ProducesResponseType(201)]
@@ -83,7 +86,6 @@ namespace Taxi.Controllers.Accounts
         [HttpGet("{id}",Name = "GetDriver")]
         public async Task<IActionResult> GetDriver(Guid id)
         {
-            
             var driver = _usersRepository.GetDriverById(id);
 
             if (driver == null)
@@ -91,7 +93,7 @@ namespace Taxi.Controllers.Accounts
                 return NotFound();
             }
 
-            var driverIdentity = await _userManager.FindByIdAsync(driver.IdentityId);
+            var driverIdentity = await _userManager.Users.Include(o => o.ProfilePicture).FirstOrDefaultAsync(p => p.Id == driver.IdentityId);
 
             if (driverIdentity == null)
             {
@@ -101,25 +103,23 @@ namespace Taxi.Controllers.Accounts
 
             _mapper.Map(driver, driverDto);
 
+            driverDto.VehicleId = driver.Vehicle?.Id;
+
+            driverDto.ProfilePictureId = driverIdentity?.ProfilePicture?.Id;
+
             return Ok(driverDto);
         }
-
-        //[HttpGet]
-        //public IActionResult GetDrivers()
-        //{
-        //    return Ok(_usersRepository.GetDrivers());
-        //}
-
+        
         [HttpPut("{id}")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> UpdateDriver(DriverUpdateDto driverDto)
+        public async Task<IActionResult> UpdateDriver([FromBody]DriverUpdateDto driverDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
             var driver = _usersRepository.GetDriverById(Guid.Parse(id));
 
@@ -144,6 +144,5 @@ namespace Taxi.Controllers.Accounts
 
             return NoContent();
         }
-
     }
 }

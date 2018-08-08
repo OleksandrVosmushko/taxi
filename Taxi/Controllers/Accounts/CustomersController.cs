@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,7 +46,7 @@ namespace Taxi.Controllers.Accounts
                 return NotFound();
             }
 
-            var customerIdentity = await _userManager.FindByIdAsync(customer.IdentityId);
+            var customerIdentity = await _userManager.Users.Include(o => o.ProfilePicture).FirstOrDefaultAsync(p => p.Id == customer.IdentityId);
 
             if (customerIdentity == null)
             {
@@ -55,6 +56,8 @@ namespace Taxi.Controllers.Accounts
             var customerDto = _mapper.Map<CustomerDto>(customerIdentity);
 
             _mapper.Map(customer, customerDto);
+
+            customerDto.ProfilePictureId = customerIdentity?.ProfilePicture?.Id;
 
             return Ok(customerDto);
         }
@@ -109,14 +112,14 @@ namespace Taxi.Controllers.Accounts
         [HttpPut("{id}")]
         [Authorize (Policy = "Customer")]
         [ProducesResponseType(204)]
-        public async Task <IActionResult> UpdateCustomer( CustomerUpdateDto customerDto)
+        public async Task <IActionResult> UpdateCustomer([FromBody] CustomerUpdateDto customerDto)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
 
             var customer = _usersRepository.GetCustomerById(Guid.Parse(id));
 

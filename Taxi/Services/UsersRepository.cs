@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Amazon.S3;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,12 +18,17 @@ namespace Taxi.Services
         ApplicationDbContext _dataContext;
         private IMapper _mapper;
         private UserManager<AppUser> _userManager;
+        private IUploadService _uploadService;
 
-        public UsersRepository(ApplicationDbContext dataContext, IMapper mapper, UserManager<AppUser> userManager)
+        public UsersRepository(ApplicationDbContext dataContext,
+            IMapper mapper, 
+            UserManager<AppUser> userManager,
+            IUploadService uploadService)
         {
             _dataContext = dataContext;
             _mapper = mapper;
             _userManager = userManager;
+            _uploadService = uploadService;
         }
         public async Task AddCustomer(Customer customer)
         {
@@ -85,7 +91,10 @@ namespace Taxi.Services
 
         public Driver GetDriverById(Guid id)
         {
-            var driver = _dataContext.Drivers.Include(d => d.Identity).SingleOrDefault(o => o.Id == id);
+            var driver = _dataContext.Drivers.Include(d => d.Identity)
+                .Include(dr => dr.Vehicle)
+                .ThenInclude(v=> v.Pictures)
+                .SingleOrDefault(o => o.Id == id);
 
             return driver;
         }
@@ -136,6 +145,78 @@ namespace Taxi.Services
         public IEnumerable<RefreshToken> GetTokensForUser(string userId)
         {
             return _dataContext.RefreshTokens.Where(t => t.IdentityId == userId).ToList();
+        }
+
+        public async Task<bool> AddVehicleToDriver(Guid DriverId, Vehicle vehicle)
+        {
+            try
+            {
+                var driver = GetDriverById(DriverId);
+                if (driver == null || driver.Vehicle != null)
+                    return false;
+                driver.Vehicle = vehicle;
+                await _dataContext.SaveChangesAsync();
+            } catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public async Task RemoveVehicle(Vehicle vehicle)
+        {
+            foreach (var p in vehicle.Pictures)
+            {
+                await _uploadService.DeleteObjectAsync(p.Id);
+            }
+            _dataContext.Remove(vehicle);
+
+            await _dataContext.SaveChangesAsync();
+        }
+        
+        public async Task<Vehicle> GetVehicle(Guid vehicleId)
+        {
+            return await _dataContext.Vehicles.Include(o => o.Pictures).FirstOrDefaultAsync(v => v.Id == vehicleId);
+        }
+
+        public async Task AddPictureToVehicle(Vehicle v, string id)
+        {
+            v.Pictures.Add(new Picture() { Id = id });
+            await _dataContext.SaveChangesAsync(); 
+        }  
+
+        public async Task<bool> RemoveProfilePicture(AppUser user)
+        {
+            await _uploadService.DeleteObjectAsync(user.ProfilePicture.Id);
+
+            _dataContext.ProfilePictures.Remove(user.ProfilePicture);
+
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> AddProfilePicture(AppUser user, ProfilePicture picture)
+        {
+            user.ProfilePicture = picture;
+
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RemoveVehicleImage(Driver driver, string imageId)
+        {
+            var res = driver.Vehicle.Pictures.RemoveAll(p => p.Id == imageId);
+
+            if (res == 0)
+                return false;
+
+            await _uploadService.DeleteObjectAsync(imageId);
+
+            await _dataContext.SaveChangesAsync();
+
+            return true;
         }
     }
 }

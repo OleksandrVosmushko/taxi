@@ -21,7 +21,6 @@ namespace Taxi.Data
             .HasMany(c => c.Places)
             .WithOne(a => a.Trip)
             .OnDelete(DeleteBehavior.Cascade);
-            
 
             base.OnModelCreating(modelBuilder);
         }
@@ -34,5 +33,11 @@ namespace Taxi.Data
         public DbSet<Trip> Trips { get; set; }
 
         public DbSet<Place> Places { get; set; }
+
+        public DbSet<Vehicle> Vehicles { get; set; }
+
+        public DbSet<Picture> Pictures { get; set; }
+
+        public DbSet<ProfilePicture> ProfilePictures { get; set; }
     }
 }

@@ -61,6 +61,7 @@ namespace Taxi.Helpers
                 context.SaveChanges();
                 var claims = new List<Claim> {
                     new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess),
                     new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId, Driver.Id.ToString()),
                     new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId, c.Id.ToString())
                  };

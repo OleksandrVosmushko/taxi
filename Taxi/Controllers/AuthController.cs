@@ -289,17 +289,37 @@ namespace Taxi.Controllers
             return NoContent();
         }
 
-        //[HttpPost("resendemail")]
-        //[ProducesResponseType(204)]
-        //public async Task<IActionResult> ResendEmail([FromBody]CreditionalsDto creditionals)
-        //{
-        //    var user = await _userManager.FindByNameAsync(creditionals.UserName);
+        [HttpPost("resendemail")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> ResendEmail([FromBody]CreditionalsDto creditionals)
+        {
+            var user = await _userManager.FindByNameAsync(creditionals.UserName);
 
-        //    if (user == null)
-        //        return NotFound();
-        //    await _userManager.IsEmailConfirmedAsync(user)
+            if (user == null)
+                return NotFound();
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(nameof(user.Email), "Email already confirmed.");
+                return BadRequest(ModelState);
+            }
+            if (!await _userManager.CheckPasswordAsync(user, creditionals.Password))
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new { uid = user.Id, token = confirmToken }, this.Request.Scheme);
+            try
+            {
+                await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                    $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+            }
+            catch
+            {
+                ModelState.AddModelError("email", "Failed to send confirmation letter");
+                return BadRequest(ModelState);
+            }
 
-        //    return NoContent();
-        //}
+            return NoContent();
+        }
     }
 }

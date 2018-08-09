@@ -17,12 +17,15 @@ namespace Taxi.Controllers
     {
         private ITripsRepository _tripsRepo;
         private IMapper _mapper;
+        private IUsersRepository _usersRepository;
 
         public TripsController(IMapper mapper,
-            ITripsRepository tripsRepo)
+            ITripsRepository tripsRepo,
+            IUsersRepository usersRepository)
         {
             _tripsRepo = tripsRepo;
             _mapper = mapper;
+            _usersRepository = usersRepository;
         }
         [Authorize(Policy = "Customer")]
         [HttpPost()]
@@ -152,9 +155,10 @@ namespace Taxi.Controllers
 
             var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
             var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
-
+            var customer = _usersRepository.GetCustomerById(trip.CustomerId);
             var toReturn = new TripDto()
             {
+
                 CustomerId = trip.CustomerId,
                 From = new PlaceDto
                 {
@@ -165,11 +169,75 @@ namespace Taxi.Controllers
                 {
                     Longitude = to.Longitude,
                     Latitude = to.Latitude
-                }
+                },
+                FirstName = customer.Identity.FirstName,
+                LastName = customer.Identity.LastName                
             };
 
             return Ok(toReturn);
         }  
-        
+
+        [Authorize(Policy = "Driver")]
+        [HttpPost("finishtrip")]
+        public async Task<IActionResult> FinishTripAsync([FromBody]FinishTripDto finishTrip)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
+
+            if (trip == null)
+                return BadRequest();
+
+            trip.FinishTime = DateTime.UtcNow;
+
+            var finishPlace = trip.Places.FirstOrDefault(p => p.IsTo == true);
+
+            finishPlace.Latitude = finishTrip.To.Latitude;
+
+            finishPlace.Longitude = finishTrip.To.Longitude;
+
+            var tripHistory = _mapper.Map<TripHistory>(trip);
+
+            var places = new List<FinishTripPlace>();
+
+            foreach(var place in trip.Places)
+            {
+                places.Add(_mapper.Map<FinishTripPlace>(place));
+            }
+            tripHistory.Places = places;
+
+            tripHistory.Price = finishTrip.Price;
+
+            await _tripsRepo.AddTripHistory(tripHistory);
+
+            _tripsRepo.RemoveTrip(trip.CustomerId);
+
+            var from = tripHistory.Places.FirstOrDefault(p => p.IsFrom == true);
+            var to = tripHistory.Places.FirstOrDefault(p => p.IsTo == true);
+
+            var toReturn = new TripHistoryDto()
+            {
+                CustomerId = tripHistory.CustomerId,
+                DriverId = tripHistory.DriverId,
+
+                Id = tripHistory.Id,
+                From = new PlaceDto
+                {
+                    Longitude = from.Longitude,
+                    Latitude = from.Latitude
+                },
+                To = new PlaceDto
+                {
+                    Longitude = to.Longitude,
+                    Latitude = to.Latitude
+                },
+                FinishTime = tripHistory.FinishTime,
+                Price = tripHistory.Price                
+            };//check if correctly maps from nullable
+            return Ok(toReturn);
+        }
     }
 }

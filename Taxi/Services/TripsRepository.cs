@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Taxi.Data;
 using Taxi.Entities;
 using Taxi.Models.Trips;
@@ -20,6 +21,13 @@ namespace Taxi.Services
             _dataContext = dataContext;
             _locationRepository = locationRepository;
             _userRepository = usersRepository;
+        }
+
+        public async Task AddTripHistory(TripHistory tripHistory)
+        {
+            await _dataContext.TripHistories.AddAsync(tripHistory);
+
+            await _dataContext.SaveChangesAsync();
         }
 
         public List<TripDto> GetNearTrips(double lon, double lat)
@@ -52,6 +60,21 @@ namespace Taxi.Services
             var trip = _dataContext.Trips.Include(t => t.Places).FirstOrDefault(t => t.DriverId == driverId);
 
             return trip;
+        }
+
+        public async Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId)
+        {
+            return await _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId).OrderByDescending(h => h.FinishTime).ToListAsync();
+        }
+
+        public async Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverID)
+        {
+            return await _dataContext.TripHistories.Where(t => t.DriverId == DriverID).OrderByDescending(h => h.FinishTime).ToListAsync();
+        }
+
+        public async Task<TripHistory> GetTripHistory(Guid id)
+        {
+            return await _dataContext.TripHistories.FindAsync(id);
         }
 
         public void RemoveTrip(Guid customerId)

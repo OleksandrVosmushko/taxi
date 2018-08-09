@@ -20,5 +20,13 @@ namespace Taxi.Services
         List<TripDto> GetNearTrips(double lon, double lat);
 
         Trip GetTripByDriver(Guid driverId);
+
+        Task AddTripHistory(TripHistory tripHistory);
+
+        Task<TripHistory> GetTripHistory(Guid id);
+
+        Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId);
+
+        Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverId);
     }
 }

@@ -79,7 +79,10 @@ namespace Taxi
             services.AddScoped<IUploadService, UploadSevice>();
 
             var awsopt = Configuration.GetAWSOptions();
-            var creds = new EnvironmentVariablesAWSCredentials();
+            var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
+            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+           
+            var creds = new BasicAWSCredentials(keyId, secretKey);
             awsopt.Credentials = creds;
             services.AddDefaultAWSOptions(awsopt);
 

@@ -10,6 +10,8 @@ rootkey.csv
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 credentials
+env.env
+docker-compose.yml
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/

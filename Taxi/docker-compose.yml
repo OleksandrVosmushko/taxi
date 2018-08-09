@@ -19,11 +19,12 @@ services:
         ports:
           - 8081:8080
     taxi:
-        env_file:
-          - env.env
+        environment:
+          - AWS_SECRET_ACCESS_KEY=rF216u64ivdEOkac6+2Vlwd3PwLubvTSM4nh2Lo8
+          - AWS_ACCESS_KEY_ID=AKIAJAPBSOE57IJVV54Q
         depends_on:
           - db
-        image: vosmushko/taxi:post2
+        image: vosmushko/taxi:post3
         restart: always
         ports:
           - "8080:80"

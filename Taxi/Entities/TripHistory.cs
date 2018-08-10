@@ -17,10 +17,16 @@ namespace Taxi.Entities
 
         public Driver Driver { get; set; }
 
-        public Place From { get; set; }
+        public List<FinishTripPlace> Places { get; set; }
+        
+        public DateTime CreationTime { get; set; }
 
-        public Place To { get; set; }
+        public DateTime DriverTakeTripTime { get; set; }
 
-        public DateTime EndTime { get; set; }
+        public DateTime StartTime { get; set; }
+
+        public DateTime FinishTime { get; set; }
+
+        public Decimal Price { get; set; }
     }
 }

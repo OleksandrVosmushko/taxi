@@ -95,6 +95,7 @@ namespace Taxi.Controllers
 
         [HttpDelete()]
         [Authorize(Policy = "Driver")]
+        [ProducesResponseType(204)]
         public async Task<IActionResult> RemoveVehicle()
         {
             if (!ModelState.IsValid)
@@ -167,6 +168,7 @@ namespace Taxi.Controllers
 
         [HttpDelete("images/{id}")]
         [Authorize(Policy = "Driver")]
+        [ProducesResponseType(204)]
         public async Task<IActionResult> RemoveVehicleImage(string id)
         {
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;

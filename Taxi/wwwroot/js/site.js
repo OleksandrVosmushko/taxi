@@ -1,4 +1,6 @@
-﻿//import { error } from "util";
+﻿//import { get } from "http";
+
+//import { error } from "util";
 
 const uri = 'api/';
 let token = "";
@@ -33,6 +35,31 @@ function createCustomer() {
             $("#response").html(JSON.stringify(result));
         }
     });
+}
+
+function getImg() {
+    var image = document.getElementById("image");
+    var url = 'http://taxi-env.hsgu7qika6.us-east-2.elasticbeanstalk.com/api/images/3a9c95f0-fbf9-45c9-989f-699e2a649e86.jpg';
+    var headers = new Headers({ "Authorization": 'Bearer ' + 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwYXZsaXZza2l5dm9sb2R5bXlyQGdtYWlsLmNvbSIsImp0aSI6ImFiMzQxMDk5LWU5ZDItNDAyZi1hNDBmLTM2MGJhMWIxYzAxNiIsImlhdCI6MTUzMzkwNzg1NywiaWQiOiIyNzc5ZjUzZC1kNGNmLTRlZDItYmU3MS1jNmJiYzUxMzk5MTciLCJyb2wiOlsiZHJpdmVyX2FjY2VzcyIsImN1c3RvbWVyX2FjY2VzcyJdLCJjdXN0b21lcklkIjoiNTUyNTA5YjctYWNlYS00ZTRkLWEyNWEtYWRkNTI3NWFhY2RhIiwiZHJpdmVySWQiOiIzZDdlMmE4MS1mZDcwLTRhMGUtOTY4Ni1jOWQyN2FkM2M4NDciLCJuYmYiOjE1MzM5MDc4NTcsImV4cCI6MTUzMzkxNTA1NywiaXNzIjoid2ViQXBpIiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdDo1Mjg0MS8ifQ.rjfGhggydlDSdpIXItYTyjt0Q9vs1S59eZXL1hfiAzA' });
+    var options = {
+        method: 'GET',
+        headers: headers,
+        mode: 'cors',
+        cache: 'default'
+    };
+    var request = new Request(url);
+
+    fetch(request, options).then((response) =>
+
+        response.body)
+
+
+            .then(stream => new Response(stream))
+            .then(response => response.blob())
+            .then(blob => URL.createObjectURL(blob))
+            .then(url => console.log(image.src = url))
+            .catch(err => console.error(err));
+        
 }
 
 function createDriver() {

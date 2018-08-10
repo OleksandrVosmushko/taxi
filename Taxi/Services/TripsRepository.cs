@@ -64,12 +64,12 @@ namespace Taxi.Services
 
         public async Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId)
         {
-            return await _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId).OrderByDescending(h => h.FinishTime).ToListAsync();
+            return await _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId).Include(o=>o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
         }
 
         public async Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverID)
         {
-            return await _dataContext.TripHistories.Where(t => t.DriverId == DriverID).OrderByDescending(h => h.FinishTime).ToListAsync();
+            return await _dataContext.TripHistories.Where(t => t.DriverId == DriverID).Include(o => o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
         }
 
         public async Task<TripHistory> GetTripHistory(Guid id)

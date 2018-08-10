@@ -61,10 +61,10 @@ namespace Taxi
         {
             var conString = Configuration.GetConnectionString("DbConnectionPost");
 
-            //if (CurrentEnvironment.IsProduction())
-            //{
-            //    conString = GetRDSConnectionString();
-            //}
+            if (CurrentEnvironment.IsProduction())
+            {
+                conString = Environment.GetEnvironmentVariable("TAXI_DB_CONN");
+            }
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(conString,

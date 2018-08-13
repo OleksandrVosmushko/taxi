@@ -27,7 +27,6 @@ namespace Taxi
 {
     public class Startup
     {
-        private readonly SymmetricSecurityKey _signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("LCJuYmYiOjE1MzExMzU5OTEsImV4cCI6"));
         
         private IHostingEnvironment CurrentEnvironment { get; set; }
         
@@ -88,13 +87,20 @@ namespace Taxi
 
             services.AddAWSService<IAmazonS3>();
 
+            var keyFromConfig = Configuration["JWT_KEY"];
+            if (keyFromConfig == null)
+            {
+                keyFromConfig = Guid.NewGuid().ToString();
+            }
+            SymmetricSecurityKey signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(keyFromConfig));
+
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
             {
                 options.Issuer = jwtOptions[nameof(JwtIssuerOptions.Issuer)];
                 options.Audience = jwtOptions[nameof(JwtIssuerOptions.Audience)];
 
-                options.SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
+                options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
             
             var tokenValidationParameters = new TokenValidationParameters
@@ -106,7 +112,7 @@ namespace Taxi
                 ValidAudience = jwtOptions[nameof(JwtIssuerOptions.Audience)],
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = _signingKey,
+                IssuerSigningKey = signingKey,
 
                 RequireExpirationTime = false,
                 ValidateLifetime = true,
@@ -232,3 +238,4 @@ namespace Taxi
     }
 }
 // "ProfilesLocation": "credentials"
+// "JWT_KEY": "LCJuYmYiOjE1MzExMzU5OTEsImV4cCI6"   

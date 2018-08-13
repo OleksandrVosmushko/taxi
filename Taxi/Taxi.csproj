@@ -26,11 +26,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IntervalTree\IntervalTree.csproj" />
+    <Folder Include="wwwroot\uploads\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\uploads\" />
+    <Reference Include="IntervalTree">
+      <HintPath>dlls\IntervalTree.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -92,6 +92,7 @@ namespace Taxi.Services
         public Driver GetDriverById(Guid id)
         {
             var driver = _dataContext.Drivers.Include(d => d.Identity)
+                .Include(dv => dv.DriverLicense)
                 .Include(dr => dr.Vehicle)
                 .ThenInclude(v=> v.Pictures)
                 .SingleOrDefault(o => o.Id == id);
@@ -217,6 +218,27 @@ namespace Taxi.Services
             await _uploadService.DeleteObjectAsync(imageId);
 
             await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> AddDriverLicense(DriverLicense driverLicense)
+        {
+            await _dataContext.DriverLicenses.AddAsync(driverLicense);
+
+            await _dataContext.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> RemoveDriverLicense(DriverLicense license)
+        {
+            _dataContext.DriverLicenses.Remove(license);
+
+            await _uploadService.DeleteObjectAsync(license.Id);
+
+            await _dataContext.SaveChangesAsync();
+
 
             return true;
         }

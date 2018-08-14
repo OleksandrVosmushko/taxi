@@ -50,5 +50,9 @@ namespace Taxi.Services
         Task<bool> AddProfilePicture(AppUser user, ProfilePicture picture);
 
         Task<bool> RemoveVehicleImage(Driver driver, string imageId);
+
+        Task<bool> RemoveDriverLicense(DriverLicense license);
+        
+        Task<bool> AddDriverLicense(DriverLicense driverLicense);
     }
 }

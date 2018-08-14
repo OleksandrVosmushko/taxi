@@ -51,5 +51,7 @@ namespace Taxi.Data
         public DbSet<FinishTripPlace> FinishTripPlaces { get; set; }
 
         public DbSet<TripRouteNode> TripRouteNodes { get; set; }
+
+        public DbSet<DriverLicense> DriverLicenses { get; set; }
     }
 }

@@ -11,9 +11,10 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180814091902_route")]
+    partial class route
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,19 +378,15 @@ namespace Taxi.Migrations
 
                     b.Property<double>("Longitude");
 
-                    b.Property<Guid?>("TripHistoryId");
-
-                    b.Property<Guid?>("TripId");
+                    b.Property<Guid>("TripId");
 
                     b.Property<DateTime>("UpdateTime");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TripHistoryId");
-
                     b.HasIndex("TripId");
 
-                    b.ToTable("TripRouteNodes");
+                    b.ToTable("TripRouteNode");
                 });
 
             modelBuilder.Entity("Taxi.Entities.Vehicle", b =>
@@ -539,14 +536,10 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
                 {
-                    b.HasOne("Taxi.Entities.TripHistory", "TripHistory")
-                        .WithMany("RouteNodes")
-                        .HasForeignKey("TripHistoryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("Taxi.Entities.Trip", "Trip")
                         .WithMany("RouteNodes")
-                        .HasForeignKey("TripId");
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Taxi.Entities.Vehicle", b =>

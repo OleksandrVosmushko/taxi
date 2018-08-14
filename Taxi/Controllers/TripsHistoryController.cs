@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Taxi.Models.Trips;
 using Taxi.Services;
 
@@ -57,6 +58,59 @@ namespace Taxi.Controllers
             }
 
             return Ok(tripsToReturn);
+        }
+
+        [HttpGet("driver/triproute/{tripHistoryId}")]
+        [Authorize(Policy = "Driver")]
+        public async Task<IActionResult> GetDriverTripRoute(Guid tripHistoryId)
+        {
+            var trip = await _tripsRepository.GetTripHistory(tripHistoryId);
+
+            if (trip == null)
+                return NotFound();
+
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            if (trip.DriverId != Guid.Parse(driverId))
+            {
+                return StatusCode(403);
+            }
+
+            var tripRoute = await _tripsRepository.GetTripRouteNodes(tripHistoryId);
+
+            var routesDto = new List<RouteNodeDto>();
+            foreach (var r in tripRoute)
+            {
+                routesDto.Add(Mapper.Map<RouteNodeDto>(r));
+            }
+
+            return Ok(routesDto);
+        }
+        [HttpGet("customer/triproute/{tripHistoryId}")]
+        [Authorize(Policy = "Customer")]
+        public async Task<IActionResult> GetCustomerTripRoute(Guid tripHistoryId)
+        {
+            var trip = await _tripsRepository.GetTripHistory(tripHistoryId);
+
+            if (trip == null)
+                return NotFound();
+
+            var customerId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+
+            if (trip.CustomerId != Guid.Parse(customerId))
+            {
+                return StatusCode(403);
+            }
+
+            var tripRoute = await _tripsRepository.GetTripRouteNodes(tripHistoryId);
+
+            var routesDto = new List<RouteNodeDto>();
+            foreach (var r in tripRoute)
+            {
+                routesDto.Add(Mapper.Map<RouteNodeDto>(r));
+            }
+            
+            return Ok(routesDto);
         }
 
         [HttpGet("customer")]

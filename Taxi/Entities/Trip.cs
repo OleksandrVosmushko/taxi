@@ -19,6 +19,16 @@ namespace Taxi.Entities
         
         public List<Place> Places { get; set; }
 
+        public List<TripRouteNode> RouteNodes { get; set; } = new List<TripRouteNode>();
+
+        public double LastLat { get; set; }
+
+        public double LastLon { get; set; }
+
+        public double Distance { get; set; }
+
+        public DateTime LastUpdateTime { get; set; }
+
         public DateTime CreationTime { get; set; }
 
         public DateTime DriverTakeTripTime { get; set; }

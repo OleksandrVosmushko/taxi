@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Taxi.Migrations
 {
-    public partial class post : Migration
+    public partial class docs1 : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -233,15 +233,71 @@ namespace Taxi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DriverLicenses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    DriverId = table.Column<Guid>(nullable: false),
+                    ImageId = table.Column<string>(nullable: true),
+                    LicensedFrom = table.Column<DateTime>(nullable: false),
+                    LicensedTo = table.Column<DateTime>(nullable: false),
+                    UpdateTime = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DriverLicenses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DriverLicenses_Drivers_DriverId",
+                        column: x => x.DriverId,
+                        principalTable: "Drivers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TripHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    CustomerId = table.Column<Guid>(nullable: false),
+                    DriverId = table.Column<Guid>(nullable: false),
+                    DriverTakeTripTime = table.Column<DateTime>(nullable: false),
+                    FinishTime = table.Column<DateTime>(nullable: false),
+                    Price = table.Column<decimal>(nullable: false),
+                    StartTime = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TripHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TripHistories_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TripHistories_Drivers_DriverId",
+                        column: x => x.DriverId,
+                        principalTable: "Drivers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Trips",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
                     CreationTime = table.Column<DateTime>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
+                    Distance = table.Column<double>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: true),
                     DriverTakeTripTime = table.Column<DateTime>(nullable: false),
                     FinishTime = table.Column<DateTime>(nullable: false),
+                    LastLat = table.Column<double>(nullable: false),
+                    LastLon = table.Column<double>(nullable: false),
+                    LastUpdateTime = table.Column<DateTime>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
@@ -284,6 +340,28 @@ namespace Taxi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "FinishTripPlaces",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    IsFrom = table.Column<bool>(nullable: false),
+                    IsTo = table.Column<bool>(nullable: false),
+                    Latitude = table.Column<double>(nullable: false),
+                    Longitude = table.Column<double>(nullable: false),
+                    TripHistoryId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FinishTripPlaces", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FinishTripPlaces_TripHistories_TripHistoryId",
+                        column: x => x.TripHistoryId,
+                        principalTable: "TripHistories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Places",
                 columns: table => new
                 {
@@ -303,6 +381,34 @@ namespace Taxi.Migrations
                         principalTable: "Trips",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TripRouteNodes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Latitude = table.Column<double>(nullable: false),
+                    Longitude = table.Column<double>(nullable: false),
+                    TripHistoryId = table.Column<Guid>(nullable: true),
+                    TripId = table.Column<Guid>(nullable: true),
+                    UpdateTime = table.Column<DateTime>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TripRouteNodes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TripRouteNodes_TripHistories_TripHistoryId",
+                        column: x => x.TripHistoryId,
+                        principalTable: "TripHistories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TripRouteNodes_Trips_TripId",
+                        column: x => x.TripId,
+                        principalTable: "Trips",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -366,9 +472,20 @@ namespace Taxi.Migrations
                 column: "IdentityId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_DriverLicenses_DriverId",
+                table: "DriverLicenses",
+                column: "DriverId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Drivers_IdentityId",
                 table: "Drivers",
                 column: "IdentityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FinishTripPlaces_TripHistoryId",
+                table: "FinishTripPlaces",
+                column: "TripHistoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pictures_VehicleId",
@@ -390,6 +507,26 @@ namespace Taxi.Migrations
                 name: "IX_RefreshTokens_IdentityId",
                 table: "RefreshTokens",
                 column: "IdentityId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TripHistories_CustomerId",
+                table: "TripHistories",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TripHistories_DriverId",
+                table: "TripHistories",
+                column: "DriverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TripRouteNodes_TripHistoryId",
+                table: "TripRouteNodes",
+                column: "TripHistoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TripRouteNodes_TripId",
+                table: "TripRouteNodes",
+                column: "TripId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Trips_CustomerId",
@@ -428,6 +565,12 @@ namespace Taxi.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "DriverLicenses");
+
+            migrationBuilder.DropTable(
+                name: "FinishTripPlaces");
+
+            migrationBuilder.DropTable(
                 name: "Pictures");
 
             migrationBuilder.DropTable(
@@ -440,10 +583,16 @@ namespace Taxi.Migrations
                 name: "RefreshTokens");
 
             migrationBuilder.DropTable(
+                name: "TripRouteNodes");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "Vehicles");
+
+            migrationBuilder.DropTable(
+                name: "TripHistories");
 
             migrationBuilder.DropTable(
                 name: "Trips");

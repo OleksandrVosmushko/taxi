@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180809133227_history")]
-    partial class history
+    [Migration("20180814182313_docs1")]
+    partial class docs1
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -212,6 +212,29 @@ namespace Taxi.Migrations
                     b.ToTable("Drivers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.DriverLicense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<Guid>("DriverId");
+
+                    b.Property<string>("ImageId");
+
+                    b.Property<DateTime>("LicensedFrom");
+
+                    b.Property<DateTime>("LicensedTo");
+
+                    b.Property<DateTime>("UpdateTime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DriverId")
+                        .IsUnique();
+
+                    b.ToTable("DriverLicenses");
+                });
+
             modelBuilder.Entity("Taxi.Entities.FinishTripPlace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -314,11 +337,19 @@ namespace Taxi.Migrations
 
                     b.Property<Guid>("CustomerId");
 
+                    b.Property<double>("Distance");
+
                     b.Property<Guid?>("DriverId");
 
                     b.Property<DateTime>("DriverTakeTripTime");
 
                     b.Property<DateTime>("FinishTime");
+
+                    b.Property<double>("LastLat");
+
+                    b.Property<double>("LastLon");
+
+                    b.Property<DateTime>("LastUpdateTime");
 
                     b.Property<DateTime>("StartTime");
 
@@ -359,6 +390,30 @@ namespace Taxi.Migrations
                     b.HasIndex("DriverId");
 
                     b.ToTable("TripHistories");
+                });
+
+            modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("Latitude");
+
+                    b.Property<double>("Longitude");
+
+                    b.Property<Guid?>("TripHistoryId");
+
+                    b.Property<Guid?>("TripId");
+
+                    b.Property<DateTime>("UpdateTime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TripHistoryId");
+
+                    b.HasIndex("TripId");
+
+                    b.ToTable("TripRouteNodes");
                 });
 
             modelBuilder.Entity("Taxi.Entities.Vehicle", b =>
@@ -443,6 +498,14 @@ namespace Taxi.Migrations
                         .HasForeignKey("IdentityId");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.DriverLicense", b =>
+                {
+                    b.HasOne("Taxi.Entities.Driver", "Driver")
+                        .WithOne("DriverLicense")
+                        .HasForeignKey("Taxi.Entities.DriverLicense", "DriverId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
             modelBuilder.Entity("Taxi.Entities.FinishTripPlace", b =>
                 {
                     b.HasOne("Taxi.Entities.TripHistory", "TripHistory")
@@ -504,6 +567,18 @@ namespace Taxi.Migrations
                         .WithMany("TripHistories")
                         .HasForeignKey("DriverId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
+                {
+                    b.HasOne("Taxi.Entities.TripHistory", "TripHistory")
+                        .WithMany("RouteNodes")
+                        .HasForeignKey("TripHistoryId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Taxi.Entities.Trip", "Trip")
+                        .WithMany("RouteNodes")
+                        .HasForeignKey("TripId");
                 });
 
             modelBuilder.Entity("Taxi.Entities.Vehicle", b =>

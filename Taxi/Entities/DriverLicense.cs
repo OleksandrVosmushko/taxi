@@ -7,10 +7,15 @@ namespace Taxi.Entities
 {
     public class DriverLicense
     {
-        public string Id { get; set; }
+        public Guid Id { get; set; }
+        
+        public DateTime LicensedFrom { get; set; }
 
+        public DateTime LicensedTo { get; set; }
+
+        public string ImageId { get; set; }
         public DateTime UpdateTime { get; set; }
-
+        
         public Driver Driver { get; set; }
 
         public Guid DriverId { get; set; }

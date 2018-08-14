@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -38,7 +39,7 @@ namespace Taxi.Controllers
         }
 
         [Authorize(Policy = "Driver")]
-        [HttpGet("driverlicense")]
+        [HttpGet("driverlicense/image")]
         public async Task<IActionResult> GetLicensePicture()
         {
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
@@ -48,7 +49,7 @@ namespace Taxi.Controllers
             if (driver?.DriverLicense == null)
                 return NotFound();
 
-            FileDto res = await _uploadService.GetObjectAsync(driver.DriverLicense.Id);
+            FileDto res = await _uploadService.GetObjectAsync(driver.DriverLicense.ImageId);
 
             if (res == null)
                 return NotFound();
@@ -59,6 +60,51 @@ namespace Taxi.Controllers
 
         [Authorize(Policy = "Driver")]
         [HttpPut("driverlicense")]
+        public async Task<IActionResult> CreateLicence([FromBody]LicenseCreationDto licenseCreation)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+
+            if (driver == null)
+                return NotFound();
+
+            if (driver?.DriverLicense != null)
+            {
+                await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
+            }
+
+            DateTime licensedTo;
+            DateTime licensedFrom;
+
+            try
+            {
+                licensedFrom = new DateTime(licenseCreation.YearFrom, licenseCreation.MonthFrom, licenseCreation.DayFrom);
+                licensedTo = new DateTime(licenseCreation.YearTo, licenseCreation.MonthTo, licenseCreation.DayTo);
+            }
+            catch
+            {
+                return BadRequest();
+            }
+
+            if (licensedFrom > licensedTo)
+                return BadRequest();
+            var license = new DriverLicense()
+            {
+                DriverId = Guid.Parse(driverId),
+                LicensedTo = licensedTo,
+                LicensedFrom = licensedFrom
+            };
+            await _usersRepository.AddDriverLicense(license);
+
+            return NoContent();
+        }
+
+
+        [Authorize(Policy = "Driver")]
+        [HttpPut("driverlicense/image")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SetLicensePicture(List<IFormFile> files)
         {
@@ -75,10 +121,16 @@ namespace Taxi.Controllers
                 return BadRequest();
             }
 
-            if (driver.DriverLicense != null)
+            if (driver.DriverLicense == null)
             {
-                await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
+                ModelState.AddModelError(nameof(driver.DriverLicense), "No license to add image.");
+                return BadRequest(ModelState);
                 //remove picture from data context
+            }
+
+            if (driver.DriverLicense.ImageId != null)
+            {
+                await _uploadService.DeleteObjectAsync(driver.DriverLicense.ImageId);
             }
             if (formFile.Length > 0)
             {
@@ -95,12 +147,9 @@ namespace Taxi.Controllers
                 }//these code snippets saves the uploaded files to the project directory
                 var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
                 await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
-                await _usersRepository.AddDriverLicense(new DriverLicense()
-                {
-                    DriverId = driver.Id,
-                    UpdateTime = DateTime.UtcNow,
-                    Id = imageId
-                });//dont save locally same names
+                driver.DriverLicense.UpdateTime = DateTime.UtcNow;
+                driver.DriverLicense.ImageId = imageId;
+                await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
                 System.IO.File.Delete(filename);
                 return Ok();
             }
@@ -108,9 +157,25 @@ namespace Taxi.Controllers
         }
 
         [Authorize(Policy = "Driver")]
+        [HttpGet("driverlicense")]
+        public  IActionResult GetDriverLicense()
+        {
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
+
+            if (driver.DriverLicense == null)
+                return NotFound();
+
+            var licenseToReturn = Mapper.Map<DriverLicenseDto>(driver.DriverLicense);
+
+            return Ok(licenseToReturn);
+        }
+
+        [Authorize(Policy = "Driver")]
         [HttpDelete("driverlicense")]
         [ProducesResponseType(204)]
-        public async Task<IActionResult> RemoveLicensePicture()
+        public async Task<IActionResult> RemoveLicense()
         {
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 

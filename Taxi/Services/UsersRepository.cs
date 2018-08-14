@@ -231,15 +231,19 @@ namespace Taxi.Services
             return true;
         }
 
+        public async Task UpdateDriverLicense(DriverLicense driverLicense)
+        {
+            await _dataContext.SaveChangesAsync();
+        }
+
         public async Task<bool> RemoveDriverLicense(DriverLicense license)
         {
             _dataContext.DriverLicenses.Remove(license);
 
-            await _uploadService.DeleteObjectAsync(license.Id);
+            await _uploadService.DeleteObjectAsync(license.ImageId);
 
             await _dataContext.SaveChangesAsync();
-
-
+            
             return true;
         }
     }

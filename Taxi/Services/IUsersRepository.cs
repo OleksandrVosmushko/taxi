@@ -54,5 +54,7 @@ namespace Taxi.Services
         Task<bool> RemoveDriverLicense(DriverLicense license);
         
         Task<bool> AddDriverLicense(DriverLicense driverLicense);
+
+        Task UpdateDriverLicense(DriverLicense driverLicense);
     }
 }

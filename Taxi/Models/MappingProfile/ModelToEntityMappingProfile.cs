@@ -65,6 +65,7 @@ namespace Taxi.Models.MappingProfile
 
             CreateMap<Trip, TripStatusDto>();
 
+            CreateMap<DriverLicense, DriverLicenseDto>();
         }
     }
 }

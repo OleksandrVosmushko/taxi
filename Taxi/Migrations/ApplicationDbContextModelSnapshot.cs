@@ -213,10 +213,16 @@ namespace Taxi.Migrations
 
             modelBuilder.Entity("Taxi.Entities.DriverLicense", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
                     b.Property<Guid>("DriverId");
+
+                    b.Property<string>("ImageId");
+
+                    b.Property<DateTime>("LicensedFrom");
+
+                    b.Property<DateTime>("LicensedTo");
 
                     b.Property<DateTime>("UpdateTime");
 

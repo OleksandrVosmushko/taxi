@@ -22,5 +22,6 @@ namespace Taxi.Models.Trips
 
         public decimal Price { get; set; }
 
+        public double Distance { get; set; }
     }
 }

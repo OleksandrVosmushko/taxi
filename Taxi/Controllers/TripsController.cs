@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
@@ -18,16 +19,19 @@ namespace Taxi.Controllers
         private ITripsRepository _tripsRepo;
         private IMapper _mapper;
         private IUsersRepository _usersRepository;
+        private IUrlHelper _urlHelper;
 
         public TripsController(IMapper mapper,
             ITripsRepository tripsRepo,
-            IUsersRepository usersRepository)
+            IUsersRepository usersRepository,
+            IUrlHelper urlHelper)
         {
             _tripsRepo = tripsRepo;
             _mapper = mapper;
             _usersRepository = usersRepository;
+            _urlHelper = urlHelper;
         }
-
+        
         [Authorize(Policy = "Driver")]
         [HttpPost("updateroute")]
         public async Task<IActionResult> UpdateTripRoute([FromBody] LatLonDto latLon)
@@ -323,7 +327,9 @@ namespace Taxi.Controllers
 
             await _tripsRepo.AddNode(node);
 
-            trip.Distance = 0;
+            var delta = Helpers.Location.CalculateKilometersDistance(trip.LastLat, trip.LastLon, finishTrip.Latitude, finishTrip.Longitude);
+
+            trip.Distance += delta;
 
             trip.LastLat = node.Latitude;
 
@@ -376,7 +382,8 @@ namespace Taxi.Controllers
                     Latitude = to.Latitude
                 },
                 FinishTime = tripHistory.FinishTime,
-                Price = tripHistory.Price                
+                Price = tripHistory.Price,
+                Distance = tripHistory.Distance
             };//check if correctly maps from nullable
             return Ok(toReturn);
         }

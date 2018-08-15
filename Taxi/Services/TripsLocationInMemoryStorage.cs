@@ -31,7 +31,9 @@ namespace Taxi.Services
 
         public Trip GetTripStartLocation(Guid customerId)
         {
-            return _accurateTripsLocations[customerId];
+            var res = _accurateTripsLocations.TryGetValue(customerId,out var trip);
+
+            return trip;
         }
 
         public void RemoveTripLocation(Guid customerId)

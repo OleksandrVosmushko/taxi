@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
@@ -27,9 +28,9 @@ namespace Taxi.Services
 
         Task<TripHistory> GetTripHistory(Guid id);
 
-        Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId);
+        PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters);
 
-        Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverId);
+        PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverId, TripHistoryResourceParameters resourceParameters);
 
         Task UpdateTrip(Trip trip);
 

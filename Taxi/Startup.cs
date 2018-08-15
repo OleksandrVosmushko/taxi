@@ -22,6 +22,9 @@ using Taxi.Helpers;
 using Taxi.Auth;
 using Amazon.S3;
 using Amazon.Runtime;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Taxi
 {
@@ -76,6 +79,15 @@ namespace Taxi
             services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
             services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
             services.AddScoped<IUploadService, UploadSevice>();
+
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddScoped<IUrlHelper, UrlHelper>(implamantationFactory =>
+            {
+                var actionContext =
+                    implamantationFactory.GetService<IActionContextAccessor>().ActionContext;
+                return new UrlHelper(actionContext);
+            });
+
 
             var awsopt = Configuration.GetAWSOptions();
             var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");

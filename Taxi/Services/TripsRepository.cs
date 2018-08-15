@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Data;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
@@ -57,6 +58,8 @@ namespace Taxi.Services
 
         public async Task UpdateTrip(Trip trip)
         {
+            _locationRepository.SetLastTripLocation(trip.CustomerId, trip);
+
             await _dataContext.SaveChangesAsync();
         }
 
@@ -77,14 +80,20 @@ namespace Taxi.Services
             }
         }
 
-        public async Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId)
+        public PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters)
         {
-            return await _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId).Include(o=>o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
+            var beforePaging = _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId)
+                .Include(o=>o.Places)
+                .OrderByDescending(h => h.FinishTime);
+            return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
-        public async Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverID)
+        public PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverID, TripHistoryResourceParameters resourceParameters)
         {
-            return await _dataContext.TripHistories.Where(t => t.DriverId == DriverID).Include(o => o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
+            var beforePaging = _dataContext.TripHistories.Where(t => t.DriverId == DriverID)
+                .Include(o => o.Places)
+                .OrderByDescending(h => h.FinishTime);
+            return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
         public async Task<TripHistory> GetTripHistory(Guid id)

@@ -62,7 +62,10 @@ namespace Taxi.Services
                 var res = new List<TripDto>();
                 var qres = Search(lon, lat, 5000);
 
-                foreach (var r in qres)
+                var uniqueList = new HashSet<Guid>(qres).ToList();
+                
+
+                foreach (var r in uniqueList)
                 {
                     var curTrip = _accurateTripsLocations[r];
                     if (curTrip.DriverId != null )
@@ -77,6 +80,8 @@ namespace Taxi.Services
                         To = new PlaceDto { Latitude = to.Latitude, Longitude = to.Longitude }
                     });
                 }
+              
+                
                 return res;
             }
         }

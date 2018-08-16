@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Taxi.Helpers;
+using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
 
@@ -23,19 +24,19 @@ namespace Taxi.Controllers
             _urlHelper = urlHelper;
             _tripsRepository = tripsRepository;
         }
-        private string CreateDriverResourceUri(TripHistoryResourceParameters resourceParameters, ResourceUriType type)
+        private string CreateResourceUri(PaginationParameters resourceParameters, ResourceUriType type, string getMethodName)
         {
             switch (type)
             {
                 case ResourceUriType.PrevoiusPage:
-                    return _urlHelper.Link("GetDriverHistory",
+                    return _urlHelper.Link(getMethodName,
                         new
                         {
                             pageNumber = resourceParameters.PageNumber - 1,
                             pageSize = resourceParameters.PageSize
                         });
                 case ResourceUriType.NextPage:
-                    return _urlHelper.Link("GetDriverHistory",
+                    return _urlHelper.Link(getMethodName,
                         new
                         {
                             pageNumber = resourceParameters.PageNumber + 1,
@@ -43,7 +44,7 @@ namespace Taxi.Controllers
                         });
                 case ResourceUriType.Current:
                 default:
-                    return _urlHelper.Link("GetDriverHistory",
+                    return _urlHelper.Link(getMethodName,
                         new
                         {
                             pageNumber = resourceParameters.PageNumber,
@@ -51,59 +52,24 @@ namespace Taxi.Controllers
                         });
             }
         }
-        private string CreateCustomerResourceUri(TripHistoryResourceParameters resourceParameters, ResourceUriType type)
-        {
-            switch (type)
-            {
-                case ResourceUriType.PrevoiusPage:
-                    return _urlHelper.Link("GetCustomerHistory",
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber - 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.NextPage:
-                    return _urlHelper.Link("GetCustomerHistory",
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber + 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.Current:
-                default:
-                    return _urlHelper.Link("GetCustomerHistory",
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber,
-                            pageSize = resourceParameters.PageSize
-                        });
-            }
-        }
+      
 
         [HttpGet("driver", Name = "GetDriverHistory")]
         [Authorize(Policy = "Driver")]
-        public async Task<IActionResult> GetHistoryForDriver(TripHistoryResourceParameters resourceParameters)
+        public async Task<IActionResult> GetDriverHistory(TripHistoryResourceParameters resourceParameters)
         {
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
             var trips =  _tripsRepository.GetTripHistoriesForDriver(Guid.Parse(driverId), resourceParameters);
 
+
             var prevLink = trips.HasPrevious
-                ? CreateDriverResourceUri(resourceParameters, ResourceUriType.PrevoiusPage) : null;
+                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverHistory)) : null;
 
             var nextLink = trips.HasNext
-                ? CreateDriverResourceUri(resourceParameters, ResourceUriType.NextPage) : null;
+                ? CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverHistory)) : null;
 
-            var paginationMetadata = new
-            {
-                totalCount = trips.TotalCount,
-                pageSize = trips.PageSize,
-                currentPage = trips.CurrentPage,
-                totalPages = trips.TotalPages,
-                previousPageLink = prevLink,
-                nextPageLink = nextLink
-            };
-            Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
+            Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));
 
             var tripsToReturn = new List<TripHistoryDto>();
             
@@ -193,7 +159,7 @@ namespace Taxi.Controllers
 
         [HttpGet("customer",Name = "GetCustomerHistory")]
         [Authorize(Policy = "Customer")]
-        public async Task<IActionResult> GetHistoryForCustomer(TripHistoryResourceParameters resourceParameters)
+        public async Task<IActionResult> GetCustomerHistory(TripHistoryResourceParameters resourceParameters)
         {
             var customerId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
 
@@ -201,21 +167,13 @@ namespace Taxi.Controllers
             var trips =  _tripsRepository.GetTripHistoriesForCustomer(Guid.Parse(customerId),resourceParameters);
 
             var prevLink = trips.HasPrevious
-                ? CreateCustomerResourceUri(resourceParameters, ResourceUriType.PrevoiusPage):null;
+                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetCustomerHistory)):null;
 
             var nextLink = trips.HasNext
-                ? CreateCustomerResourceUri(resourceParameters, ResourceUriType.NextPage) : null;
+                ?CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetCustomerHistory)) : null;
 
-            var paginationMetadata = new
-            {
-                totalCount = trips.TotalCount,
-                pageSize = trips.PageSize,
-                currentPage = trips.CurrentPage,
-                totalPages = trips.TotalPages,
-                previousPageLink = prevLink,
-                nextPageLink = nextLink
-            };
-            Response.Headers.Add("X-Pagination", Newtonsoft.Json.JsonConvert.SerializeObject(paginationMetadata));
+            
+            Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));
 
             var tripsToReturn = new List<TripHistoryDto>();
 

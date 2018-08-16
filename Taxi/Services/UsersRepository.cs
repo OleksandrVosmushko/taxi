@@ -30,6 +30,12 @@ namespace Taxi.Services
             _userManager = userManager;
             _uploadService = uploadService;
         }
+
+        public Admin GetAdminById(Guid adminId)
+        {
+            return _dataContext.Admins.Include(a => a.Identity).FirstOrDefault(ad => ad.Id == adminId);
+        }
+
         public async Task AddCustomer(Customer customer)
         {
             await _dataContext.Customers.AddAsync(customer);

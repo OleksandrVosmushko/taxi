@@ -101,6 +101,44 @@ namespace Taxi.Helpers
                 var addClaimRes = userManager.AddClaimsAsync(c.Identity, claims).Result;
             }
 
+            if (userManager.FindByNameAsync("root").Result == null)
+            {
+                var id = "01a2586b-eea7-4470-95c5-baeccfbc68a2";
+                var adminId = new Guid("1eb67299-3eea-400e-a72c-0ef7c1e3246d");
+                var user = new AppUser()
+                {
+                    FirstName = "root",
+                    LastName = "root",
+                    Email = "root@email.com",
+                    PhoneNumber = "333",
+                    UserName = "root",
+                    EmailConfirmed = true,
+                    Id = id
+                };
+
+                var rootpassword = Environment.GetEnvironmentVariable("TAXI_ROOT_USER") ?? "151515";
+                IdentityResult result = userManager.CreateAsync
+                    (user, rootpassword).Result;
+                var a = new Admin
+                {
+                    Id = adminId,
+                    IdentityId = id,
+                    IsApproved = true
+                };
+                
+                context.Admins.Add(a);
+                
+                context.SaveChanges();
+
+                var claims = new List<Claim> {
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.AdminAccess),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.RootUserAccess),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId, a.Id.ToString())
+                };
+
+                var addClaimRes = userManager.AddClaimsAsync(a.Identity, claims).Result;
+
+            }
 
         }
     }

@@ -9,6 +9,7 @@ namespace Taxi.Services
 {
     public interface IUsersRepository
     {
+        Admin GetAdminById(Guid adminId);
         Task AddCustomer(Customer customer);
 
         Task AddDriver(Driver driver);

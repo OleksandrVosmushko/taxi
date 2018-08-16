@@ -45,7 +45,8 @@ namespace Taxi.Auth
             {
                 if (claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol ||
                     claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId ||
-                    claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)
+                    claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId ||
+                    claim.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId)
                 {
                     claims.Add(claim);
                 }
@@ -85,6 +86,13 @@ namespace Taxi.Auth
 
             var driverIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId);
             
+            var adminIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.AdminId);
+
+            if (adminIdClaim != null)
+            {
+                idClaims.Add(adminIdClaim);
+            }
+
             if (customerIdClaim != null)
             {
                 idClaims.Add(customerIdClaim);

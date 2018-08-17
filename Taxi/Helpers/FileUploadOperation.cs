@@ -12,7 +12,10 @@ namespace Taxi.Helpers
         public void Apply(Operation operation, OperationFilterContext context)
         {
             if (operation.OperationId.ToLower() == "apivehiclesimagespost" ||
-                operation.OperationId.ToLower() == "apiprofilepicturepost")
+                operation.OperationId.ToLower() == "apiprofilepicturepost"||
+                operation.OperationId.ToLower() == "apivehiclesimagesput" ||
+                operation.OperationId.ToLower() == "apidocumentsdriverlicenseimageput"
+                )
             {
                 operation.Parameters.Clear();
                 operation.Parameters.Add(new NonBodyParameter

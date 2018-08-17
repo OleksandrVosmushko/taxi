@@ -151,6 +151,35 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt)); 
         }
 
+        [Produces(contentType: "application/json")]
+        [HttpPost("admin")]
+        public async Task<IActionResult> LoginAdmin([FromBody]CreditionalsDto credentials)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var identity = await GetClaimsIdentity(credentials.UserName, credentials.Password);
+            if (identity == null)
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            // Ensure the email is confirmed.
+           
+            var admin = _userRepository.GetAdminById(Guid.Parse(identity.Claims.SingleOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.AdminId)?.Value??default(Guid).ToString()));
+
+            if (admin == null)
+            {
+                return NotFound();
+            }
+            var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];
+
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, admin.Id, ip, userAgent);
+
+            return Ok(JsonConvert.DeserializeObject(jwt));
+        }
 
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)
         {
@@ -289,5 +318,37 @@ namespace Taxi.Controllers
             return NoContent();
         }
 
+        [HttpPost("resendemail")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> ResendEmail([FromBody]CreditionalsDto creditionals)
+        {
+            var user = await _userManager.FindByNameAsync(creditionals.UserName);
+
+            if (user == null)
+                return NotFound();
+            if (await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(nameof(user.Email), "Email already confirmed.");
+                return BadRequest(ModelState);
+            }
+            if (!await _userManager.CheckPasswordAsync(user, creditionals.Password))
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            var confirmToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            var emailConfirmUrl = Url.RouteUrl("ConfirmEmail", new { uid = user.Id, token = confirmToken }, this.Request.Scheme);
+            try
+            {
+                await _emailSender.SendEmailAsync(user.Email, "Confirm your account",
+                    $"Please confirm your account by this ref <a href=\"{emailConfirmUrl}\">link</a>");
+            }
+            catch
+            {
+                ModelState.AddModelError("email", "Failed to send confirmation letter");
+                return BadRequest(ModelState);
+            }
+
+            return NoContent();
+        }
     }
 }

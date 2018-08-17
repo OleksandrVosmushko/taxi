@@ -9,6 +9,7 @@ namespace Taxi.Services
 {
     public interface IUsersRepository
     {
+        Admin GetAdminById(Guid adminId);
         Task AddCustomer(Customer customer);
 
         Task AddDriver(Driver driver);
@@ -50,5 +51,11 @@ namespace Taxi.Services
         Task<bool> AddProfilePicture(AppUser user, ProfilePicture picture);
 
         Task<bool> RemoveVehicleImage(Driver driver, string imageId);
+
+        Task<bool> RemoveDriverLicense(DriverLicense license);
+        
+        Task<bool> AddDriverLicense(DriverLicense driverLicense);
+
+        Task UpdateDriverLicense(DriverLicense driverLicense);
     }
 }

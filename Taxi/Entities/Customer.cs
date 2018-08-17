@@ -14,6 +14,7 @@ namespace Taxi.Entities
         public AppUser Identity { get; set; }
 
         public Trip CurrentTrip { get; set; }
-        
+
+        public List<TripHistory> TripHistories { get; set; } = new List<TripHistory>();
     }
 }

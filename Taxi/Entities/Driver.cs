@@ -18,5 +18,10 @@ namespace Taxi.Entities
         public Trip CurrentTrip { get; set; }
 
         public Vehicle Vehicle { get; set; }
+
+        public List<TripHistory> TripHistories { get; set; } = new List<TripHistory>();
+
+        public DriverLicense DriverLicense { get; set; }
+
     }
 }

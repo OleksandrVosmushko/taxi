@@ -21,19 +21,28 @@ using Swashbuckle.AspNetCore.Swagger;
 using Taxi.Helpers;
 using Taxi.Auth;
 using Amazon.S3;
-
+using Amazon.Runtime;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
 
 namespace Taxi
 {
     public class Startup
     {
-        private readonly SymmetricSecurityKey _signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes("LCJuYmYiOjE1MzExMzU5OTEsImV4cCI6"));
         
         private IHostingEnvironment CurrentEnvironment { get; set; }
-
-        public Startup(IConfiguration configuration, IHostingEnvironment env)
+        
+        public Startup( IHostingEnvironment env)
         {
-            Configuration = configuration;
+            var builder = new ConfigurationBuilder()
+              .SetBasePath(env.ContentRootPath)
+              .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+              .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+              .AddEnvironmentVariables();
+
+            Configuration = builder.Build();
+
             CurrentEnvironment = env;
         }
 
@@ -54,10 +63,10 @@ namespace Taxi
         {
             var conString = Configuration.GetConnectionString("DbConnectionPost");
 
-            //if (CurrentEnvironment.IsProduction())
-            //{
-            //    conString = GetRDSConnectionString();
-            //}
+            if (CurrentEnvironment.IsProduction())
+            {
+                conString = Environment.GetEnvironmentVariable("TAXI_DB_CONN");
+            }
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(conString,
@@ -71,9 +80,31 @@ namespace Taxi
             services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
             services.AddScoped<IUploadService, UploadSevice>();
 
-            services.AddDefaultAWSOptions(Configuration.GetAWSOptions());
-            
+            services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
+            services.AddScoped<IUrlHelper, UrlHelper>(implamantationFactory =>
+            {
+                var actionContext =
+                    implamantationFactory.GetService<IActionContextAccessor>().ActionContext;
+                return new UrlHelper(actionContext);
+            });
+
+
+            var awsopt = Configuration.GetAWSOptions();
+            var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
+            var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
+           
+            var creds = new BasicAWSCredentials(keyId, secretKey);
+            awsopt.Credentials = creds;
+            services.AddDefaultAWSOptions(awsopt);
+
             services.AddAWSService<IAmazonS3>();
+
+            var keyFromConfig = Configuration["JWT_KEY"];
+            if (keyFromConfig == null)
+            {
+                keyFromConfig = Guid.NewGuid().ToString();
+            }
+            SymmetricSecurityKey signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(keyFromConfig));
 
             var jwtOptions = Configuration.GetSection(nameof(JwtIssuerOptions));
             services.Configure<JwtIssuerOptions>(options =>
@@ -81,10 +112,9 @@ namespace Taxi
                 options.Issuer = jwtOptions[nameof(JwtIssuerOptions.Issuer)];
                 options.Audience = jwtOptions[nameof(JwtIssuerOptions.Audience)];
 
-                options.SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256);
+                options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
-
-        
+            
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -94,7 +124,7 @@ namespace Taxi
                 ValidAudience = jwtOptions[nameof(JwtIssuerOptions.Audience)],
 
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = _signingKey,
+                IssuerSigningKey = signingKey,
 
                 RequireExpirationTime = false,
                 ValidateLifetime = true,
@@ -117,6 +147,8 @@ namespace Taxi
             {
                 options.AddPolicy("Customer", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.CustomerAccess));
                 options.AddPolicy("Driver", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.DriverAccess));
+                options.AddPolicy("Admin", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.AdminAccess));
+                options.AddPolicy("Root", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.RootUserAccess));
             });
 
             services.Configure<EmailSenderOptions>(Configuration.GetSection("email"));
@@ -219,3 +251,5 @@ namespace Taxi
         }
     }
 }
+// "ProfilesLocation": "credentials"
+// "JWT_KEY": "LCJuYmYiOjE1MzExMzU5OTEsImV4cCI6"   

@@ -41,39 +41,39 @@ namespace Taxi.Controllers
             _hostingEnvironment = env;
         }
         //addVehicleToDriverById
-        [HttpPost("driver/{id}")]
-        [ProducesResponseType(201)]
-        public async  Task<IActionResult> AddVehicleToDriverById([FromRoute] Guid id ,[FromBody] AddVehicleDto vehicle)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+        //[HttpPost("driver/{id}")]
+        //[ProducesResponseType(201)]
+        //public async  Task<IActionResult> AddVehicleToDriverById([FromRoute] Guid id ,[FromBody] AddVehicleDto vehicle)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
 
-            var driver = _usersRepository.GetDriverById(id);
+        //    var driver = _usersRepository.GetDriverById(id);
 
-            if (driver == null)
-                return NotFound();
+        //    if (driver == null)
+        //        return NotFound();
             
-            if (driver.Vehicle != null)
-            {
-                ModelState.AddModelError(nameof(driver.Vehicle), "Driver already has vehicle.");
-                return BadRequest();
-            }
-            var vehicleEntity = _mapper.Map<Vehicle>(vehicle);
+        //    if (driver.Vehicle != null)
+        //    {
+        //        ModelState.AddModelError(nameof(driver.Vehicle), "Driver already has vehicle.");
+        //        return BadRequest();
+        //    }
+        //    var vehicleEntity = _mapper.Map<Vehicle>(vehicle);
 
-            var res = await _usersRepository.AddVehicleToDriver(id, vehicleEntity);
+        //    var res = await _usersRepository.AddVehicleToDriver(id, vehicleEntity);
 
-            if (res != true)
-            {
-                return BadRequest();
-            }
+        //    if (res != true)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicleEntity);
+        //    var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicleEntity);
 
-            return CreatedAtRoute("GetVehicle", new { id = vehicleEntity.Id }, vehicleToReturn);
-        }
+        //    return CreatedAtRoute("GetVehicle", new { id = vehicleEntity.Id }, vehicleToReturn);
+        //}
 
         [HttpPut()]
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [ProducesResponseType(201)]
         public async Task<IActionResult> AddVehicleToDriver([FromBody]AddVehicleDto vehicle)
         {
@@ -141,7 +141,7 @@ namespace Taxi.Controllers
         }
 
         [HttpGet( Name = "GetDriverVehicle")]
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         public IActionResult GetDriverVehicle()
         {
             if (!ModelState.IsValid)
@@ -183,7 +183,7 @@ namespace Taxi.Controllers
         }
 
         [HttpPut("images")]
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> UploadPut(List<IFormFile> files)
         {
@@ -240,7 +240,7 @@ namespace Taxi.Controllers
         }
 
         [HttpPost("images")]
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> Upload(List<IFormFile> files)
         {

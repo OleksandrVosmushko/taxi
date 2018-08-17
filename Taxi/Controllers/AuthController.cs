@@ -84,6 +84,27 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
 
+        [HttpPost("driver/signuptoken")]
+        public async Task<IActionResult> GetDriverRegistrationToken([FromBody] CreditionalsDto credentials)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var identity = await GetRegistrationIdentity(credentials.UserName, credentials.Password);
+            if (identity == null)
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            var driver = _userRepository.GetDriverByIdentityId(identity.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.Id).Value);
+
+            if (driver == null)
+            {
+                return NotFound();
+            }
+
+            var jwt = await Tokens.GenerateRegistrationJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id);
+
+            return Ok(JsonConvert.DeserializeObject(jwt));
+        }
 
         [Authorize(Policy = "Customer")]
         [HttpPost("customerdriver")]
@@ -179,6 +200,36 @@ namespace Taxi.Controllers
             var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, admin.Id, ip, userAgent);
 
             return Ok(JsonConvert.DeserializeObject(jwt));
+        }
+
+        private async Task<ClaimsIdentity> GetRegistrationIdentity(string userName, string password)
+        {
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+                return await Task.FromResult<ClaimsIdentity>(null);
+
+            // get the user to verifty
+            var userToVerify = await _userManager.FindByNameAsync(userName);
+
+            if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
+
+            var looked = await _userManager.IsLockedOutAsync(userToVerify);
+            if (looked)
+            {
+                ModelState.AddModelError("login_failure", $"Number of your login attempts expired, try again in {userToVerify.LockoutEnd}");
+                return await Task.FromResult<ClaimsIdentity>(null);
+            }
+
+            // check the credentials
+            if (await _userManager.CheckPasswordAsync(userToVerify, password))
+            {
+                await _userManager.ResetAccessFailedCountAsync(userToVerify);
+                return await Task.FromResult(await _jwtFactory.GenerateClaimsIdentityForRegistration(userName, userToVerify.Id));
+            }
+
+            //inc the number of failed logins
+            await _userManager.AccessFailedAsync(userToVerify);
+            // Credentials are invalid, or account doesn't exist
+            return await Task.FromResult<ClaimsIdentity>(null);
         }
 
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)

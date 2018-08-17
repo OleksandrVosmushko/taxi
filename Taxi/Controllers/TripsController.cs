@@ -354,7 +354,12 @@ namespace Taxi.Controllers
                 places.Add(_mapper.Map<FinishTripPlace>(place));
             }
             tripHistory.Places = places;
-            tripHistory.RouteNodes= trip.RouteNodes;
+            
+            foreach(var rnode in trip.RouteNodes)
+            {
+                tripHistory.TripHistoryRouteNodes.Add(Mapper.Map<TripHistoryRouteNode>(rnode));
+            }
+
             //TODO : CalculatePrice
             tripHistory.Price = 0;
 

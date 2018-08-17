@@ -101,10 +101,10 @@ namespace Taxi.Services
             return await _dataContext.TripHistories.FindAsync(id);
         }
 
-        public async Task<List<TripRouteNode>> GetTripRouteNodes(Guid tripHistoryId)
+        public async Task<List<TripHistoryRouteNode>> GetTripRouteNodes(Guid tripHistoryId)
         {
-            return await _dataContext.TripRouteNodes.Where(n=>n.TripHistoryId == tripHistoryId)
-                .OrderByDescending(o=>o.UpdateTime).ToListAsync();
+            return await _dataContext.TripHistoryRouteNodes.Where(n=>n.TripHistoryId == tripHistoryId)
+                .OrderBy(o=>o.UpdateTime).ToListAsync();
         }
 
         public void RemoveTrip(Guid customerId)
@@ -115,8 +115,9 @@ namespace Taxi.Services
             {
                 _dataContext.Trips.Remove(tripToRemove);
                 _locationRepository.RemoveTripLocation(customerId);
+                _dataContext.SaveChanges();
             }
-            _dataContext.SaveChanges();
+           
         }
 
         public bool SetTrip(Trip trip)

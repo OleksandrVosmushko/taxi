@@ -12,7 +12,7 @@ namespace Taxi.Services
     {
         bool SetTrip(Trip trip);
 
-        Task<List<TripRouteNode>> GetTripRouteNodes(Guid tripId);
+        Task<List<TripHistoryRouteNode>> GetTripRouteNodes(Guid tripId);
 
         void RemoveTrip(Guid customerId);
         
@@ -37,3 +37,4 @@ namespace Taxi.Services
         Task AddNode(TripRouteNode node);
     }
 }
+   

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Taxi.Entities
 {
-    public class TripRouteNode
+    public class TripHistoryRouteNode
     {
         public double Latitude { get; set; }
 
@@ -15,8 +15,8 @@ namespace Taxi.Entities
 
         public Guid Id { get; set; }
 
-        public Guid TripId { get; set; }
+        public Guid TripHistoryId { get; set; }
 
-        public Trip Trip { get; set; }
+        public TripHistory TripHistory { get; set; }
     }
 }

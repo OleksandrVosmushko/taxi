@@ -31,6 +31,6 @@ namespace Taxi.Entities
 
         public double Distance { get; set; }
 
-        public List<TripRouteNode> RouteNodes { get; set; } = new List<TripRouteNode>();
+        public List<TripHistoryRouteNode> TripHistoryRouteNodes { get; set; } = new List<TripHistoryRouteNode>();
     }
 }

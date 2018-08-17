@@ -9,6 +9,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Taxi.Data;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
 
 namespace Taxi.Services
@@ -35,6 +36,13 @@ namespace Taxi.Services
         {
             return _dataContext.Admins.Include(a => a.Identity).FirstOrDefault(ad => ad.Id == adminId);
         }
+
+        //public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
+        //{
+        //    //var beforePaging = _dataContext.Admins.Include(a => a.Identity);
+        //    //    .OrderByDescending(h => h.FinishTime);
+        //    //return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+        //}
 
         public async Task AddCustomer(Customer customer)
         {

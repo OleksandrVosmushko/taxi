@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180816134912_root")]
-    partial class root
+    [Migration("20180817125210_migr")]
+    partial class migr
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -410,6 +410,26 @@ namespace Taxi.Migrations
                     b.ToTable("TripHistories");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.TripHistoryRouteNode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("Latitude");
+
+                    b.Property<double>("Longitude");
+
+                    b.Property<Guid>("TripHistoryId");
+
+                    b.Property<DateTime>("UpdateTime");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TripHistoryId");
+
+                    b.ToTable("TripHistoryRouteNodes");
+                });
+
             modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -419,15 +439,11 @@ namespace Taxi.Migrations
 
                     b.Property<double>("Longitude");
 
-                    b.Property<Guid?>("TripHistoryId");
-
-                    b.Property<Guid?>("TripId");
+                    b.Property<Guid>("TripId");
 
                     b.Property<DateTime>("UpdateTime");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TripHistoryId");
 
                     b.HasIndex("TripId");
 
@@ -594,16 +610,20 @@ namespace Taxi.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
+            modelBuilder.Entity("Taxi.Entities.TripHistoryRouteNode", b =>
                 {
                     b.HasOne("Taxi.Entities.TripHistory", "TripHistory")
-                        .WithMany("RouteNodes")
+                        .WithMany("TripHistoryRouteNodes")
                         .HasForeignKey("TripHistoryId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
 
+            modelBuilder.Entity("Taxi.Entities.TripRouteNode", b =>
+                {
                     b.HasOne("Taxi.Entities.Trip", "Trip")
                         .WithMany("RouteNodes")
-                        .HasForeignKey("TripId");
+                        .HasForeignKey("TripId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Taxi.Entities.Vehicle", b =>

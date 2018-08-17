@@ -151,6 +151,35 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt)); 
         }
 
+        [Produces(contentType: "application/json")]
+        [HttpPost("admin")]
+        public async Task<IActionResult> LoginAdmin([FromBody]CreditionalsDto credentials)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var identity = await GetClaimsIdentity(credentials.UserName, credentials.Password);
+            if (identity == null)
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            // Ensure the email is confirmed.
+           
+            var admin = _userRepository.GetAdminById(Guid.Parse(identity.Claims.SingleOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.AdminId)?.Value??default(Guid).ToString()));
+
+            if (admin == null)
+            {
+                return NotFound();
+            }
+            var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+            var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];
+
+            var jwt = await Tokens.GenerateJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, admin.Id, ip, userAgent);
+
+            return Ok(JsonConvert.DeserializeObject(jwt));
+        }
 
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)
         {

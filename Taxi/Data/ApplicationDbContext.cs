@@ -22,6 +22,12 @@ namespace Taxi.Data
             .WithOne(a => a.Trip)
             .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<TripHistory>()
+                .HasMany(c => c.RouteNodes)
+                .WithOne(a => a.TripHistory)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
             base.OnModelCreating(modelBuilder);
         }
         public DbSet<Customer> Customers { get; set; }
@@ -43,5 +49,11 @@ namespace Taxi.Data
         public DbSet<TripHistory> TripHistories { get; set; }
 
         public DbSet<FinishTripPlace> FinishTripPlaces { get; set; }
+
+        public DbSet<TripRouteNode> TripRouteNodes { get; set; }
+
+        public DbSet<DriverLicense> DriverLicenses { get; set; }
+
+        public DbSet<Admin> Admins { get; set; }
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Data;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
@@ -22,7 +23,7 @@ namespace Taxi.Services
             _locationRepository = locationRepository;
             _userRepository = usersRepository;
         }
-
+        
         public async Task AddTripHistory(TripHistory tripHistory)
         {
             await _dataContext.TripHistories.AddAsync(tripHistory);
@@ -55,26 +56,55 @@ namespace Taxi.Services
             return trip;
         }
 
-        public Trip GetTripByDriver(Guid driverId)
+        public async Task UpdateTrip(Trip trip)
         {
-            var trip = _dataContext.Trips.Include(t => t.Places).FirstOrDefault(t => t.DriverId == driverId);
+            _locationRepository.SetLastTripLocation(trip.CustomerId, trip);
 
-            return trip;
+            await _dataContext.SaveChangesAsync();
         }
 
-        public async Task<List<TripHistory>> GetTripHistoriesForCustomer(Guid CustomerId)
+        public async Task AddNode(TripRouteNode node)
         {
-            return await _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId).Include(o=>o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
+            await _dataContext.TripRouteNodes.AddAsync(node);
+            await _dataContext.SaveChangesAsync();
+        }
+        public Trip GetTripByDriver(Guid driverId, bool includeRoutes = false)
+        {
+            if (!includeRoutes)
+            {
+                return _dataContext.Trips.Include(t => t.Places).FirstOrDefault(t => t.DriverId == driverId);
+            }
+            else
+            {
+                return _dataContext.Trips.Include(t => t.Places).Include(tr => tr.RouteNodes).FirstOrDefault(t => t.DriverId == driverId);
+            }
         }
 
-        public async Task<List<TripHistory>> GetTripHistoriesForDriver(Guid DriverID)
+        public PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters)
         {
-            return await _dataContext.TripHistories.Where(t => t.DriverId == DriverID).Include(o => o.Places).OrderByDescending(h => h.FinishTime).ToListAsync();
+            var beforePaging = _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId)
+                .Include(o=>o.Places)
+                .OrderByDescending(h => h.FinishTime);
+            return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+        }
+
+        public PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverID, TripHistoryResourceParameters resourceParameters)
+        {
+            var beforePaging = _dataContext.TripHistories.Where(t => t.DriverId == DriverID)
+                .Include(o => o.Places)
+                .OrderByDescending(h => h.FinishTime);
+            return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
         public async Task<TripHistory> GetTripHistory(Guid id)
         {
             return await _dataContext.TripHistories.FindAsync(id);
+        }
+
+        public async Task<List<TripRouteNode>> GetTripRouteNodes(Guid tripHistoryId)
+        {
+            return await _dataContext.TripRouteNodes.Where(n=>n.TripHistoryId == tripHistoryId)
+                .OrderByDescending(o=>o.UpdateTime).ToListAsync();
         }
 
         public void RemoveTrip(Guid customerId)
@@ -99,6 +129,7 @@ namespace Taxi.Services
                     if (tr != null)
                     {
                         _dataContext.Remove(tr);
+                        _dataContext.SaveChanges();
                         _dataContext.Add(trip);
                     } else
                     _dataContext.Add(trip);

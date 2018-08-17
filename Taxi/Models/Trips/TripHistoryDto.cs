@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Taxi.Entities;
 
 namespace Taxi.Models.Trips
 {
@@ -20,5 +21,7 @@ namespace Taxi.Models.Trips
         public DateTime FinishTime { get; set; }
 
         public decimal Price { get; set; }
+
+        public double Distance { get; set; }
     }
 }

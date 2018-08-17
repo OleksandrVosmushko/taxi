@@ -204,16 +204,11 @@ namespace Taxi.Services
 
         static S2Point pointFromLatLng(double lat, double lon)
         {
-            var phi = ConvertToRadians(lat);
-            var theta = ConvertToRadians(lon);
+            var phi = Helpers.Location.ConvertToRadians(lat);
+            var theta = Helpers.Location.ConvertToRadians(lon);
             var cosPhi = Math.Cos(phi);
             return new S2Point(Math.Cos(theta) * cosPhi, Math.Sin(theta) * cosPhi, Math.Sin(phi));
         }
-        static double ConvertToRadians(double angle)
-        {
-            return (Math.PI / 180) * angle;
-        }
-
 
         const double EarthRadiusM = 6371010.0;
     }

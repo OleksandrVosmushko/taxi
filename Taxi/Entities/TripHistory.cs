@@ -28,5 +28,9 @@ namespace Taxi.Entities
         public DateTime FinishTime { get; set; }
 
         public Decimal Price { get; set; }
+
+        public double Distance { get; set; }
+
+        public List<TripRouteNode> RouteNodes { get; set; } = new List<TripRouteNode>();
     }
 }

@@ -70,7 +70,10 @@ namespace Taxi
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(conString,
-                b=> b.MigrationsAssembly("Taxi")));
+                b => {
+                    b.MigrationsAssembly("Taxi");
+                    b.UseNetTopologySuite();
+                }));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
@@ -209,7 +212,7 @@ namespace Taxi
             
             if (env.IsDevelopment())
             {
-                app.UseBrowserLink();
+                //app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
             }
             else

@@ -17,6 +17,7 @@ using Taxi.Services;
 using Taxi.Models.Customers;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace Taxi.Controllers
 {
@@ -338,8 +339,10 @@ namespace Taxi.Controllers
         }
 
         [HttpPost("refreshtoken")]
-        public async Task<IActionResult> RefreshToken(string refreshToken)
+        public async Task<IActionResult> RefreshToken([Required] string refreshToken)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 
             var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];

@@ -85,16 +85,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.CartesianToSpherical(from.Location),
+                    To = Helpers.Location.CartesianToSpherical(to.Location),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance
@@ -188,16 +180,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.CartesianToSpherical(from.Location),
+                    To = Helpers.Location.CartesianToSpherical(to.Location),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance

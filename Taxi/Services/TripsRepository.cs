@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,15 +34,29 @@ namespace Taxi.Services
 
         public List<TripDto> GetNearTrips(double lon, double lat)
         {
-            var trips =_locationRepository.GetNearTrips(lon, lat);
+            //probably change it
+            //var trips = _dataContext.Places.Where(p => p.IsFrom == true)
+            //    .OrderBy(d => d.Location.Distance(Helpers.Location.pointFromLatLng(lat, lon))).Include(t=> t.Trip);
+            var trips = _dataContext.Trips.Where(p => p.DriverId == null)
+                .OrderBy(d => d.Places.FirstOrDefault(p => p.IsFrom == true).Location.Distance(Helpers.Location.pointFromLatLng(lat, lon)))
+                .Include(l => l.Places).ToList();
+
+            var tripsDto = new List<TripDto>();
+
             foreach (var t in trips)
             {
+                
                 var customer = _userRepository.GetCustomerById(t.CustomerId);
-
-                t.LastName = customer.Identity.LastName;
-                t.FirstName = customer.Identity.FirstName;
+                
+                tripsDto.Add(new TripDto() {
+                    CustomerId = customer.Id,
+                    FirstName = customer.Identity.FirstName,
+                    LastName = customer.Identity.LastName,
+                    From = Helpers.Location.CartesianToSpherical(t.Places.FirstOrDefault(p => p.IsFrom == true).Location),
+                    To = Helpers.Location.CartesianToSpherical(t.Places.FirstOrDefault(p => p.IsTo == true).Location)
+                });
             }
-            return trips;
+            return tripsDto;
         }
 
         public Trip GetTrip(Guid customerId)
@@ -139,7 +154,6 @@ namespace Taxi.Services
 
                 _dataContext.SaveChanges();
 
-                _locationRepository.SetLastTripLocation(trip.CustomerId, trip);   
             } catch (Exception e)
             {
                 return false;
@@ -159,9 +173,8 @@ namespace Taxi.Services
                 return false;
         
             var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-            from.Latitude = lat;
-            from.Longitude = lon;
-            _locationRepository.SetLastTripLocation(customerId, trip);
+            from.Location = Helpers.Location.pointFromLatLng(lat, lon);
+           // _locationRepository.SetLastTripLocation(customerId, trip);
             return true;
         }
     }

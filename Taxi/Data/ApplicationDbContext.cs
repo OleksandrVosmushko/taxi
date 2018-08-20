@@ -14,6 +14,12 @@ namespace Taxi.Data
         {
             
         }
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    optionsBuilder.UseNpgsql()
+
+        //    base.OnConfiguring(optionsBuilder);
+        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -21,7 +27,7 @@ namespace Taxi.Data
             .HasMany(c => c.Places)
             .WithOne(a => a.Trip)
             .OnDelete(DeleteBehavior.Cascade);
-            
+            modelBuilder.HasPostgresExtension("postgis");
             base.OnModelCreating(modelBuilder);
         }
         public DbSet<Customer> Customers { get; set; }

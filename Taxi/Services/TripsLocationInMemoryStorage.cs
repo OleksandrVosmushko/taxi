@@ -21,7 +21,7 @@ namespace Taxi.Services
 
         static object locker = new object();
 
-        private static ConcurrentDictionary<Guid, Trip> _accurateTripsLocations = 
+        private static ConcurrentDictionary<Guid, Trip> _accurateTripsLocations =
             new ConcurrentDictionary<Guid, Trip>();
 
         public TripsLocationInMemoryStorage()
@@ -31,7 +31,7 @@ namespace Taxi.Services
 
         public Trip GetTripStartLocation(Guid customerId)
         {
-            var res = _accurateTripsLocations.TryGetValue(customerId,out var trip);
+            var res = _accurateTripsLocations.TryGetValue(customerId, out var trip);
 
             return trip;
         }
@@ -46,45 +46,46 @@ namespace Taxi.Services
             }
         }
 
-        public void SetLastTripLocation(Guid customerId, Trip location)
-        {
-            lock (locker) {
-                var from = location.Places.FirstOrDefault(p => p.IsFrom == true);
-                bool res = UpdateUser(customerId, from.Longitude, from.Latitude);
-                _accurateTripsLocations[customerId] = location;
-            }
-        }
-        
-        public List<TripDto> GetNearTrips(double lon, double lat)
-        {
-            lock (locker)
-            {
-                var res = new List<TripDto>();
-                var qres = Search(lon, lat, 5000);
+        //public void SetLastTripLocation(Guid customerId, Trip location)
+        //{
+        //    lock (locker)
+        //    {
+        //        var from = location.Places.FirstOrDefault(p => p.IsFrom == true);
+        //        bool res = UpdateUser(customerId, from.Longitude, from.Latitude);
+        //        _accurateTripsLocations[customerId] = location;
+        //    }
+        //}
 
-                var uniqueList = new HashSet<Guid>(qres).ToList();
-                
+        //public List<TripDto> GetNearTrips(double lon, double lat)
+        //{
+        //    lock (locker)
+        //    {
+        //        var res = new List<TripDto>();
+        //        var qres = Search(lon, lat, 5000);
 
-                foreach (var r in uniqueList)
-                {
-                    var curTrip = _accurateTripsLocations[r];
-                    if (curTrip.DriverId != null )
-                        continue;
-                    var from = curTrip.Places.FirstOrDefault(c => c.IsFrom == true);
-                    var to = curTrip.Places.FirstOrDefault(c => c.IsTo == true);
-                  
-                    res.Add(new TripDto
-                    {
-                        CustomerId = r,
-                        From = new PlaceDto { Latitude = from.Latitude, Longitude = from.Longitude},
-                        To = new PlaceDto { Latitude = to.Latitude, Longitude = to.Longitude }
-                    });
-                }
-              
-                
-                return res;
-            }
-        }
+        //        var uniqueList = new HashSet<Guid>(qres).ToList();
+
+
+        //        foreach (var r in uniqueList)
+        //        {
+        //            var curTrip = _accurateTripsLocations[r];
+        //            if (curTrip.DriverId != null)
+        //                continue;
+        //            var from = curTrip.Places.FirstOrDefault(c => c.IsFrom == true);
+        //            var to = curTrip.Places.FirstOrDefault(c => c.IsTo == true);
+
+        //            res.Add(new TripDto
+        //            {
+        //                CustomerId = r,
+        //                From = new PlaceDto { Latitude = from.Latitude, Longitude = from.Longitude },
+        //                To = new PlaceDto { Latitude = to.Latitude, Longitude = to.Longitude }
+        //            });
+        //        }
+
+
+        //        return res;
+        //    }
+        //}
 
         private struct UserList : IComparable<UserList>
         {
@@ -163,6 +164,7 @@ namespace Taxi.Services
             {
                 var latlng = S2LatLng.FromDegrees(lat, lon);
 
+
                 var centerPoint = pointFromLatLng(lat, lon);
 
                 var centerAngle = ((double)radius) / EarthRadiusM;
@@ -172,11 +174,11 @@ namespace Taxi.Services
                 var regionCoverer = new S2RegionCoverer();
 
                 regionCoverer.MaxLevel = 13;
-                
+
                 var covering = regionCoverer.GetCovering(cap);
-                
+
                 var res = new List<Guid>();
-                
+
                 foreach (var u in covering)
                 {
                     var sell = new S2CellId(u.Id);
@@ -243,7 +245,7 @@ namespace Taxi.Services
                 return true;
             }
         }
-        
+
 
         static S2Point pointFromLatLng(double lat, double lon)
         {
@@ -257,6 +259,15 @@ namespace Taxi.Services
             return (Math.PI / 180) * angle;
         }
 
+        public void SetLastTripLocation(Guid customerId, Trip location)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<TripDto> GetNearTrips(double lon, double lat)
+        {
+            throw new NotImplementedException();
+        }
 
         const double EarthRadiusM = 6371010.0;
     }

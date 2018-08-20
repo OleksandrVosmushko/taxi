@@ -1,22 +1,25 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using System;
-using System.Collections.Generic;
+using NetTopologySuite.Geometries;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Taxi.Migrations
 {
-    public partial class migr : Migration
+    public partial class m : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AlterDatabase()
+                .Annotation("Npgsql:PostgresExtension:postgis", "'postgis', '', ''");
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
                     Id = table.Column<string>(nullable: false),
-                    ConcurrencyStamp = table.Column<string>(nullable: true),
                     Name = table.Column<string>(maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(maxLength: 256, nullable: true)
+                    NormalizedName = table.Column<string>(maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -28,22 +31,22 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false),
-                    ConcurrencyStamp = table.Column<string>(nullable: true),
-                    Email = table.Column<string>(maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(nullable: false),
-                    FirstName = table.Column<string>(nullable: true),
-                    LastName = table.Column<string>(nullable: true),
-                    LockoutEnabled = table.Column<bool>(nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
-                    NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
+                    UserName = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
+                    Email = table.Column<string>(maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(nullable: false),
                     PasswordHash = table.Column<string>(nullable: true),
+                    SecurityStamp = table.Column<string>(nullable: true),
+                    ConcurrencyStamp = table.Column<string>(nullable: true),
                     PhoneNumber = table.Column<string>(nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(nullable: false),
-                    SecurityStamp = table.Column<string>(nullable: true),
                     TwoFactorEnabled = table.Column<bool>(nullable: false),
-                    UserName = table.Column<string>(maxLength: 256, nullable: true)
+                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
+                    LockoutEnabled = table.Column<bool>(nullable: false),
+                    AccessFailedCount = table.Column<int>(nullable: false),
+                    FirstName = table.Column<string>(nullable: true),
+                    LastName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -56,9 +59,9 @@ namespace Taxi.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    RoleId = table.Column<string>(nullable: false),
                     ClaimType = table.Column<string>(nullable: true),
-                    ClaimValue = table.Column<string>(nullable: true),
-                    RoleId = table.Column<string>(nullable: false)
+                    ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -96,9 +99,9 @@ namespace Taxi.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    UserId = table.Column<string>(nullable: false),
                     ClaimType = table.Column<string>(nullable: true),
-                    ClaimValue = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: false)
+                    ClaimValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -198,8 +201,8 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    City = table.Column<string>(nullable: true),
-                    IdentityId = table.Column<string>(nullable: true)
+                    IdentityId = table.Column<string>(nullable: true),
+                    City = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -235,8 +238,8 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Token = table.Column<string>(nullable: false),
-                    Expiration = table.Column<long>(nullable: false),
                     IdentityId = table.Column<string>(nullable: true),
+                    Expiration = table.Column<long>(nullable: false),
                     Ip = table.Column<string>(nullable: true),
                     Useragent = table.Column<string>(nullable: true)
                 },
@@ -256,11 +259,11 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    DriverId = table.Column<Guid>(nullable: false),
-                    ImageId = table.Column<string>(nullable: true),
                     LicensedFrom = table.Column<DateTime>(nullable: false),
                     LicensedTo = table.Column<DateTime>(nullable: false),
-                    UpdateTime = table.Column<DateTime>(nullable: false)
+                    ImageId = table.Column<string>(nullable: true),
+                    UpdateTime = table.Column<DateTime>(nullable: false),
+                    DriverId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -278,14 +281,14 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    CreationTime = table.Column<DateTime>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
-                    Distance = table.Column<double>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: false),
+                    CreationTime = table.Column<DateTime>(nullable: false),
                     DriverTakeTripTime = table.Column<DateTime>(nullable: false),
+                    StartTime = table.Column<DateTime>(nullable: false),
                     FinishTime = table.Column<DateTime>(nullable: false),
                     Price = table.Column<decimal>(nullable: false),
-                    StartTime = table.Column<DateTime>(nullable: false)
+                    Distance = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -309,16 +312,16 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    CreationTime = table.Column<DateTime>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
-                    Distance = table.Column<double>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: true),
-                    DriverTakeTripTime = table.Column<DateTime>(nullable: false),
-                    FinishTime = table.Column<DateTime>(nullable: false),
                     LastLat = table.Column<double>(nullable: false),
                     LastLon = table.Column<double>(nullable: false),
+                    Distance = table.Column<double>(nullable: false),
                     LastUpdateTime = table.Column<DateTime>(nullable: false),
-                    StartTime = table.Column<DateTime>(nullable: false)
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    DriverTakeTripTime = table.Column<DateTime>(nullable: false),
+                    StartTime = table.Column<DateTime>(nullable: false),
+                    FinishTime = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -342,11 +345,11 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
+                    Number = table.Column<string>(nullable: true),
+                    Model = table.Column<string>(nullable: true),
                     Brand = table.Column<string>(nullable: true),
                     Color = table.Column<string>(nullable: true),
-                    DriverId = table.Column<Guid>(nullable: false),
-                    Model = table.Column<string>(nullable: true),
-                    Number = table.Column<string>(nullable: true)
+                    DriverId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -364,11 +367,10 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
+                    TripHistoryId = table.Column<Guid>(nullable: false),
                     IsFrom = table.Column<bool>(nullable: false),
                     IsTo = table.Column<bool>(nullable: false),
-                    Latitude = table.Column<double>(nullable: false),
-                    Longitude = table.Column<double>(nullable: false),
-                    TripHistoryId = table.Column<Guid>(nullable: false)
+                    Location = table.Column<Point>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -385,11 +387,11 @@ namespace Taxi.Migrations
                 name: "TripHistoryRouteNodes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
                     Latitude = table.Column<double>(nullable: false),
                     Longitude = table.Column<double>(nullable: false),
-                    TripHistoryId = table.Column<Guid>(nullable: false),
-                    UpdateTime = table.Column<DateTime>(nullable: false)
+                    UpdateTime = table.Column<DateTime>(nullable: false),
+                    Id = table.Column<Guid>(nullable: false),
+                    TripHistoryId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -407,11 +409,10 @@ namespace Taxi.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(nullable: false),
+                    TripId = table.Column<Guid>(nullable: false),
                     IsFrom = table.Column<bool>(nullable: false),
                     IsTo = table.Column<bool>(nullable: false),
-                    Latitude = table.Column<double>(nullable: false),
-                    Longitude = table.Column<double>(nullable: false),
-                    TripId = table.Column<Guid>(nullable: false)
+                    Location = table.Column<Point>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -428,11 +429,11 @@ namespace Taxi.Migrations
                 name: "TripRouteNodes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
                     Latitude = table.Column<double>(nullable: false),
                     Longitude = table.Column<double>(nullable: false),
-                    TripId = table.Column<Guid>(nullable: false),
-                    UpdateTime = table.Column<DateTime>(nullable: false)
+                    UpdateTime = table.Column<DateTime>(nullable: false),
+                    Id = table.Column<Guid>(nullable: false),
+                    TripId = table.Column<Guid>(nullable: false)
                 },
                 constraints: table =>
                 {

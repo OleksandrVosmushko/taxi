@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetTopologySuite.Geometries;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,9 +16,7 @@ namespace Taxi.Entities
 
         public bool IsTo { get; set; }
 
-        public double Latitude { get; set; }
-
-        public double Longitude { get; set; }
+        public Point Location { get; set; }
 
         public TripHistory TripHistory { get; set; }
     }

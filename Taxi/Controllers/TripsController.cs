@@ -83,16 +83,8 @@ namespace Taxi.Controllers
             var tripToReturn = new UpdateResultTripDto()
             {
                 CustomerId = trip.CustomerId,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
+                From = Taxi.Helpers.Location.CartesianToSpherical(from.Location),
+                To = Taxi.Helpers.Location.CartesianToSpherical(to.Location),
                 LastUpdatePoint = new PlaceDto()
                 {
                     Longitude = trip.LastLon,
@@ -120,15 +112,13 @@ namespace Taxi.Controllers
                 {
                     new Place()
                     {
-                        Latitude = tripCreationDto.From.Latitude,
-                        Longitude = tripCreationDto.From.Longitude ,
-                        
+                        Location  = Taxi.Helpers.Location.pointFromLatLng(tripCreationDto.From.Latitude, tripCreationDto.From.Longitude),
+                       
                         IsFrom = true
                     },
                     new Place()
                     {
-                        Latitude = tripCreationDto.To.Latitude,
-                        Longitude = tripCreationDto.To.Longitude,
+                        Location  = Taxi.Helpers.Location.pointFromLatLng(tripCreationDto.To.Latitude, tripCreationDto.To.Longitude),
                         IsTo = true
                     }
                 }
@@ -197,16 +187,9 @@ namespace Taxi.Controllers
             var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
             var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
 
-            tripStatusDto.From = new PlaceDto
-            {
-                Longitude = from.Longitude,
-                Latitude = from.Latitude
-            };
-            tripStatusDto.To = new PlaceDto
-            {
-                Longitude = to.Longitude,
-                Latitude = to.Latitude
-            };
+            tripStatusDto.From = Taxi.Helpers.Location.CartesianToSpherical(from.Location);
+
+            tripStatusDto.To = Taxi.Helpers.Location.CartesianToSpherical(to.Location);
 
             return Ok(tripStatusDto);
         }
@@ -253,10 +236,8 @@ namespace Taxi.Controllers
             trip.StartTime = DateTime.UtcNow;
 
             var startpoint = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-
-            startpoint.Latitude = location.Latitude;
-
-            startpoint.Longitude = location.Longitude;
+            
+            startpoint.Location = Location.pointFromLatLng(location.Latitude, location.Longitude);
 
             #region StartNode
             var node = _mapper.Map<TripRouteNode>(location);
@@ -285,16 +266,8 @@ namespace Taxi.Controllers
             {
 
                 CustomerId = trip.CustomerId,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
+                From = Helpers.Location.CartesianToSpherical(from.Location),
+                To = Helpers.Location.CartesianToSpherical(to.Location),
                 FirstName = customer.Identity.FirstName,
                 LastName = customer.Identity.LastName                
             };
@@ -341,10 +314,8 @@ namespace Taxi.Controllers
 
             var finishPlace = trip.Places.FirstOrDefault(p => p.IsTo == true);
 
-            finishPlace.Latitude = finishTrip.Latitude;
-
-            finishPlace.Longitude = finishTrip.Longitude;
-
+            finishPlace.Location = Helpers.Location.pointFromLatLng(finishTrip.Latitude, finishTrip.Longitude);
+            
             var tripHistory = _mapper.Map<TripHistory>(trip);
 
             var places = new List<FinishTripPlace>();
@@ -376,16 +347,8 @@ namespace Taxi.Controllers
                 DriverId = tripHistory.DriverId,
 
                 Id = tripHistory.Id,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
+                From = Helpers.Location.CartesianToSpherical(from.Location),
+                To = Helpers.Location.CartesianToSpherical(to.Location),
                 FinishTime = tripHistory.FinishTime,
                 Price = tripHistory.Price,
                 Distance = tripHistory.Distance

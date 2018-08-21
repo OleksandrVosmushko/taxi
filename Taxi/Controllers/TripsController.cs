@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using GeoAPI.Geometries;
 using NetTopologySuite.Geometries;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
@@ -165,12 +166,57 @@ namespace Taxi.Controllers
             return NoContent();
         }
         
-        [HttpGet()]
+        [HttpGet(Name = "GetNearTrips")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(200)]
-        public IActionResult GetNearTrips(LatLonDto driverLocation)
+        public IActionResult GetNearTrips(GetTripsResourceParameters resourceParameters)
         {
-            return Ok(_tripsRepo.GetNearTrips(driverLocation.Longitude, driverLocation.Latitude));
+            var toReturn = _tripsRepo.GetNearTrips(resourceParameters.Longitude, resourceParameters.Latitude, resourceParameters);
+
+            var prevLink = toReturn.HasPrevious
+                ? CreateTripsResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetNearTrips)) : null;
+
+            var nextLink = toReturn.HasNext
+                ? CreateTripsResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetNearTrips)) : null;
+
+            Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(toReturn, resourceParameters, prevLink, nextLink));
+
+            return Ok(toReturn.ToList());
+        }
+
+        private string CreateTripsResourceUri(GetTripsResourceParameters resourceParameters, ResourceUriType type, string getMethodName)
+        {
+            switch (type)
+            {
+                case ResourceUriType.PrevoiusPage:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber - 1,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+                case ResourceUriType.NextPage:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber + 1,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+                case ResourceUriType.Current:
+                default:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+            }
         }
 
         [Authorize(Policy = "Customer")]

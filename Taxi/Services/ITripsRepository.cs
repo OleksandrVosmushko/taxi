@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Helpers;
+using Taxi.Models;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
@@ -20,7 +21,7 @@ namespace Taxi.Services
 
    //     bool UpdateTripLocation(double lon, double lat, Guid customerId);
 
-        List<TripDto> GetNearTrips(double lon, double lat);
+        PagedList<TripDto> GetNearTrips(double lon, double lat, PaginationParameters paginationParameters);
 
         Trip GetTripByDriver(Guid driverId, bool includeRoutes  = false);
         

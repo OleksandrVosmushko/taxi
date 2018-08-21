@@ -13,6 +13,7 @@ using Npgsql;
 using Taxi.Data;
 using Taxi.Entities;
 using Taxi.Helpers;
+using Taxi.Models;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
@@ -20,14 +21,13 @@ namespace Taxi.Services
     public class TripsRepository : ITripsRepository
     {
         private ApplicationDbContext _dataContext;
-        private ITripsLocationRepository _locationRepository;
         private IUsersRepository _userRepository;
 
 
-        public TripsRepository(ApplicationDbContext dataContext, ITripsLocationRepository locationRepository, IUsersRepository usersRepository)
+        public TripsRepository(ApplicationDbContext dataContext, 
+            IUsersRepository usersRepository)
         {
             _dataContext = dataContext;
-            _locationRepository = locationRepository;
             _userRepository = usersRepository;
         }
 
@@ -64,7 +64,7 @@ namespace Taxi.Services
             await _dataContext.SaveChangesAsync();
         }
 
-        public List<TripDto> GetNearTrips(double lon, double lat)
+        public PagedList<TripDto> GetNearTrips(double lon, double lat, PaginationParameters paginationParameters)
         {
             //probably change it
             //var trips = _dataContext.Places.Where(p => p.IsFrom == true)
@@ -73,8 +73,8 @@ namespace Taxi.Services
             List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
             sqlParameters.Add(new NpgsqlParameter("lon", lon));
             sqlParameters.Add(new NpgsqlParameter("lat", lat));
-            sqlParameters.Add(new NpgsqlParameter("items", 10));
-            sqlParameters.Add(new NpgsqlParameter("page", 1));
+            sqlParameters.Add(new NpgsqlParameter("items", paginationParameters.PageSize));
+            sqlParameters.Add(new NpgsqlParameter("page", paginationParameters.PageNumber));
             var trips = _dataContext.Trips.FromSql(query, sqlParameters.ToArray()).ToList();
             
             //var trips = _dataContext.Trips.Where(p => p.DriverId == null)
@@ -97,28 +97,19 @@ namespace Taxi.Services
                     To = Helpers.Location.PointToPlaceDto(t.To)
                 });
             }
-            return tripsDto;
+
+            var pagedList = new PagedList<TripDto>(tripsDto, _dataContext.Trips.Count(), paginationParameters.PageNumber, paginationParameters.PageSize);
+
+            return pagedList;
         }
 
         public Trip GetTrip(Guid customerId)
         {
-            var trip = _locationRepository.GetTripStartLocation(customerId);
-
-            if (trip != null)
-                return trip;
-
-            trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
+            var trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
             
             return trip;
         }
-
-        //public async Task UpdateTrip(Trip trip)
-        //{
-        //    _locationRepository.SetLastTripLocation(trip.CustomerId, trip);
-
-        //    await _dataContext.SaveChangesAsync();
-        //}
-
+        
         public async Task AddNode(TripRouteNode node)
         {
             await _dataContext.TripRouteNodes.AddAsync(node);
@@ -168,7 +159,6 @@ namespace Taxi.Services
             if (tripToRemove != null)
             {
                 _dataContext.Trips.Remove(tripToRemove);
-                _locationRepository.RemoveTripLocation(customerId);
                 _dataContext.SaveChanges();
             }
            
@@ -221,48 +211,6 @@ namespace Taxi.Services
 
             return true;
         }
-
-        public bool SetTrip(Trip trip)
-        {
-            try
-            {
-                if (trip.Id == default(Guid))
-                {
-                    var tr = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == trip.CustomerId);
-                    if (tr != null)
-                    {
-                        _dataContext.Remove(tr);
-                        _dataContext.SaveChanges();
-                        _dataContext.Add(trip);
-                    } else
-                    _dataContext.Add(trip);
-                }
-                else _dataContext.Update(trip);
-
-                _dataContext.SaveChanges();
-
-            } catch (Exception e)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        public bool UpdateTripLocation(double lon, double lat, Guid customerId)
-        {
-            var trip = _locationRepository.GetTripStartLocation(customerId);
-            if (trip == null)
-            {
-                trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
-            }
-
-            if (trip == null)
-                return false;
-
-            var from = trip.From;
-            from = Helpers.Location.pointFromLatLng(lat, lon);
-           // _locationRepository.SetLastTripLocation(customerId, trip);
-            return true;
-        }
+      
     }
 }

@@ -3,8 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 using Taxi.Data;
 using Taxi.Entities;
 using Taxi.Helpers;
@@ -18,13 +23,40 @@ namespace Taxi.Services
         private ITripsLocationRepository _locationRepository;
         private IUsersRepository _userRepository;
 
+
         public TripsRepository(ApplicationDbContext dataContext, ITripsLocationRepository locationRepository, IUsersRepository usersRepository)
         {
             _dataContext = dataContext;
             _locationRepository = locationRepository;
             _userRepository = usersRepository;
         }
-        
+
+        public void InsertTrip(Trip trip, double lat1, double lon1,double lat2,double lon2)
+        {
+            var query = string.Format(System.IO.File.ReadAllText("InsertTripQuery.txt"), lon1, lat1, lon2, lat2);
+            
+            List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
+            if (trip.Id == default(Guid))
+                trip.Id = Guid.NewGuid();
+            sqlParameters.Add(new NpgsqlParameter("Id", trip.Id));
+            sqlParameters.Add(new NpgsqlParameter("CustomerId", trip.CustomerId));
+            var did =(object) trip.DriverId ?? DBNull.Value;
+            sqlParameters.Add(new NpgsqlParameter("DriverId", did));
+            sqlParameters.Add(new NpgsqlParameter("LastLat", trip.LastLat));
+            sqlParameters.Add(new NpgsqlParameter("LastLon", trip.LastLon));
+            sqlParameters.Add(new NpgsqlParameter("Distance", trip.Distance));
+            sqlParameters.Add(new NpgsqlParameter("LastUpdateTime", trip.LastUpdateTime));
+            sqlParameters.Add(new NpgsqlParameter("CreationTime", trip.CreationTime));
+            sqlParameters.Add(new NpgsqlParameter("DriverTakeTripTime", trip.DriverTakeTripTime));
+            sqlParameters.Add(new NpgsqlParameter("StartTime", trip.StartTime));
+            sqlParameters.Add(new NpgsqlParameter("FinishTime", trip.FinishTime));
+            //sqlParameters.Add(new NpgsqlParameter("lon1", lon1));
+            //sqlParameters.Add(new NpgsqlParameter("lat1", lat1));
+            //sqlParameters.Add(new NpgsqlParameter("lon2", lon2));
+            //sqlParameters.Add(new NpgsqlParameter("lat2", lat2));
+            _dataContext.Database.ExecuteSqlCommand(query, sqlParameters);
+        }
+
         public async Task AddTripHistory(TripHistory tripHistory)
         {
             await _dataContext.TripHistories.AddAsync(tripHistory);
@@ -37,9 +69,18 @@ namespace Taxi.Services
             //probably change it
             //var trips = _dataContext.Places.Where(p => p.IsFrom == true)
             //    .OrderBy(d => d.Location.Distance(Helpers.Location.pointFromLatLng(lat, lon))).Include(t=> t.Trip);
-            var trips = _dataContext.Trips.Where(p => p.DriverId == null)
-                .OrderBy(d => d.Places.FirstOrDefault(p => p.IsFrom == true).Location.Distance(Helpers.Location.pointFromLatLng(lat, lon)))
-                .Include(l => l.Places).ToList();
+            var query = string.Format(System.IO.File.ReadAllText("GetNearQuery.txt"));
+            List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
+            sqlParameters.Add(new NpgsqlParameter("lon", lon));
+            sqlParameters.Add(new NpgsqlParameter("lat", lat));
+            sqlParameters.Add(new NpgsqlParameter("items", 10));
+            sqlParameters.Add(new NpgsqlParameter("page", 1));
+            var trips = _dataContext.Trips.FromSql(query, sqlParameters.ToArray()).ToList();
+            
+            //var trips = _dataContext.Trips.Where(p => p.DriverId == null)
+            //    .OrderBy(d => d.From.Distance(Helpers.Location.pointFromLatLng(lat, lon)))
+            //    .ToList();
+
 
             var tripsDto = new List<TripDto>();
 
@@ -52,8 +93,8 @@ namespace Taxi.Services
                     CustomerId = customer.Id,
                     FirstName = customer.Identity.FirstName,
                     LastName = customer.Identity.LastName,
-                    From = Helpers.Location.CartesianToSpherical(t.Places.FirstOrDefault(p => p.IsFrom == true).Location),
-                    To = Helpers.Location.CartesianToSpherical(t.Places.FirstOrDefault(p => p.IsTo == true).Location)
+                    From = Helpers.Location.PointToPlaceDto(t.From),
+                    To = Helpers.Location.PointToPlaceDto(t.To)
                 });
             }
             return tripsDto;
@@ -71,12 +112,12 @@ namespace Taxi.Services
             return trip;
         }
 
-        public async Task UpdateTrip(Trip trip)
-        {
-            _locationRepository.SetLastTripLocation(trip.CustomerId, trip);
+        //public async Task UpdateTrip(Trip trip)
+        //{
+        //    _locationRepository.SetLastTripLocation(trip.CustomerId, trip);
 
-            await _dataContext.SaveChangesAsync();
-        }
+        //    await _dataContext.SaveChangesAsync();
+        //}
 
         public async Task AddNode(TripRouteNode node)
         {
@@ -87,18 +128,17 @@ namespace Taxi.Services
         {
             if (!includeRoutes)
             {
-                return _dataContext.Trips.Include(t => t.Places).FirstOrDefault(t => t.DriverId == driverId);
+                return _dataContext.Trips.FirstOrDefault(t => t.DriverId == driverId);
             }
             else
             {
-                return _dataContext.Trips.Include(t => t.Places).Include(tr => tr.RouteNodes).FirstOrDefault(t => t.DriverId == driverId);
+                return _dataContext.Trips.Include(tr => tr.RouteNodes).FirstOrDefault(t => t.DriverId == driverId);
             }
         }
 
         public PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters)
         {
             var beforePaging = _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId)
-                .Include(o=>o.Places)
                 .OrderByDescending(h => h.FinishTime);
             return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
@@ -106,7 +146,6 @@ namespace Taxi.Services
         public PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverID, TripHistoryResourceParameters resourceParameters)
         {
             var beforePaging = _dataContext.TripHistories.Where(t => t.DriverId == DriverID)
-                .Include(o => o.Places)
                 .OrderByDescending(h => h.FinishTime);
             return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
@@ -133,6 +172,54 @@ namespace Taxi.Services
                 _dataContext.SaveChanges();
             }
            
+        }
+
+        public async Task<bool> UpdateTrip(Trip trip, PlaceDto from=null , PlaceDto to = null)
+        {
+            try
+            {
+                _dataContext.Update(trip);
+
+                _dataContext.SaveChanges();
+
+                if (from != null)
+                {
+                    var queryfrom = string.Format(System.IO.File.ReadAllText("UpdateFromQuery.txt"));
+
+                    List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
+
+                    sqlParameters.Add(new NpgsqlParameter("lon", from.Longitude));
+
+                    sqlParameters.Add(new NpgsqlParameter("lat", from.Latitude));
+
+                    sqlParameters.Add(new NpgsqlParameter("CustomerId", trip.CustomerId));
+
+                    await _dataContext.Database.ExecuteSqlCommandAsync(queryfrom, sqlParameters);
+                }
+
+                if (to != null)
+                {
+                    var queryto = string.Format(System.IO.File.ReadAllText("UpdateToQuery.txt"));
+
+                    List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
+
+                    sqlParameters.Add(new NpgsqlParameter("lon", to.Longitude));
+
+                    sqlParameters.Add(new NpgsqlParameter("lat", to.Latitude));
+
+                    sqlParameters.Add(new NpgsqlParameter("CustomerId", trip.CustomerId));
+
+                    await _dataContext.Database.ExecuteSqlCommandAsync(queryto, sqlParameters);
+                }
+                _dataContext.Entry(trip).Reload();
+            }
+            catch(Exception e)
+            {
+                
+                return false;
+            }
+
+            return true;
         }
 
         public bool SetTrip(Trip trip)
@@ -171,9 +258,9 @@ namespace Taxi.Services
 
             if (trip == null)
                 return false;
-        
-            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-            from.Location = Helpers.Location.pointFromLatLng(lat, lon);
+
+            var from = trip.From;
+            from = Helpers.Location.pointFromLatLng(lat, lon);
            // _locationRepository.SetLastTripLocation(customerId, trip);
             return true;
         }

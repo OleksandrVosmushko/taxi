@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180820135355_m")]
-    partial class m
+    [Migration("20180821072455_place")]
+    partial class place
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -253,26 +253,6 @@ namespace Taxi.Migrations
                     b.ToTable("DriverLicenses");
                 });
 
-            modelBuilder.Entity("Taxi.Entities.FinishTripPlace", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("IsFrom");
-
-                    b.Property<bool>("IsTo");
-
-                    b.Property<Point>("Location");
-
-                    b.Property<Guid>("TripHistoryId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TripHistoryId");
-
-                    b.ToTable("FinishTripPlaces");
-                });
-
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
                     b.Property<string>("Id")
@@ -285,26 +265,6 @@ namespace Taxi.Migrations
                     b.HasIndex("VehicleId");
 
                     b.ToTable("Pictures");
-                });
-
-            modelBuilder.Entity("Taxi.Entities.Place", b =>
-                {
-                    b.Property<Guid>("id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<bool>("IsFrom");
-
-                    b.Property<bool>("IsTo");
-
-                    b.Property<Point>("Location");
-
-                    b.Property<Guid>("TripId");
-
-                    b.HasKey("id");
-
-                    b.HasIndex("TripId");
-
-                    b.ToTable("Places");
                 });
 
             modelBuilder.Entity("Taxi.Entities.ProfilePicture", b =>
@@ -359,6 +319,8 @@ namespace Taxi.Migrations
 
                     b.Property<DateTime>("FinishTime");
 
+                    b.Property<Point>("From");
+
                     b.Property<double>("LastLat");
 
                     b.Property<double>("LastLon");
@@ -366,6 +328,8 @@ namespace Taxi.Migrations
                     b.Property<DateTime>("LastUpdateTime");
 
                     b.Property<DateTime>("StartTime");
+
+                    b.Property<Point>("To");
 
                     b.HasKey("Id");
 
@@ -395,9 +359,13 @@ namespace Taxi.Migrations
 
                     b.Property<DateTime>("FinishTime");
 
+                    b.Property<Point>("From");
+
                     b.Property<decimal>("Price");
 
                     b.Property<DateTime>("StartTime");
+
+                    b.Property<Point>("To");
 
                     b.HasKey("Id");
 
@@ -545,27 +513,11 @@ namespace Taxi.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
-            modelBuilder.Entity("Taxi.Entities.FinishTripPlace", b =>
-                {
-                    b.HasOne("Taxi.Entities.TripHistory", "TripHistory")
-                        .WithMany("Places")
-                        .HasForeignKey("TripHistoryId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
             modelBuilder.Entity("Taxi.Entities.Picture", b =>
                 {
                     b.HasOne("Taxi.Entities.Vehicle", "Vehicle")
                         .WithMany("Pictures")
                         .HasForeignKey("VehicleId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("Taxi.Entities.Place", b =>
-                {
-                    b.HasOne("Taxi.Entities.Trip", "Trip")
-                        .WithMany("Places")
-                        .HasForeignKey("TripId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

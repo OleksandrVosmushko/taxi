@@ -19,6 +19,7 @@ namespace Taxi.Helpers
             //context.Database.EnsureDeleted();
             //  context.Database.EnsureCreated();
             context.Database.Migrate();
+            
             if (userManager.FindByNameAsync("1@mail.ru").Result == null)
             {
                 var id = "d01ba177-4d21-4d75-94ca-5702ecda7487";

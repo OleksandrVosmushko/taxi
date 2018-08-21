@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Geolocation;
 using Google.Common.Geometry;
@@ -35,7 +36,17 @@ namespace Taxi.Helpers
                 EarthRadiusM * Math.Sin(lat));
         }
 
-
+        public static PlaceDto PointToPlaceDto(Point p)
+        {
+            var s = p.SRID;
+            if (s != 4326)
+                return null;
+            return new PlaceDto()
+            {
+                Longitude = p.X,
+                Latitude = p.Y
+            };
+        }
         public static PlaceDto CartesianToSpherical(Point p)
         {
             //if (cartCoords.X == 0)

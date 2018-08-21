@@ -23,12 +23,9 @@ namespace Taxi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Trip>()
-            .HasMany(c => c.Places)
-            .WithOne(a => a.Trip)
-            .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.HasPostgresExtension("postgis");
             base.OnModelCreating(modelBuilder);
+            
         }
         public DbSet<Customer> Customers { get; set; }
 
@@ -37,9 +34,7 @@ namespace Taxi.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<Trip> Trips { get; set; }
-
-        public DbSet<Place> Places { get; set; }
-
+        
         public DbSet<Vehicle> Vehicles { get; set; }
 
         public DbSet<Picture> Pictures { get; set; }
@@ -47,9 +42,7 @@ namespace Taxi.Data
         public DbSet<ProfilePicture> ProfilePictures { get; set; }
 
         public DbSet<TripHistory> TripHistories { get; set; }
-
-        public DbSet<FinishTripPlace> FinishTripPlaces { get; set; }
-
+        
         public DbSet<TripRouteNode> TripRouteNodes { get; set; }
 
         public DbSet<DriverLicense> DriverLicenses { get; set; }

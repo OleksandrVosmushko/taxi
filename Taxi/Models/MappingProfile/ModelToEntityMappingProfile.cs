@@ -54,16 +54,16 @@ namespace Taxi.Models.MappingProfile
             CreateMap<Vehicle, VehicleToReturnDto>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             
             CreateMap<Trip, TripHistory>().ForMember(x => x.Id, opt => opt.Ignore());
-
-            CreateMap<Place, FinishTripPlace>().ForMember(x => x.Id, opt => opt.Ignore());
-
+            
             CreateMap<LatLonDto, TripRouteNode>();
+
+            CreateMap<LatLonDto, PlaceDto>();
 
             CreateMap<PlaceDto, TripRouteNode>();//unused
 
             CreateMap<TripRouteNode, RouteNodeDto>();
 
-            CreateMap<Trip, TripStatusDto>();
+            CreateMap<Trip, TripStatusDto>().ForMember(x => x.From, opt => opt.Ignore()).ForMember(x => x.To, opt => opt.Ignore());
 
             CreateMap<DriverLicense, DriverLicenseDto>();
 

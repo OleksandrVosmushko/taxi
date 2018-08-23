@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Runtime.Internal;
 
 namespace Taxi.Entities
 {
@@ -16,5 +17,7 @@ namespace Taxi.Entities
         public Trip CurrentTrip { get; set; }
 
         public List<TripHistory> TripHistories { get; set; } = new List<TripHistory>();
+
+        public List<RefundRequest> RefundRequests { get; set; } = new List<RefundRequest>();
     }
 }

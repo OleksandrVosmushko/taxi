@@ -81,7 +81,7 @@ namespace Taxi
             services.AddScoped<ITripsRepository, TripsRepository>();
             services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
             services.AddScoped<IUploadService, UploadSevice>();
-
+            services.AddScoped<IGoogleMapsService, GoogleMapsService>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper, UrlHelper>(implamantationFactory =>
             {
@@ -116,7 +116,12 @@ namespace Taxi
 
                 options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
-            
+
+            services.Configure<GoogleApiOptions>(opts =>
+            {
+                opts.ApiKey = Configuration["GOOGLE_API_KEY"];
+            });
+
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,

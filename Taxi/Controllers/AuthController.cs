@@ -274,6 +274,8 @@ namespace Taxi.Controllers
         public async Task<IActionResult> Confirm(string uid, string token)
         {
             var user = await _userManager.FindByIdAsync(uid);
+            if (user == null)
+                return NotFound();
             var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
             //change links
             if (confirmResult.Succeeded)

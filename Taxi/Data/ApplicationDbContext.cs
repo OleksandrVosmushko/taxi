@@ -50,5 +50,9 @@ namespace Taxi.Data
         public DbSet<Admin> Admins { get; set; }
 
         public DbSet<TripHistoryRouteNode> TripHistoryRouteNodes { get; set; }
+
+        public DbSet<RefundRequest> RefundRequests { get; set; }
+
+        public DbSet<AdminResponce> AdminResponces { get; set; }
     }
 }

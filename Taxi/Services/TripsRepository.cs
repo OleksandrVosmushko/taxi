@@ -33,12 +33,16 @@ namespace Taxi.Services
 
         public void InsertTrip(Trip trip, double lat1, double lon1,double lat2,double lon2)
         {
-            var query = string.Format(System.IO.File.ReadAllText("InsertTripQuery.txt"), lon1, lat1, lon2, lat2);
+            var query = string.Format(System.IO.File.ReadAllText("InsertTripQuery.txt"));
             
             List<NpgsqlParameter> sqlParameters = new List<NpgsqlParameter>();
             if (trip.Id == default(Guid))
                 trip.Id = Guid.NewGuid();
             sqlParameters.Add(new NpgsqlParameter("Id", trip.Id));
+            sqlParameters.Add(new NpgsqlParameter("lon1", lon1));
+            sqlParameters.Add(new NpgsqlParameter("lat1", lat1));
+            sqlParameters.Add(new NpgsqlParameter("lon2", lon2));
+            sqlParameters.Add(new NpgsqlParameter("lat2", lat2));
             sqlParameters.Add(new NpgsqlParameter("CustomerId", trip.CustomerId));
             var did =(object) trip.DriverId ?? DBNull.Value;
             sqlParameters.Add(new NpgsqlParameter("DriverId", did));
@@ -50,6 +54,7 @@ namespace Taxi.Services
             sqlParameters.Add(new NpgsqlParameter("DriverTakeTripTime", trip.DriverTakeTripTime));
             sqlParameters.Add(new NpgsqlParameter("StartTime", trip.StartTime));
             sqlParameters.Add(new NpgsqlParameter("FinishTime", trip.FinishTime));
+            sqlParameters.Add(new NpgsqlParameter("Price", trip.Price));
             //sqlParameters.Add(new NpgsqlParameter("lon1", lon1));
             //sqlParameters.Add(new NpgsqlParameter("lat1", lat1));
             //sqlParameters.Add(new NpgsqlParameter("lon2", lon2));
@@ -81,7 +86,6 @@ namespace Taxi.Services
             //    .OrderBy(d => d.From.Distance(Helpers.Location.pointFromLatLng(lat, lon)))
             //    .ToList();
 
-
             var tripsDto = new List<TripDto>();
 
             foreach (var t in trips)
@@ -103,11 +107,12 @@ namespace Taxi.Services
             return pagedList;
         }
 
-        public Trip GetTrip(Guid customerId)
+        public Trip GetTrip(Guid customerId, bool includeRoutes = false)
         {
-            var trip = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
+            if (!includeRoutes) return _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
             
-            return trip;
+            return _dataContext.Trips.Include(t=>t.RouteNodes).FirstOrDefault(t => t.CustomerId == customerId);
+            
         }
         
         public async Task AddNode(TripRouteNode node)

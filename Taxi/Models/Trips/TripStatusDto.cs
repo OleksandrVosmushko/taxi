@@ -20,6 +20,10 @@ namespace Taxi.Models.Trips
         public PlaceDto From { get; set; }
 
         public PlaceDto To { get; set; }
-        
+
+        public double Distance { get; set; }
+
+        public Decimal Price { get; set; }
+
     }
 }

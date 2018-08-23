@@ -30,6 +30,8 @@ namespace Taxi.Entities
 
         public double Distance { get; set; }
 
+        public Decimal Price { get; set; }
+
         public DateTime LastUpdateTime { get; set; }
 
         public DateTime CreationTime { get; set; }

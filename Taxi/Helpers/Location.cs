@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using Geolocation;
-using Google.Common.Geometry;
 using NetTopologySuite.Geometries;
-using Taxi.Models;
 using Taxi.Models.Trips;
 
 namespace Taxi.Helpers
@@ -47,31 +41,31 @@ namespace Taxi.Helpers
                 Latitude = p.Y
             };
         }
-        public static PlaceDto CartesianToSpherical(Point p)
-        {
-            //if (cartCoords.X == 0)
-            //    cartCoords.X = double.Epsilon;
-            //var outRadius = Math.Sqrt((cartCoords.X * cartCoords.X)
-            //                + (cartCoords.Y * cartCoords.Y)
-            //                + (cartCoords.Z * cartCoords.Z));
-            //var outPolar = Math.Atan(cartCoords.Z / cartCoords.X);
-            //if (cartCoords.X < 0)
-            //    outPolar += Math.PI;
-            //  outElevation = Mathf.Asin(cartCoords.y / outRadius);
-            if (p.Coordinate.X == 0)
-                p.Coordinate.X = double.Epsilon;
-                var radius = Math.Sqrt(p.Coordinate.X * p.Coordinate.X +
-                p.Coordinate.Y * p.Coordinate.Y +
-                p.Coordinate.Z * p.Coordinate.Z);
-            var latitude = Math.Asin(p.Coordinate.Z / radius);
-            var longitude = Math.Atan2(p.Coordinate.Y, p.Coordinate.X);
-            latitude = ConvertToDegree(latitude);
-            longitude = ConvertToDegree(longitude);
-            return new PlaceDto()
-            {
-                Latitude = latitude,
-                Longitude = longitude
-            };
-        }
+        //public static PlaceDto CartesianToSpherical(Point p)
+        //{
+        //    //if (cartCoords.X == 0)
+        //    //    cartCoords.X = double.Epsilon;
+        //    //var outRadius = Math.Sqrt((cartCoords.X * cartCoords.X)
+        //    //                + (cartCoords.Y * cartCoords.Y)
+        //    //                + (cartCoords.Z * cartCoords.Z));
+        //    //var outPolar = Math.Atan(cartCoords.Z / cartCoords.X);
+        //    //if (cartCoords.X < 0)
+        //    //    outPolar += Math.PI;
+        //    //  outElevation = Mathf.Asin(cartCoords.y / outRadius);
+        //    if (p.Coordinate.X == 0)
+        //        p.Coordinate.X = double.Epsilon;
+        //        var radius = Math.Sqrt(p.Coordinate.X * p.Coordinate.X +
+        //        p.Coordinate.Y * p.Coordinate.Y +
+        //        p.Coordinate.Z * p.Coordinate.Z);
+        //    var latitude = Math.Asin(p.Coordinate.Z / radius);
+        //    var longitude = Math.Atan2(p.Coordinate.Y, p.Coordinate.X);
+        //    latitude = ConvertToDegree(latitude);
+        //    longitude = ConvertToDegree(longitude);
+        //    return new PlaceDto()
+        //    {
+        //        Latitude = latitude,
+        //        Longitude = longitude
+        //    };
+        //}
     }
 }

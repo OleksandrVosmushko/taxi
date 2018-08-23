@@ -68,6 +68,8 @@ namespace Taxi.Models.MappingProfile
             CreateMap<DriverLicense, DriverLicenseDto>();
 
             CreateMap<TripRouteNode, TripHistoryRouteNode>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<RefundMessageDto, RefundRequest>();
         }
     }
 }

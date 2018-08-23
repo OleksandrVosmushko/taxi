@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Auth.AccessControlPolicy;
+using GeoAPI.Geometries;
+using NetTopologySuite.Geometries;
 using Taxi.Entities;
 using Taxi.Helpers;
 using Taxi.Models;
@@ -20,16 +23,19 @@ namespace Taxi.Controllers
         private IMapper _mapper;
         private IUsersRepository _usersRepository;
         private IUrlHelper _urlHelper;
+        private IGoogleMapsService _googleMapsService;
 
         public TripsController(IMapper mapper,
             ITripsRepository tripsRepo,
             IUsersRepository usersRepository,
-            IUrlHelper urlHelper)
+            IUrlHelper urlHelper,
+            IGoogleMapsService googleMapsService)
         {
             _tripsRepo = tripsRepo;
             _mapper = mapper;
             _usersRepository = usersRepository;
             _urlHelper = urlHelper;
+            _googleMapsService = googleMapsService;
         }
         
         [Authorize(Policy = "Driver")]
@@ -64,7 +70,7 @@ namespace Taxi.Controllers
 
                 await _tripsRepo.AddNode(node);
 
-                trip.Distance += delta;
+            //    trip.Distance += delta;
 
                 trip.LastLat = latLon.Latitude;
 
@@ -75,68 +81,90 @@ namespace Taxi.Controllers
                 await _tripsRepo.UpdateTrip(trip);
 
             }
-            
-            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-            var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
+
+            var from = trip.From;
+            var to = trip.To;
 
 
             var tripToReturn = new UpdateResultTripDto()
             {
                 CustomerId = trip.CustomerId,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
+                From = Taxi.Helpers.Location.PointToPlaceDto(from),
+                To = Taxi.Helpers.Location.PointToPlaceDto(to),
                 LastUpdatePoint = new PlaceDto()
                 {
                     Longitude = trip.LastLon,
                     Latitude = trip.LastLat
                 },
-                TraveledDistance = trip.Distance
+                //TraveledDistance = trip.Distance
             };
 
             return Ok(tripToReturn);
         }
-
+         
         [Authorize(Policy = "Customer")]
-        [HttpPost()]
-        [ProducesResponseType(204)]
-        public IActionResult CreateTripForCustomer([FromBody]TripCreationDto tripCreationDto)
+        [HttpPost("info")]
+        public async Task<IActionResult> CreateTripForCustomerInfo([FromBody]TripCreationDto tripCreationDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
+
+            //if (customer.CurrentTrip != null)
+            //    _tripsRepo.RemoveTrip(customer.Id);
+
             var tripEntity = new Trip()
             {
-                CreationTime = DateTime.UtcNow,
-                CustomerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value),
-                Places = new List<Place>
+               // CreationTime = DateTime.UtcNow,
+                CustomerId = customer.Id,
+                From = Helpers.Location.pointFromLatLng(tripCreationDto.From.Latitude, tripCreationDto.From.Longitude),
+                To = Helpers.Location.pointFromLatLng(tripCreationDto.To.Latitude, tripCreationDto.To.Longitude)
+            };
+            
+            var directions = await _googleMapsService.GetDirections(tripCreationDto.From.Latitude,
+                tripCreationDto.From.Longitude,
+                tripCreationDto.To.Latitude,
+                tripCreationDto.To.Longitude);
+
+            double length = 0;
+
+            foreach (var r in directions.Routes)
+            {
+                foreach (var l in r.Legs)
                 {
-                    new Place()
-                    {
-                        Latitude = tripCreationDto.From.Latitude,
-                        Longitude = tripCreationDto.From.Longitude ,
-                        
-                        IsFrom = true
-                    },
-                    new Place()
-                    {
-                        Latitude = tripCreationDto.To.Latitude,
-                        Longitude = tripCreationDto.To.Longitude,
-                        IsTo = true
-                    }
+                    length += l.Distance.Value;
                 }
+            }
+
+            if (Math.Abs(length) < double.Epsilon)
+                return BadRequest("No route to destination");
+
+            length /= 1000;
+
+
+            tripEntity.Distance = length;
+            tripEntity.Price = 0;
+            #region Responce
+
+            var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
+            
+            tripStatusDto.From = new PlaceDto()
+            {
+                Latitude = tripCreationDto.From.Latitude,
+                Longitude = tripCreationDto.From.Longitude
             };
 
-            _tripsRepo.SetTrip(tripEntity);
+            tripStatusDto.To = new PlaceDto()
+            {
+                Latitude = tripCreationDto.To.Latitude,
+                Longitude = tripCreationDto.To.Longitude
+            };
 
-            return NoContent();
+            return Ok(tripStatusDto);
+
+
+            #endregion
         }
 
         [Authorize(Policy = "Customer")]
@@ -151,6 +179,17 @@ namespace Taxi.Controllers
                 return BadRequest();
             }
 
+            var trip = _tripsRepo.GetTrip(Guid.Parse(customerid));
+
+            if (trip == null)
+                return NotFound();
+
+            if (trip.DriverId != null)
+            {
+                ModelState.AddModelError(nameof(Trip), "Driver already assigned");
+                return BadRequest(ModelState);
+            }
+            //TODO : refund
             _tripsRepo.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
@@ -159,26 +198,223 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Customer")]
         [HttpPut("from")]
         [ProducesResponseType(204)]
-        public IActionResult UpdateTripStartLocation([FromBody]LatLonDto location)
+        public async Task<IActionResult> UpdateTripStartLocation([FromBody]LatLonDto location)
         {
             if (!ModelState.IsValid)
                 return BadRequest();
             var customerId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value);
 
-            var res = _tripsRepo.UpdateTripLocation(location.Longitude, location.Latitude, customerId);
+            var trip = _tripsRepo.GetTrip(customerId);
+
+            if (trip == null)
+                return NotFound();
+
+            var res = await _tripsRepo.UpdateTrip(trip, Mapper.Map<PlaceDto>(location));
 
             if (res == false)
                 return BadRequest();
 
             return NoContent();
         }
-        
-        [HttpGet()]
+
+        [Authorize(Policy = "Customer")]
+        [HttpPost("customer/approvefinish")]
+        public async Task<IActionResult> ApproveFinish()
+        {
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
+
+            if (customer?.CurrentTrip == null)
+            {
+                return NotFound();
+            }
+
+            if (customer.CurrentTrip.FinishTime == default(DateTime))
+            {
+               ModelState.AddModelError(nameof(Trip), "Trip not finished");
+                return BadRequest(ModelState);
+            }
+
+            var trip = _tripsRepo.GetTrip(customer.Id, true);
+            // TODO:Money to Driver
+            var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
+
+            await _tripsRepo.AddTripHistory(tripHistory);
+
+            _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+
+            var from = tripHistory.From;
+            var to = tripHistory.To;
+
+            var toReturn = new TripHistoryDto()
+            {
+                CustomerId = tripHistory.CustomerId,
+                DriverId = tripHistory.DriverId,
+
+                Id = tripHistory.Id,
+                From = Helpers.Location.PointToPlaceDto(from),
+                To = Helpers.Location.PointToPlaceDto(to),
+                FinishTime = tripHistory.FinishTime,
+                Price = tripHistory.Price,
+                Distance = tripHistory.Distance
+            };//check if correctly maps from nullable
+            
+            return Ok(toReturn);
+        }
+
+        [Authorize(Policy = "Customer")]
+        [HttpPost("customer/requestrefund")]
+        public async Task<IActionResult> RequestRefund([FromBody]RefundMessageDto refundMessage)
+        {
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
+
+            var trip = _tripsRepo.GetTrip(customer.Id, true);
+            if (trip == null)
+            {
+                return NotFound();
+            }
+
+            
+            var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
+
+            await _tripsRepo.AddTripHistory(tripHistory);
+
+            var refundRequest = Mapper.Map<RefundRequest>(refundMessage);
+
+            refundRequest.CreationTime = DateTime.UtcNow;
+
+            refundRequest.CustomerId = customer.Id;
+
+            refundRequest.TripHistoryId = tripHistory.Id;
+            
+            _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+
+            //TODO: Admin check refund
+
+            return Ok();
+        }
+
+        [Authorize(Policy = "Customer")]
+        [HttpPost()]
+        public async Task<IActionResult> CreateTripForCustomer([FromBody]TripCreationDto tripCreationDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
+
+            //if (customer.CurrentTrip != null)
+            //    _tripsRepo.RemoveTrip(customer.Id);
+
+            if (customer.CurrentTrip != null)
+                return BadRequest("Already has trip");
+
+            var tripEntity = new Trip()
+            {
+                CreationTime = DateTime.UtcNow,
+                CustomerId = customer.Id,
+                From = Helpers.Location.pointFromLatLng(tripCreationDto.From.Latitude, tripCreationDto.From.Longitude),
+                To = Helpers.Location.pointFromLatLng(tripCreationDto.To.Latitude, tripCreationDto.To.Longitude)
+            };
+            
+            #region CalcLength
+
+            var directions = await _googleMapsService.GetDirections(tripCreationDto.From.Latitude,
+                tripCreationDto.From.Longitude,
+                tripCreationDto.To.Latitude,
+                tripCreationDto.To.Longitude);
+
+            double length = 0;
+
+            foreach (var r in directions.Routes)
+            {
+                foreach (var l in r.Legs)
+                {
+                    length += l.Distance.Value;
+                }
+            }
+
+            if (Math.Abs(length) < double.Epsilon)
+                return BadRequest("No route to destination");
+
+            length /= 1000;
+
+            tripEntity.Distance = length;
+
+            #endregion
+
+            _tripsRepo.InsertTrip(tripEntity, tripCreationDto.From.Latitude,
+                tripCreationDto.From.Longitude,
+                tripCreationDto.To.Latitude, tripCreationDto.To.Longitude);
+
+            #region Responce
+
+            var trip = _tripsRepo.GetTrip(customer.Id);
+
+            var tripStatusDto = Mapper.Map<TripStatusDto>(trip);
+
+            var from = trip.From;
+            var to = trip.To;
+
+            tripStatusDto.From = Taxi.Helpers.Location.PointToPlaceDto(from);
+
+            tripStatusDto.To = Taxi.Helpers.Location.PointToPlaceDto(to);
+
+            return Ok(tripStatusDto);
+
+            #endregion
+        }
+
+        [HttpGet(Name = "GetNearTrips")]
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(200)]
-        public IActionResult GetNearTrips(LatLonDto driverLocation)
+        public IActionResult GetNearTrips(GetTripsResourceParameters resourceParameters)
         {
-            return Ok(_tripsRepo.GetNearTrips(driverLocation.Longitude, driverLocation.Latitude));
+            var toReturn = _tripsRepo.GetNearTrips(resourceParameters.Longitude, resourceParameters.Latitude, resourceParameters);
+
+            var prevLink = toReturn.HasPrevious
+                ? CreateTripsResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetNearTrips)) : null;
+
+            var nextLink = toReturn.HasNext
+                ? CreateTripsResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetNearTrips)) : null;
+
+            Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(toReturn, resourceParameters, prevLink, nextLink));
+
+            return Ok(toReturn.ToList());
+        }
+
+        private string CreateTripsResourceUri(GetTripsResourceParameters resourceParameters, ResourceUriType type, string getMethodName)
+        {
+            switch (type)
+            {
+                case ResourceUriType.PrevoiusPage:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber - 1,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+                case ResourceUriType.NextPage:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber + 1,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+                case ResourceUriType.Current:
+                default:
+                    return _urlHelper.Link(getMethodName,
+                        new
+                        {
+                            pageNumber = resourceParameters.PageNumber,
+                            pageSize = resourceParameters.PageSize,
+                            longitude = resourceParameters.Longitude,
+                            latitude = resourceParameters.Latitude
+                        });
+            }
         }
 
         [Authorize(Policy = "Customer")]
@@ -194,19 +430,12 @@ namespace Taxi.Controllers
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(trip);
 
-            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-            var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
+            var from = trip.From;
+            var to = trip.To;
 
-            tripStatusDto.From = new PlaceDto
-            {
-                Longitude = from.Longitude,
-                Latitude = from.Latitude
-            };
-            tripStatusDto.To = new PlaceDto
-            {
-                Longitude = to.Longitude,
-                Latitude = to.Latitude
-            };
+            tripStatusDto.From = Taxi.Helpers.Location.PointToPlaceDto(from);
+
+            tripStatusDto.To = Taxi.Helpers.Location.PointToPlaceDto(to);
 
             return Ok(tripStatusDto);
         }
@@ -214,7 +443,7 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
         [ProducesResponseType(204)]
-        public IActionResult AddDriverToTrip(Guid customerId)
+        public async Task<IActionResult> AddDriverToTrip(Guid customerId)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -230,8 +459,10 @@ namespace Taxi.Controllers
 
             trip.DriverTakeTripTime = DateTime.UtcNow;
 
-            _tripsRepo.SetTrip(trip);
+            var res = await _tripsRepo.UpdateTrip(trip);
 
+            if (res != true)
+                return BadRequest();
             return NoContent();
         }
         
@@ -251,13 +482,7 @@ namespace Taxi.Controllers
                 return BadRequest();
 
             trip.StartTime = DateTime.UtcNow;
-
-            var startpoint = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-
-            startpoint.Latitude = location.Latitude;
-
-            startpoint.Longitude = location.Longitude;
-
+            
             #region StartNode
             var node = _mapper.Map<TripRouteNode>(location);
 
@@ -267,7 +492,7 @@ namespace Taxi.Controllers
 
             await _tripsRepo.AddNode(node);
 
-            trip.Distance = 0;
+          //  trip.Distance = 0;
 
             trip.LastLat = location.Latitude;
 
@@ -276,25 +501,19 @@ namespace Taxi.Controllers
             trip.LastUpdateTime = node.UpdateTime;
             #endregion
 
-            _tripsRepo.SetTrip(trip);
+            var res = await _tripsRepo.UpdateTrip(trip, Mapper.Map<PlaceDto>(location));
 
-            var from = trip.Places.FirstOrDefault(p => p.IsFrom == true);
-            var to = trip.Places.FirstOrDefault(p => p.IsTo == true);
+            if (res != true)
+                return BadRequest();
+            
+            var from = trip.From;
+            var to = trip.To;
             var customer = _usersRepository.GetCustomerById(trip.CustomerId);
             var toReturn = new TripDto()
             {
-
                 CustomerId = trip.CustomerId,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
+                From = Helpers.Location.PointToPlaceDto(from),
+                To = Helpers.Location.PointToPlaceDto(to),
                 FirstName = customer.Identity.FirstName,
                 LastName = customer.Identity.LastName                
             };
@@ -329,7 +548,7 @@ namespace Taxi.Controllers
 
             var delta = Helpers.Location.CalculateKilometersDistance(trip.LastLat, trip.LastLon, finishTrip.Latitude, finishTrip.Longitude);
 
-            trip.Distance += delta;
+            //trip.Distance += delta;
 
             trip.LastLat = node.Latitude;
 
@@ -337,55 +556,22 @@ namespace Taxi.Controllers
 
             trip.LastUpdateTime = node.UpdateTime;
 
+            var res = await _tripsRepo.UpdateTrip(trip, null, Mapper.Map<PlaceDto>(finishTrip));
+
+            if (res == false)
+                return BadRequest();
             #endregion
 
-            var finishPlace = trip.Places.FirstOrDefault(p => p.IsTo == true);
+            var tripStatusDto = Mapper.Map<TripStatusDto>(trip);
 
-            finishPlace.Latitude = finishTrip.Latitude;
+            var from = trip.From;
+            var to = trip.To;
 
-            finishPlace.Longitude = finishTrip.Longitude;
+            tripStatusDto.From = Taxi.Helpers.Location.PointToPlaceDto(from);
 
-            var tripHistory = _mapper.Map<TripHistory>(trip);
+            tripStatusDto.To = Taxi.Helpers.Location.PointToPlaceDto(to);
 
-            var places = new List<FinishTripPlace>();
-
-            foreach(var place in trip.Places)
-            {
-                places.Add(_mapper.Map<FinishTripPlace>(place));
-            }
-            tripHistory.Places = places;
-            tripHistory.RouteNodes= trip.RouteNodes;
-            //TODO : CalculatePrice
-            tripHistory.Price = 0;
-
-            await _tripsRepo.AddTripHistory(tripHistory);
-
-            _tripsRepo.RemoveTrip(trip.CustomerId);
-
-            var from = tripHistory.Places.FirstOrDefault(p => p.IsFrom == true);
-            var to = tripHistory.Places.FirstOrDefault(p => p.IsTo == true);
-
-            var toReturn = new TripHistoryDto()
-            {
-                CustomerId = tripHistory.CustomerId,
-                DriverId = tripHistory.DriverId,
-
-                Id = tripHistory.Id,
-                From = new PlaceDto
-                {
-                    Longitude = from.Longitude,
-                    Latitude = from.Latitude
-                },
-                To = new PlaceDto
-                {
-                    Longitude = to.Longitude,
-                    Latitude = to.Latitude
-                },
-                FinishTime = tripHistory.FinishTime,
-                Price = tripHistory.Price,
-                Distance = tripHistory.Distance
-            };//check if correctly maps from nullable
-            return Ok(toReturn);
+            return Ok(tripStatusDto);
         }
     }
 }

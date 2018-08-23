@@ -266,5 +266,43 @@ namespace Taxi.Auth
                 await _repository.DeleteRefleshToken(t);
             }
         }
+
+        public async Task<ClaimsIdentity> GenerateClaimsIdentityForRegistration(string userName, string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+
+            var allClaims = (await _userManager.GetClaimsAsync(user)).ToList();
+
+
+            var idClaims = new List<Claim>();
+
+            var customerIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.CustomerId);
+
+            var driverIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId);
+
+            var adminIdClaim = (allClaims).FirstOrDefault(c => c.Type == Constants.Strings.JwtClaimIdentifiers.AdminId);
+
+            if (adminIdClaim != null)
+            {
+                idClaims.Add(adminIdClaim);
+            }
+
+            if (customerIdClaim != null)
+            {
+                idClaims.Add(customerIdClaim);
+            }
+
+            if (driverIdClaim != null)
+            {
+                idClaims.Add(driverIdClaim);
+            }
+
+            ClaimsIdentity identity = new ClaimsIdentity(new GenericIdentity(userName, "Token"), new[]
+            {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Id, id)
+            }.Union(idClaims));
+
+            return identity;
+        }
     }
 }

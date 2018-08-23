@@ -76,8 +76,8 @@ namespace Taxi.Controllers
             foreach(var t in trips)
             {
 
-                var from = t.Places.FirstOrDefault(p => p.IsFrom == true);
-                var to = t.Places.FirstOrDefault(p => p.IsTo == true);
+                var from = t.From;
+                var to = t.To;
 
                 tripsToReturn.Add(new TripHistoryDto()
                 {
@@ -85,16 +85,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.PointToPlaceDto(from),
+                    To = Helpers.Location.PointToPlaceDto(to),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance
@@ -179,8 +171,8 @@ namespace Taxi.Controllers
 
             foreach (var t in trips)
             {
-                var from = t.Places.FirstOrDefault(p => p.IsFrom == true);
-                var to = t.Places.FirstOrDefault(p => p.IsTo == true);
+                var from = t.From;
+                var to = t.To;
                 
                 tripsToReturn.Add(new TripHistoryDto()
                 {
@@ -188,16 +180,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.PointToPlaceDto(from),
+                    To = Helpers.Location.PointToPlaceDto(to),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance

@@ -17,6 +17,7 @@ using Taxi.Services;
 using Taxi.Models.Customers;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace Taxi.Controllers
 {
@@ -84,6 +85,27 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt)); ;
         }
 
+        [HttpPost("driver/signuptoken")]
+        public async Task<IActionResult> GetDriverRegistrationToken([FromBody] CreditionalsDto credentials)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var identity = await GetRegistrationIdentity(credentials.UserName, credentials.Password);
+            if (identity == null)
+            {
+                return BadRequest(Errors.AddErrorToModelState("login_failure", "Invalid username or password.", ModelState));
+            }
+            var driver = _userRepository.GetDriverByIdentityId(identity.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.Id).Value);
+
+            if (driver == null)
+            {
+                return NotFound();
+            }
+
+            var jwt = await Tokens.GenerateRegistrationJwt(identity, _jwtFactory, credentials.UserName, _jwtOptions, driver.Id);
+
+            return Ok(JsonConvert.DeserializeObject(jwt));
+        }
 
         [Authorize(Policy = "Customer")]
         [HttpPost("customerdriver")]
@@ -181,6 +203,36 @@ namespace Taxi.Controllers
             return Ok(JsonConvert.DeserializeObject(jwt));
         }
 
+        private async Task<ClaimsIdentity> GetRegistrationIdentity(string userName, string password)
+        {
+            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
+                return await Task.FromResult<ClaimsIdentity>(null);
+
+            // get the user to verifty
+            var userToVerify = await _userManager.FindByNameAsync(userName);
+
+            if (userToVerify == null) return await Task.FromResult<ClaimsIdentity>(null);
+
+            var looked = await _userManager.IsLockedOutAsync(userToVerify);
+            if (looked)
+            {
+                ModelState.AddModelError("login_failure", $"Number of your login attempts expired, try again in {userToVerify.LockoutEnd}");
+                return await Task.FromResult<ClaimsIdentity>(null);
+            }
+
+            // check the credentials
+            if (await _userManager.CheckPasswordAsync(userToVerify, password))
+            {
+                await _userManager.ResetAccessFailedCountAsync(userToVerify);
+                return await Task.FromResult(await _jwtFactory.GenerateClaimsIdentityForRegistration(userName, userToVerify.Id));
+            }
+
+            //inc the number of failed logins
+            await _userManager.AccessFailedAsync(userToVerify);
+            // Credentials are invalid, or account doesn't exist
+            return await Task.FromResult<ClaimsIdentity>(null);
+        }
+
         private async Task<ClaimsIdentity> GetClaimsIdentity(string userName, string password)
         {
             if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
@@ -222,6 +274,8 @@ namespace Taxi.Controllers
         public async Task<IActionResult> Confirm(string uid, string token)
         {
             var user = await _userManager.FindByIdAsync(uid);
+            if (user == null)
+                return NotFound();
             var confirmResult = await _userManager.ConfirmEmailAsync(user, token);
             //change links
             if (confirmResult.Succeeded)
@@ -287,8 +341,10 @@ namespace Taxi.Controllers
         }
 
         [HttpPost("refreshtoken")]
-        public async Task<IActionResult> RefreshToken(string refreshToken)
+        public async Task<IActionResult> RefreshToken([Required] string refreshToken)
         {
+            if (!ModelState.IsValid)
+                return BadRequest();
             var ip = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 
             var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"];

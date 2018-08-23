@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NetTopologySuite.Geometries;
 
 namespace Taxi.Entities
 {
@@ -17,7 +18,9 @@ namespace Taxi.Entities
 
         public Driver Driver{ get; set; }
         
-        public List<Place> Places { get; set; }
+        public Point From { get; set; }
+
+        public Point To { get; set; }
 
         public List<TripRouteNode> RouteNodes { get; set; } = new List<TripRouteNode>();
 
@@ -26,6 +29,8 @@ namespace Taxi.Entities
         public double LastLon { get; set; }
 
         public double Distance { get; set; }
+
+        public Decimal Price { get; set; }
 
         public DateTime LastUpdateTime { get; set; }
 

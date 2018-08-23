@@ -38,7 +38,7 @@ namespace Taxi.Controllers
             _hostingEnvironment = env;
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpGet("driverlicense/image")]
         public async Task<IActionResult> GetLicensePicture()
         {
@@ -58,7 +58,7 @@ namespace Taxi.Controllers
             return File(res.Stream, res.ContentType);
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpPut("driverlicense")]
         public async Task<IActionResult> CreateLicence([FromBody]LicenseCreationDto licenseCreation)
         {
@@ -103,7 +103,7 @@ namespace Taxi.Controllers
         }
 
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpPut("driverlicense/image")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SetLicensePicture(List<IFormFile> files)
@@ -156,7 +156,7 @@ namespace Taxi.Controllers
             return BadRequest();
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpGet("driverlicense")]
         public  IActionResult GetDriverLicense()
         {

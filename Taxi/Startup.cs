@@ -70,16 +70,18 @@ namespace Taxi
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(conString,
-                b=> b.MigrationsAssembly("Taxi")));
+                b => {
+                    b.MigrationsAssembly("Taxi");
+                    b.UseNetTopologySuite();
+                }));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ITripsRepository, TripsRepository>();
             services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
-            services.AddSingleton<ITripsLocationRepository, TripsLocationInMemoryStorage>();
             services.AddScoped<IUploadService, UploadSevice>();
-
+            services.AddScoped<IGoogleMapsService, GoogleMapsService>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();
             services.AddScoped<IUrlHelper, UrlHelper>(implamantationFactory =>
             {
@@ -114,7 +116,12 @@ namespace Taxi
 
                 options.SigningCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
             });
-            
+
+            services.Configure<GoogleApiOptions>(opts =>
+            {
+                opts.ApiKey = Configuration["GOOGLE_API_KEY"];
+            });
+
             var tokenValidationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -147,6 +154,7 @@ namespace Taxi
             {
                 options.AddPolicy("Customer", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.CustomerAccess));
                 options.AddPolicy("Driver", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.DriverAccess));
+                options.AddPolicy("DriverReg", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.DriverId));
                 options.AddPolicy("Admin", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.AdminAccess));
                 options.AddPolicy("Root", policy => policy.RequireClaim(Constants.Strings.JwtClaimIdentifiers.Rol, Constants.Strings.JwtClaims.RootUserAccess));
             });
@@ -208,7 +216,7 @@ namespace Taxi
             
             if (env.IsDevelopment())
             {
-                app.UseBrowserLink();
+                //app.UseBrowserLink();
                 app.UseDeveloperExceptionPage();
             }
             else

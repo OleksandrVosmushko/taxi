@@ -15,5 +15,9 @@ namespace Taxi.Entities
         public ProfilePicture ProfilePicture { get; set; }
 
         public List<RefreshToken> RefreshTokens { get; set; }
+        
+        public string  PrivateKey { get; set; }
+
+        public List<AdminResponce> AdminResponces { get; set; } = new List<AdminResponce>();
     }
 }

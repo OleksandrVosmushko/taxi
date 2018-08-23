@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -10,9 +11,10 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20180822142723_key")]
+    partial class key
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -144,28 +146,6 @@ namespace Taxi.Migrations
                     b.ToTable("Admins");
                 });
 
-            modelBuilder.Entity("Taxi.Entities.AdminResponce", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<Guid>("AdminId");
-
-                    b.Property<string>("AppUserId");
-
-                    b.Property<DateTime>("CreationTime");
-
-                    b.Property<string>("IdentityId");
-
-                    b.Property<string>("Message");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AppUserId");
-
-                    b.ToTable("AdminResponces");
-                });
-
             modelBuilder.Entity("Taxi.Entities.AppUser", b =>
                 {
                     b.Property<string>("Id")
@@ -202,6 +182,8 @@ namespace Taxi.Migrations
                     b.Property<bool>("PhoneNumberConfirmed");
 
                     b.Property<string>("PrivateKey");
+
+                    b.Property<string>("PublicKey");
 
                     b.Property<string>("SecurityStamp");
 
@@ -322,28 +304,6 @@ namespace Taxi.Migrations
                     b.HasIndex("IdentityId");
 
                     b.ToTable("RefreshTokens");
-                });
-
-            modelBuilder.Entity("Taxi.Entities.RefundRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<DateTime>("CreationTime");
-
-                    b.Property<Guid>("CustomerId");
-
-                    b.Property<string>("Message");
-
-                    b.Property<bool>("Solved");
-
-                    b.Property<Guid>("TripHistoryId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
-
-                    b.ToTable("RefundRequests");
                 });
 
             modelBuilder.Entity("Taxi.Entities.Trip", b =>
@@ -537,13 +497,6 @@ namespace Taxi.Migrations
                         .HasForeignKey("IdentityId");
                 });
 
-            modelBuilder.Entity("Taxi.Entities.AdminResponce", b =>
-                {
-                    b.HasOne("Taxi.Entities.AppUser")
-                        .WithMany("AdminResponces")
-                        .HasForeignKey("AppUserId");
-                });
-
             modelBuilder.Entity("Taxi.Entities.Customer", b =>
                 {
                     b.HasOne("Taxi.Entities.AppUser", "Identity")
@@ -586,14 +539,6 @@ namespace Taxi.Migrations
                     b.HasOne("Taxi.Entities.AppUser", "Identity")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("IdentityId");
-                });
-
-            modelBuilder.Entity("Taxi.Entities.RefundRequest", b =>
-                {
-                    b.HasOne("Taxi.Entities.Customer")
-                        .WithMany("RefundRequests")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Taxi.Entities.Trip", b =>

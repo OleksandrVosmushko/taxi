@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Taxi.Models.Admins;
 
 namespace Taxi.Controllers
 {
@@ -18,8 +19,10 @@ namespace Taxi.Controllers
 
         [Authorize(Policy = "Root")]
         [HttpGet]
-        public IActionResult GetAdmins()
+        public IActionResult GetAdmins(AdminResourceParameters resourceParameters)
         {
+
+
             return Ok();
         }
 

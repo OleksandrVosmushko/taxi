@@ -17,43 +17,17 @@ namespace Taxi.Controllers
     {
         private ITripsRepository _tripsRepository;
         private IUrlHelper _urlHelper;
+        private IResourceUriHelper _resourceUriHelper;
 
         public TripsHistoryController(ITripsRepository tripsRepository,
-            IUrlHelper urlHelper)
+            IUrlHelper urlHelper,
+            IResourceUriHelper resourceUriHelper)
         {
             _urlHelper = urlHelper;
             _tripsRepository = tripsRepository;
+            _resourceUriHelper = resourceUriHelper;
         }
-        private string CreateResourceUri(PaginationParameters resourceParameters, ResourceUriType type, string getMethodName)
-        {
-            switch (type)
-            {
-                case ResourceUriType.PrevoiusPage:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber - 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.NextPage:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber + 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.Current:
-                default:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber,
-                            pageSize = resourceParameters.PageSize
-                        });
-            }
-        }
-      
-
+        
         [HttpGet("driver", Name = "GetDriverHistory")]
         [Authorize(Policy = "Driver")]
         public async Task<IActionResult> GetDriverHistory(TripHistoryResourceParameters resourceParameters)
@@ -64,10 +38,10 @@ namespace Taxi.Controllers
 
 
             var prevLink = trips.HasPrevious
-                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverHistory)) : null;
 
             var nextLink = trips.HasNext
-                ? CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverHistory)) : null;
 
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));
 
@@ -159,10 +133,10 @@ namespace Taxi.Controllers
             var trips =  _tripsRepository.GetTripHistoriesForCustomer(Guid.Parse(customerId),resourceParameters);
 
             var prevLink = trips.HasPrevious
-                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetCustomerHistory)):null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetCustomerHistory)):null;
 
             var nextLink = trips.HasNext
-                ?CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetCustomerHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetCustomerHistory)) : null;
 
             
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));

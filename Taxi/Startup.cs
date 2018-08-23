@@ -89,7 +89,7 @@ namespace Taxi
                     implamantationFactory.GetService<IActionContextAccessor>().ActionContext;
                 return new UrlHelper(actionContext);
             });
-
+            services.AddScoped<IResourceUriHelper, ResourceUriHelper>();
 
             var awsopt = Configuration.GetAWSOptions();
             var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");

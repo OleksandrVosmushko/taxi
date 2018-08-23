@@ -3,13 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
 
 namespace Taxi.Services
 {
     public interface IUsersRepository
     {
+        
         Admin GetAdminById(Guid adminId);
+
+        PagedList<Admin> GetAdmins(PaginationParameters parameters);
+
+        Task AddAdmin(Admin admin);
+
+        Task ApproveAdmin(Admin admin);
+
         Task AddCustomer(Customer customer);
 
         Task AddDriver(Driver driver);

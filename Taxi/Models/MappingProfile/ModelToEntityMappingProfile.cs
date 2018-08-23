@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Helpers;
+using Taxi.Models.Admins;
 using Taxi.Models.Customers;
 using Taxi.Models.Drivers;
 using Taxi.Models.Trips;
@@ -70,6 +71,18 @@ namespace Taxi.Models.MappingProfile
             CreateMap<TripRouteNode, TripHistoryRouteNode>().ForMember(x => x.Id, opt => opt.Ignore());
 
             CreateMap<RefundMessageDto, RefundRequest>();
+
+            CreateMap<AdminRegistrationDto, AppUser>().ForMember(au => au.UserName, map => map.MapFrom(vm => vm.Email));
+
+            CreateMap<AdminRegistrationDto, Admin>();
+
+            CreateMap<Admin, Customer>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<AdminRegistrationDto, AdminDto>();
+
+            CreateMap<Admin, AdminDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
+
+            CreateMap<AppUser, AdminDto>().ForMember(x => x.Id, opt => opt.Ignore());
         }
     }
 }

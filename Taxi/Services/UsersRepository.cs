@@ -34,15 +34,39 @@ namespace Taxi.Services
 
         public Admin GetAdminById(Guid adminId)
         {
-            return _dataContext.Admins.Include(a => a.Identity).FirstOrDefault(ad => ad.Id == adminId);
+            return _dataContext.Admins.Include(a => a.Identity).ThenInclude(a => a.ProfilePicture).FirstOrDefault(ad => ad.Id == adminId);
         }
 
-        //public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
-        //{
-        //    //var beforePaging = _dataContext.Admins.Include(a => a.Identity);
-        //    //    .OrderByDescending(h => h.FinishTime);
-        //    //return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
-        //}
+        public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
+        {
+            var beforePaging = _dataContext.Admins.Include(a => a.Identity).ThenInclude(i => i.ProfilePicture);
+            return PagedList<Admin>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
+        }
+
+        public async Task AddAdmin(Admin admin)
+        {
+            await _dataContext.Admins.AddAsync(admin);
+
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId, admin.Id.ToString())
+            };
+            var identity = await _userManager.FindByIdAsync(admin.IdentityId);
+
+            var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+
+            if (admin.IsApproved == true)
+                await ApproveAdmin(admin);
+        }
+
+        public async Task ApproveAdmin(Admin admin)
+        {
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.AdminAccess),
+            };
+            var identity = await _userManager.FindByIdAsync(admin.IdentityId);
+
+            var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+        }
 
         public async Task AddCustomer(Customer customer)
         {
@@ -57,7 +81,7 @@ namespace Taxi.Services
 
             var addClaimRes = await _userManager.AddClaimsAsync(customer.Identity, claims);
         }
-
+        
         public async Task UpdateCustomer(Customer customer)
         {
             await _dataContext.SaveChangesAsync();

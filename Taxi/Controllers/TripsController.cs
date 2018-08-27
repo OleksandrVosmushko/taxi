@@ -466,6 +466,29 @@ namespace Taxi.Controllers
             return NoContent();
         }
         
+        [Authorize(Policy = "Driver")]
+        [HttpGet("driver/tripstatus")]
+        public IActionResult GetTripStatusByDriver()
+        {
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
+
+            if (trip == null)
+                return NotFound();
+
+            var tripStatusDto = Mapper.Map<TripStatusDto>(trip);
+
+            var from = trip.From;
+            var to = trip.To;
+
+            tripStatusDto.From = Taxi.Helpers.Location.PointToPlaceDto(from);
+
+            tripStatusDto.To = Taxi.Helpers.Location.PointToPlaceDto(to);
+
+            return Ok(tripStatusDto);
+        }
+
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
         [ProducesResponseType(200)]
@@ -520,6 +543,7 @@ namespace Taxi.Controllers
 
             return Ok(toReturn);
         }  
+
 
         [Authorize(Policy = "Driver")]
         [HttpPost("finishtrip")]

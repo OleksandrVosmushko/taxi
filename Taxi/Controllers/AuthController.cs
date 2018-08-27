@@ -324,7 +324,7 @@ namespace Taxi.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-            var user = await _userManager.FindByEmailAsync(setPasswordDto.Email);
+            var user = await _userManager.FindByIdAsync(setPasswordDto.Id);
 
             if (user == null)
             {

@@ -5,12 +5,19 @@ using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Helpers;
 using Taxi.Models;
+using Taxi.Models.Admins;
+using Taxi.Models.Drivers;
 
 namespace Taxi.Services
 {
     public interface IUsersRepository
     {
-        
+        Task RemoveUser(AppUser user);
+
+        PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
+        PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters); 
+        Task AddAdminResponse(AdminResponse response);
+        Task<PagedList<AppUser>> GetUsers(UserResourceParameters resourceParameters);
         Admin GetAdminById(Guid adminId);
 
         PagedList<Admin> GetAdmins(PaginationParameters parameters);

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Taxi.Entities
+namespace Taxi.Models.Admins
 {
-    public class AdminResponce
+    public class RefundRequestDto
     {
         public Guid Id { get; set; }
 
@@ -13,8 +13,10 @@ namespace Taxi.Entities
 
         public DateTime CreationTime { get; set; }
 
-        public Guid AdminId { get; set; }
+        public bool Solved { get; set; }
 
-        public string IdentityId { get; set; }
+        public Guid CustomerId { get; set; }
+
+        public Guid TripHistoryId { get; set; }
     }
 }

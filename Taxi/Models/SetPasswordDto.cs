@@ -9,8 +9,7 @@ namespace Taxi.Models
     public class SetPasswordDto
     {
         [Required]
-        [EmailAddress]
-        public string Email { get; set; }
+        public string Id { get; set; }
 
         [Required]
         [StringLength(100, MinimumLength = 6)]

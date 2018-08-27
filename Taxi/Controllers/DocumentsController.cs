@@ -149,6 +149,7 @@ namespace Taxi.Controllers
                 await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
                 driver.DriverLicense.UpdateTime = DateTime.UtcNow;
                 driver.DriverLicense.ImageId = imageId;
+                driver.DriverLicense.IsApproved = false;
                 await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
                 System.IO.File.Delete(filename);
                 return Ok();
@@ -164,7 +165,7 @@ namespace Taxi.Controllers
 
             var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
 
-            if (driver.DriverLicense == null)
+            if (driver?.DriverLicense == null)
                 return NotFound();
 
             var licenseToReturn = Mapper.Map<DriverLicenseDto>(driver.DriverLicense);

@@ -12,7 +12,7 @@ namespace Taxi.Models
         [EmailAddress]
         public string Email { get; set; }
 
-        [Required(ErrorMessage = "You must provide a phone number")]
+      //  [Required(ErrorMessage = "You must provide a phone number")]
         [Phone]
         public string PhoneNumber { get; set; }
     }

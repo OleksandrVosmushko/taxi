@@ -14,5 +14,6 @@ namespace Taxi.Entities
         public AppUser Identity { get; set; }
 
         public bool IsApproved { get; set; }
+        
     }
 }

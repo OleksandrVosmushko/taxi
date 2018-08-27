@@ -83,6 +83,14 @@ namespace Taxi.Models.MappingProfile
             CreateMap<Admin, AdminDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
 
             CreateMap<AppUser, AdminDto>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<AppUser, UserDto>();
+
+            CreateMap<AdminResponseDto, AdminResponse>();
+
+            CreateMap<RefundRequest, RefundRequestDto>();
+
+            CreateMap<TripHistory, AdminTripHistoryDto>().ForMember(x => x.From, opt => opt.Ignore()).ForMember(x => x.To, opt => opt.Ignore());
         }
     }
 }

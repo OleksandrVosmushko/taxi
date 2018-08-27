@@ -14,10 +14,13 @@ namespace Taxi.Entities
         public DateTime LicensedTo { get; set; }
 
         public string ImageId { get; set; }
+
         public DateTime UpdateTime { get; set; }
         
         public Driver Driver { get; set; }
 
         public Guid DriverId { get; set; }
+
+        public bool IsApproved { get; set; } 
     }
 }

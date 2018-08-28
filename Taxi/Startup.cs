@@ -25,6 +25,7 @@ using Amazon.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Taxi.Hubs;
 
 namespace Taxi
 {
@@ -89,6 +90,8 @@ namespace Taxi
                     implamantationFactory.GetService<IActionContextAccessor>().ActionContext;
                 return new UrlHelper(actionContext);
             });
+
+            services.AddSignalR();
 
 
             var awsopt = Configuration.GetAWSOptions();
@@ -255,6 +258,11 @@ namespace Taxi
                 //routes.MapRoute(
                 //    name: "default",
                 //    template: "{controller}/{action}/{id?}");
+            });
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<RouteHub>("/route");
             });
         }
     }

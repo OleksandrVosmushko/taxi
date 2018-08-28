@@ -14,7 +14,8 @@
     <PackageReference Include="GeoAPI.Core" Version="1.7.5" />
     <PackageReference Include="Geolocation" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />  
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0-preview1-35029" />
     <PackageReference Include="NetTopologySuite" Version="1.15.0" />
     <PackageReference Include="NetTopologySuite.IO.PostGis" Version="1.15.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1" />

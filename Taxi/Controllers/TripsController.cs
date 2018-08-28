@@ -273,6 +273,11 @@ namespace Taxi.Controllers
                 return NotFound();
             }
 
+            if (trip.DriverId == null)
+            {
+                ModelState.AddModelError(nameof(Trip), "Driver not assigned");
+                return BadRequest(ModelState);
+            }
             
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
@@ -285,7 +290,12 @@ namespace Taxi.Controllers
             refundRequest.CustomerId = customer.Id;
 
             refundRequest.TripHistoryId = tripHistory.Id;
-            
+
+            refundRequest.IdentityId = User.Claims
+                .FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            _tripsRepo.AddRefundRequest(refundRequest);
+
             _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
 
             //TODO: Admin check refund

@@ -17,6 +17,8 @@ namespace Taxi.Entities
 
         public Guid CustomerId { get; set; }
 
+        public string IdentityId { get; set; }
+
         public Guid TripHistoryId { get; set; }
     }
 }

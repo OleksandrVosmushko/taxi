@@ -12,5 +12,7 @@ namespace Taxi.Models.Drivers
         public DateTime LicensedTo { get; set; }
 
         public bool IsApproved { get; set; }
+
+        public Guid DriverId { get; set; }
     }
 }

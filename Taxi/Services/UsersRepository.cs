@@ -349,6 +349,13 @@ namespace Taxi.Services
             await _dataContext.SaveChangesAsync();
         }
 
+        public PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters)
+        {
+            var beforePaging = _dataContext.AdminResponces.Where(a => a.IdentityId == id).OrderByDescending(ar => ar.CreationTime);
+
+            return PagedList<AdminResponse>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+        }
+
         public async Task<bool> RemoveDriverLicense(DriverLicense license)
         {
             _dataContext.DriverLicenses.Remove(license);

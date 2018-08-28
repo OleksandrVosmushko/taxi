@@ -62,6 +62,12 @@ namespace Taxi.Services
             _dataContext.Database.ExecuteSqlCommand(query, sqlParameters);
         }
 
+        public void AddRefundRequest(RefundRequest refundRequest)
+        {
+            _dataContext.RefundRequests.Add(refundRequest);
+            _dataContext.SaveChanges();
+        }
+
         public async Task AddTripHistory(TripHistory tripHistory)
         {
             await _dataContext.TripHistories.AddAsync(tripHistory);

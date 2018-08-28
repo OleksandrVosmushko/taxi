@@ -91,6 +91,8 @@ namespace Taxi.Models.MappingProfile
             CreateMap<RefundRequest, RefundRequestDto>();
 
             CreateMap<TripHistory, AdminTripHistoryDto>().ForMember(x => x.From, opt => opt.Ignore()).ForMember(x => x.To, opt => opt.Ignore());
+
+            CreateMap<AdminResponse, AdminResponseToReturnDto>();
         }
     }
 }

@@ -148,7 +148,7 @@ namespace Taxi.Controllers
             responce.CreationTime = DateTime.UtcNow;
 
             responce.AdminId = Guid.Parse( adminid);
-
+            
             await _usersRepository.AddAdminResponse(responce);
 
             return Ok();
@@ -157,7 +157,7 @@ namespace Taxi.Controllers
 
 
         [Authorize(Policy = "Admin")]
-        [HttpGet("refundRequests")]
+        [HttpGet("refundRequests", Name = "GetRefundRequests")]
         public IActionResult GetRefundRequests(RefundResourceParameters resourceParameters)
         {
             if (!ModelState.IsValid)
@@ -166,10 +166,10 @@ namespace Taxi.Controllers
             var refundsRequests = _usersRepository.GetRefundRequests(resourceParameters);
 
             var prevLink = refundsRequests.HasPrevious
-                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetUsers)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetRefundRequests)) : null;
 
             var nextLink = refundsRequests.HasNext
-                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetUsers)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetRefundRequests)) : null;
 
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(refundsRequests, resourceParameters, prevLink, nextLink));
 
@@ -225,7 +225,7 @@ namespace Taxi.Controllers
         }
 
         [Authorize(Policy = "Admin")]
-        [HttpGet("driverlicenses")]
+        [HttpGet("driverlicenses", Name = "GetDriverLicenses")]
         public IActionResult GetDriverLicenses(DriverLicenseResourceParameters resourceParameters)
         {
             if (!ModelState.IsValid)
@@ -234,10 +234,10 @@ namespace Taxi.Controllers
             var licenses = _usersRepository.GetDriverLicenses(resourceParameters);
 
             var prevLink = licenses.HasPrevious
-                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetUsers)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverLicenses)) : null;
 
             var nextLink = licenses.HasNext
-                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetUsers)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverLicenses)) : null;
 
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(licenses, resourceParameters, prevLink, nextLink));
 

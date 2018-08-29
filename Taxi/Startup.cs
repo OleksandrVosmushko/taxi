@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,6 +26,7 @@ using Amazon.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Logging;
 
 namespace Taxi
 {
@@ -41,6 +43,10 @@ namespace Taxi
               .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
               .AddEnvironmentVariables();
 
+            //test
+            // throw new Exception(AppContext.BaseDirectory);
+            //throw new Exception(Directory.GetCurrentDirectory());
+           // throw new Exception(env.ContentRootPath);
             Configuration = builder.Build();
 
             CurrentEnvironment = env;

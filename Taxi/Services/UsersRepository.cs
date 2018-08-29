@@ -47,6 +47,11 @@ namespace Taxi.Services
             await _userManager.DeleteAsync(user);
         }
 
+        public AppUser GetUser(string id)
+        {
+            return _dataContext.Users.Include(u => u.ProfilePicture).FirstOrDefault(ur => ur.Id == id);
+        }
+
         public PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters)
         {
             IQueryable<RefundRequest> beforePaging = _dataContext.RefundRequests;
@@ -104,7 +109,7 @@ namespace Taxi.Services
                         c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null);
             }
 
-            return PagedList<AppUser>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
+            return PagedList<AppUser>.Create(beforePaging.Include(u => u.ProfilePicture), paginationParameters.PageNumber, paginationParameters.PageSize);
         }
 
         public Admin GetAdminById(Guid adminId)

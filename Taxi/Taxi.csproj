@@ -4,8 +4,11 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <UserSecretsId>b2fc8fee-caf0-4059-9e7a-411f9d6bfa4c</UserSecretsId>
   </PropertyGroup>
-
+  <!--<PropertyGroup>
+    <PublishDir>..\out</PublishDir>
+  </PropertyGroup>-->
   <ItemGroup>
+    
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="4.0.1" />
     <PackageReference Include="AWSSDK.Core" Version="3.3.24.4" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.3.6" />
@@ -14,7 +17,9 @@
     <PackageReference Include="GeoAPI.Core" Version="1.7.5" />
     <PackageReference Include="Geolocation" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />  
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
     <PackageReference Include="NetTopologySuite" Version="1.15.0" />
     <PackageReference Include="NetTopologySuite.IO.PostGis" Version="1.15.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1" />
@@ -33,10 +38,26 @@
     <Content Include="./GetNearQuery.txt" Link="GetNearQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateFromQuery.txt" Link="UpdateFromQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateToQuery.txt" Link="UpdateToQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Docker.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaxiCoinCoreLibrary\TaxiCoinCoreLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

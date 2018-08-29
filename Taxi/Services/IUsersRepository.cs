@@ -14,6 +14,7 @@ namespace Taxi.Services
     {
         Task RemoveUser(AppUser user);
 
+        AppUser GetUser(string id);
         PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
         PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters); 
         Task AddAdminResponse(AdminResponse response);

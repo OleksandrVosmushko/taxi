@@ -97,6 +97,7 @@ namespace Taxi.Controllers
                         userDto.Ids[c.Type] = c.Value;
                     }
                 }
+                userDto.ProfilePictureId = user.ProfilePicture?.Id;
                 userDtos.Add(userDto);
             }
             return Ok(userDtos);
@@ -106,7 +107,7 @@ namespace Taxi.Controllers
         [HttpGet("getuser/{id}", Name = "GetUser")]
         public async Task<IActionResult> GetUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
+            var user = _usersRepository.GetUser(id);
 
             if (user == null)
             {
@@ -129,6 +130,7 @@ namespace Taxi.Controllers
                 }
             }
 
+            userDto.ProfilePictureId = user.ProfilePicture?.Id;
             return Ok(userDto);
         }
 

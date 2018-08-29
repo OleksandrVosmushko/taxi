@@ -36,6 +36,9 @@ namespace Taxi.Services
         Task AddNode(TripRouteNode node);
         void InsertTrip(Trip tripEntity, double lat1, double lon1, double lat2, double lon2);
         void AddRefundRequest(RefundRequest refundRequest);
+        void AddContract(Contract contract);
+
+        Contract GetContract(ulong id);
     }
 }
    

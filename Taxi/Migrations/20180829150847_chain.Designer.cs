@@ -11,8 +11,8 @@ using Taxi.Data;
 namespace Taxi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20180828074937_refundfix")]
-    partial class refundfix
+    [Migration("20180829150847_chain")]
+    partial class chain
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -224,6 +224,28 @@ namespace Taxi.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Contract", b =>
+                {
+                    b.Property<decimal>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
+                    b.Property<double>("FromLatitude");
+
+                    b.Property<double>("FromLongitude");
+
+                    b.Property<double>("ToLatitude");
+
+                    b.Property<double>("ToLongitude");
+
+                    b.Property<decimal>("TokenValue")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Contracts");
+                });
+
             modelBuilder.Entity("Taxi.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -357,6 +379,9 @@ namespace Taxi.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<decimal>("ContractId")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
                     b.Property<DateTime>("CreationTime");
 
                     b.Property<Guid>("CustomerId");
@@ -377,7 +402,8 @@ namespace Taxi.Migrations
 
                     b.Property<DateTime>("LastUpdateTime");
 
-                    b.Property<decimal>("Price");
+                    b.Property<decimal>("Price")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
 
                     b.Property<DateTime>("StartTime");
 
@@ -399,6 +425,9 @@ namespace Taxi.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<decimal>("ContractId")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
+
                     b.Property<DateTime>("CreationTime");
 
                     b.Property<Guid>("CustomerId");
@@ -413,7 +442,8 @@ namespace Taxi.Migrations
 
                     b.Property<Point>("From");
 
-                    b.Property<decimal>("Price");
+                    b.Property<decimal>("Price")
+                        .HasConversion(new ValueConverter<decimal, decimal>(v => default(decimal), v => default(decimal), new ConverterMappingHints(precision: 20, scale: 0)));
 
                     b.Property<DateTime>("StartTime");
 

@@ -8,6 +8,8 @@ namespace Taxi.Entities
 {
     public class Trip
     {
+        public ulong ContractId { get; set; }
+
         public Guid Id { set; get; }
 
         public Guid CustomerId { get; set; }
@@ -30,7 +32,7 @@ namespace Taxi.Entities
 
         public double Distance { get; set; }
 
-        public Decimal Price { get; set; }
+        public ulong Price { get; set; }
 
         public DateTime LastUpdateTime { get; set; }
 

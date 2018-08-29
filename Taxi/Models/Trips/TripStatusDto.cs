@@ -23,7 +23,7 @@ namespace Taxi.Models.Trips
 
         public double Distance { get; set; }
 
-        public Decimal Price { get; set; }
+        public ulong Price { get; set; }
 
     }
 }

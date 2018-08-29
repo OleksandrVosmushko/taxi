@@ -2,6 +2,7 @@
 using Nethereum.Signer;
 using Newtonsoft.Json;
 using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
 using TaxiCoinCoreLibrary.TokenAPI;
 using TaxiCoinCoreLibrary.Utils;
@@ -10,9 +11,18 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
 {
     public class Refund
     {
-        public static string Create(UInt64 id, DefaultControllerPattern req, User user)
+        public static TransactionReceipt Create(UInt64 id, DefaultControllerPattern req, User user, ModelStateDictionary ModelState)
         {
-            user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            try
+            {
+                user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(user.PublicKey), "Unable to get public key");
+                return null;
+            }
+
             TransactionReceipt result;
             try
             {
@@ -20,10 +30,11 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             }
             catch (Exception e)
             {
-                return JsonConvert.SerializeObject(e.Message);
+                ModelState.AddModelError(nameof(User),e.Message);
+                return null;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
         }
 
         public static string Approve(UInt64 id, DefaultControllerPattern req, User user)

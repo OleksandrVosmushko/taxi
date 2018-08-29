@@ -12,7 +12,7 @@ namespace Taxi.Data
     {
         public ApplicationDbContext(DbContextOptions options): base (options)
         {
-            
+         
         }
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //{
@@ -24,9 +24,14 @@ namespace Taxi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.HasPostgresExtension("postgis");
+            modelBuilder.Entity<Contract>()
+                .Property(c => c.Id)
+                .ValueGeneratedOnAdd();
             base.OnModelCreating(modelBuilder);
             
         }
+
+        public DbSet<Contract> Contracts { get; set; }
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Driver> Drivers { get; set; }

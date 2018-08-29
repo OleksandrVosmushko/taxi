@@ -13,6 +13,8 @@ using Taxi.Helpers;
 using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
+using TaxiCoinCoreLibrary.ControllerFunctions;
+using TaxiCoinCoreLibrary.RequestObjectPatterns;
 
 namespace Taxi.Controllers
 {
@@ -144,7 +146,7 @@ namespace Taxi.Controllers
 
 
             tripEntity.Distance = length;
-            tripEntity.Price = 0;
+            tripEntity.Price = 4;
             #region Responce
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
@@ -190,6 +192,14 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
             }
             //TODO : refund
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(customerid));
+
+            Refund.Create(trip.ContractId, new DefaultControllerPattern(),
+                new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             _tripsRepo.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
@@ -235,7 +245,14 @@ namespace Taxi.Controllers
             }
 
             var trip = _tripsRepo.GetTrip(customer.Id, true);
+
             // TODO:Money to Driver
+            var result = Order.CompleteOrder(trip.ContractId, new DefaultControllerPattern(),
+                new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
             await _tripsRepo.AddTripHistory(tripHistory);
@@ -278,7 +295,15 @@ namespace Taxi.Controllers
                 ModelState.AddModelError(nameof(Trip), "Driver not assigned");
                 return BadRequest(ModelState);
             }
-            
+
+            var user = _usersRepository.GetCustomerById(trip.CustomerId);
+
+            var refundCreationRes = Refund.Create(trip.ContractId, new DefaultControllerPattern(),
+                new User() {PrivateKey = user.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
             await _tripsRepo.AddTripHistory(tripHistory);
@@ -350,7 +375,28 @@ namespace Taxi.Controllers
 
             tripEntity.Distance = length;
 
+            tripEntity.Price = 4;
             #endregion
+
+            var contract = new Contract()
+            {
+                FromLatitude = tripCreationDto.From.Latitude,
+                FromLongitude = tripCreationDto.From.Longitude,
+                ToLatitude = tripCreationDto.To.Latitude,
+                ToLongitude = tripCreationDto.To.Longitude,
+                TokenValue = tripEntity.Price
+            };
+
+            _tripsRepo.AddContract(contract);
+
+            var res = Payment.Create(contract.Id, new CreatePaymentPattern(){Value = contract.TokenValue},new User{PrivateKey = customer.Identity.PrivateKey}, ModelState);
+            //swap
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+           
+
+            tripEntity.ContractId = contract.Id;
 
             _tripsRepo.InsertTrip(tripEntity, tripCreationDto.From.Latitude,
                 tripCreationDto.From.Longitude,
@@ -452,7 +498,7 @@ namespace Taxi.Controllers
 
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
-        [ProducesResponseType(204)]
+        //[ProducesResponseType(204)]
         public async Task<IActionResult> AddDriverToTrip(Guid customerId)
         {
             if (!ModelState.IsValid)
@@ -464,6 +510,13 @@ namespace Taxi.Controllers
            
             if (trip == null || driverId == null || trip.DriverId != null) 
                 return BadRequest();
+            var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
+
+            var orderRes = Order.GetOrder(trip.ContractId, new DefaultControllerPattern(),
+                new User() {PrivateKey = driver.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             trip.DriverId = Guid.Parse(driverId);
 
@@ -473,7 +526,8 @@ namespace Taxi.Controllers
 
             if (res != true)
                 return BadRequest();
-            return NoContent();
+
+            return Ok(orderRes);
         }
         
         [Authorize(Policy = "Driver")]

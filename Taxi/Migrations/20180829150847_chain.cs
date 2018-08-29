@@ -5,7 +5,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Taxi.Migrations
 {
-    public partial class place : Migration
+    public partial class chain : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -46,11 +46,28 @@ namespace Taxi.Migrations
                     LockoutEnabled = table.Column<bool>(nullable: false),
                     AccessFailedCount = table.Column<int>(nullable: false),
                     FirstName = table.Column<string>(nullable: true),
-                    LastName = table.Column<string>(nullable: true)
+                    LastName = table.Column<string>(nullable: true),
+                    PrivateKey = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Contracts",
+                columns: table => new
+                {
+                    Id = table.Column<decimal>(nullable: false),
+                    TokenValue = table.Column<decimal>(nullable: false),
+                    FromLatitude = table.Column<double>(nullable: false),
+                    FromLongitude = table.Column<double>(nullable: false),
+                    ToLatitude = table.Column<double>(nullable: false),
+                    ToLongitude = table.Column<double>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Contracts", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -72,6 +89,28 @@ namespace Taxi.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AdminResponces",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Message = table.Column<string>(nullable: true),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    AdminId = table.Column<Guid>(nullable: false),
+                    IdentityId = table.Column<string>(nullable: true),
+                    AppUserId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AdminResponces", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AdminResponces_AspNetUsers_AppUserId",
+                        column: x => x.AppUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -255,6 +294,29 @@ namespace Taxi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RefundRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(nullable: false),
+                    Message = table.Column<string>(nullable: true),
+                    CreationTime = table.Column<DateTime>(nullable: false),
+                    Solved = table.Column<bool>(nullable: false),
+                    CustomerId = table.Column<Guid>(nullable: false),
+                    IdentityId = table.Column<string>(nullable: true),
+                    TripHistoryId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefundRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefundRequests_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "DriverLicenses",
                 columns: table => new
                 {
@@ -263,7 +325,8 @@ namespace Taxi.Migrations
                     LicensedTo = table.Column<DateTime>(nullable: false),
                     ImageId = table.Column<string>(nullable: true),
                     UpdateTime = table.Column<DateTime>(nullable: false),
-                    DriverId = table.Column<Guid>(nullable: false)
+                    DriverId = table.Column<Guid>(nullable: false),
+                    IsApproved = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {
@@ -280,6 +343,7 @@ namespace Taxi.Migrations
                 name: "TripHistories",
                 columns: table => new
                 {
+                    ContractId = table.Column<decimal>(nullable: false),
                     Id = table.Column<Guid>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: false),
@@ -313,6 +377,7 @@ namespace Taxi.Migrations
                 name: "Trips",
                 columns: table => new
                 {
+                    ContractId = table.Column<decimal>(nullable: false),
                     Id = table.Column<Guid>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: true),
@@ -321,6 +386,7 @@ namespace Taxi.Migrations
                     LastLat = table.Column<double>(nullable: false),
                     LastLon = table.Column<double>(nullable: false),
                     Distance = table.Column<double>(nullable: false),
+                    Price = table.Column<decimal>(nullable: false),
                     LastUpdateTime = table.Column<DateTime>(nullable: false),
                     CreationTime = table.Column<DateTime>(nullable: false),
                     DriverTakeTripTime = table.Column<DateTime>(nullable: false),
@@ -427,6 +493,11 @@ namespace Taxi.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_AdminResponces_AppUserId",
+                table: "AdminResponces",
+                column: "AppUserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Admins_IdentityId",
                 table: "Admins",
                 column: "IdentityId");
@@ -501,6 +572,11 @@ namespace Taxi.Migrations
                 column: "IdentityId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefundRequests_CustomerId",
+                table: "RefundRequests",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TripHistories_CustomerId",
                 table: "TripHistories",
                 column: "CustomerId");
@@ -542,6 +618,9 @@ namespace Taxi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "AdminResponces");
+
+            migrationBuilder.DropTable(
                 name: "Admins");
 
             migrationBuilder.DropTable(
@@ -560,6 +639,9 @@ namespace Taxi.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Contracts");
+
+            migrationBuilder.DropTable(
                 name: "DriverLicenses");
 
             migrationBuilder.DropTable(
@@ -570,6 +652,9 @@ namespace Taxi.Migrations
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
+                name: "RefundRequests");
 
             migrationBuilder.DropTable(
                 name: "TripHistoryRouteNodes");

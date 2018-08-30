@@ -32,7 +32,7 @@ namespace Taxi
             globalsInstance.ContractFunctions = new ContractFunctions(abi, byteCode);
 
             var res = Deploy.GetApiFromContractAddress(new DeployControllerPattern(){Address = "0x617922c9fb79969549c615ccb410b6c711be0617" });
-           // var res = Deploy.DeployContract(new DefaultControllerPattern() { Gas = 8000000 }, new User() { PrivateKey = "90467FCD1A14CEE777EF5D86FE1947BC48171F78D41395CCA9CF5C1189EA6E08" }).Result;
+           // var res = Deploy.DeployContract(new DefaultControllerPattern() { Gas = 4000000 }, new User() { PrivateKey = "9ad29856230856c4317b5af4f68896938249455f93e0fa48ac1c70e3a188620e" }).Result;
 
             var host = CreateWebHostBuilder(args).Build();
             

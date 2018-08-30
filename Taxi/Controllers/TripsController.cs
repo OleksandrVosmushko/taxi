@@ -375,7 +375,7 @@ namespace Taxi.Controllers
 
             tripEntity.Distance = length;
 
-            tripEntity.Price = 100000000000000;
+            tripEntity.Price = 1000;
             #endregion
 
             var contract = new Contract()

@@ -27,6 +27,7 @@ namespace Taxi.Models.Admins
         public string LastName { get; set; }
 
         [Required]
+        [StringLength(64, MinimumLength = 64)]
         public string PrivateKey { get; set; }
     }
 }

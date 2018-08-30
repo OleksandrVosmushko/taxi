@@ -156,7 +156,7 @@ namespace Taxi.Controllers
 
 
             tripEntity.Distance = length;
-            tripEntity.Price = Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance);
+            tripEntity.Price = (long)Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance);
             #region Responce
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
@@ -385,7 +385,7 @@ namespace Taxi.Controllers
 
             tripEntity.Distance = length;
 
-            tripEntity.Price = 1000;
+            tripEntity.Price = (long)Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance); ;
             #endregion
 
             var contract = new Contract()

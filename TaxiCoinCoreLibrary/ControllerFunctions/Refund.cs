@@ -37,9 +37,18 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             return result;
         }
 
-        public static string Approve(UInt64 id, DefaultControllerPattern req, User user)
+        public static TransactionReceipt Approve(UInt64 id, DefaultControllerPattern req, User user, ModelStateDictionary ModelState)
         {
-            user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            try
+            {
+                user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(user.PublicKey), "Unable to get public key");
+                return null;
+            }
+
             TransactionReceipt result;
             try
             {
@@ -47,15 +56,26 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             }
             catch (Exception e)
             {
-                return JsonConvert.SerializeObject(e.Message);
+
+                ModelState.AddModelError(nameof(User), e.Message);
+                return null;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
         }
 
-        public static string DisApprove(UInt64 id, DefaultControllerPattern req, User user)
+        public static TransactionReceipt DisApprove(UInt64 id, DefaultControllerPattern req, User user, ModelStateDictionary ModelState)
         {
-            user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            try
+            {
+                user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(user.PublicKey), "Unable to get public key");
+                return null;
+            }
+
             TransactionReceipt result;
             try
             {
@@ -63,10 +83,11 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             }
             catch (Exception e)
             {
-                return JsonConvert.SerializeObject(e.Message);
+                ModelState.AddModelError(nameof(User), e.Message);
+                return null;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
         }
     }
 }

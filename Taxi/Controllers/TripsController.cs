@@ -146,7 +146,7 @@ namespace Taxi.Controllers
 
 
             tripEntity.Distance = length;
-            tripEntity.Price = 4;
+            tripEntity.Price = 400000;
             #region Responce
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
@@ -194,7 +194,7 @@ namespace Taxi.Controllers
             //TODO : refund
             var customer = _usersRepository.GetCustomerById(Guid.Parse(customerid));
 
-            Refund.Create(trip.ContractId, new DefaultControllerPattern(),
+            var res = Refund.Create((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
 
             if (!ModelState.IsValid)
@@ -247,7 +247,7 @@ namespace Taxi.Controllers
             var trip = _tripsRepo.GetTrip(customer.Id, true);
 
             // TODO:Money to Driver
-            var result = Order.CompleteOrder(trip.ContractId, new DefaultControllerPattern(),
+            var result = Order.CompleteOrder((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
 
             if (!ModelState.IsValid)
@@ -298,7 +298,7 @@ namespace Taxi.Controllers
 
             var user = _usersRepository.GetCustomerById(trip.CustomerId);
 
-            var refundCreationRes = Refund.Create(trip.ContractId, new DefaultControllerPattern(),
+            var refundCreationRes = Refund.Create((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User() {PrivateKey = user.Identity.PrivateKey}, ModelState);
 
             if (!ModelState.IsValid)
@@ -375,7 +375,7 @@ namespace Taxi.Controllers
 
             tripEntity.Distance = length;
 
-            tripEntity.Price = 4;
+            tripEntity.Price = 100000000000000;
             #endregion
 
             var contract = new Contract()
@@ -389,7 +389,7 @@ namespace Taxi.Controllers
 
             _tripsRepo.AddContract(contract);
 
-            var res = Payment.Create(contract.Id, new CreatePaymentPattern(){Value = contract.TokenValue},new User{PrivateKey = customer.Identity.PrivateKey}, ModelState);
+            var res = Payment.Create((ulong)contract.Id, new CreatePaymentPattern(){Value = (ulong)contract.TokenValue},new User{PrivateKey = customer.Identity.PrivateKey}, ModelState);
             //swap
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -512,7 +512,7 @@ namespace Taxi.Controllers
                 return BadRequest();
             var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
 
-            var orderRes = Order.GetOrder(trip.ContractId, new DefaultControllerPattern(),
+            var orderRes = Order.GetOrder((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User() {PrivateKey = driver.Identity.PrivateKey}, ModelState);
 
             if (!ModelState.IsValid)

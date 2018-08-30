@@ -5,7 +5,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Taxi.Migrations
 {
-    public partial class chain : Migration
+    public partial class migration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -58,8 +58,9 @@ namespace Taxi.Migrations
                 name: "Contracts",
                 columns: table => new
                 {
-                    Id = table.Column<decimal>(nullable: false),
-                    TokenValue = table.Column<decimal>(nullable: false),
+                    Id = table.Column<long>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.SerialColumn),
+                    TokenValue = table.Column<long>(nullable: false),
                     FromLatitude = table.Column<double>(nullable: false),
                     FromLongitude = table.Column<double>(nullable: false),
                     ToLatitude = table.Column<double>(nullable: false),
@@ -343,7 +344,7 @@ namespace Taxi.Migrations
                 name: "TripHistories",
                 columns: table => new
                 {
-                    ContractId = table.Column<decimal>(nullable: false),
+                    ContractId = table.Column<long>(nullable: false),
                     Id = table.Column<Guid>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: false),
@@ -353,7 +354,7 @@ namespace Taxi.Migrations
                     DriverTakeTripTime = table.Column<DateTime>(nullable: false),
                     StartTime = table.Column<DateTime>(nullable: false),
                     FinishTime = table.Column<DateTime>(nullable: false),
-                    Price = table.Column<decimal>(nullable: false),
+                    Price = table.Column<long>(nullable: false),
                     Distance = table.Column<double>(nullable: false)
                 },
                 constraints: table =>
@@ -377,7 +378,7 @@ namespace Taxi.Migrations
                 name: "Trips",
                 columns: table => new
                 {
-                    ContractId = table.Column<decimal>(nullable: false),
+                    ContractId = table.Column<long>(nullable: false),
                     Id = table.Column<Guid>(nullable: false),
                     CustomerId = table.Column<Guid>(nullable: false),
                     DriverId = table.Column<Guid>(nullable: true),
@@ -386,7 +387,7 @@ namespace Taxi.Migrations
                     LastLat = table.Column<double>(nullable: false),
                     LastLon = table.Column<double>(nullable: false),
                     Distance = table.Column<double>(nullable: false),
-                    Price = table.Column<decimal>(nullable: false),
+                    Price = table.Column<long>(nullable: false),
                     LastUpdateTime = table.Column<DateTime>(nullable: false),
                     CreationTime = table.Column<DateTime>(nullable: false),
                     DriverTakeTripTime = table.Column<DateTime>(nullable: false),

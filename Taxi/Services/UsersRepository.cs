@@ -63,6 +63,16 @@ namespace Taxi.Services
             return PagedList<RefundRequest>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
+        public void UpdateRefund(RefundRequest request)
+        {
+            _dataContext.SaveChanges();
+        }
+
+        public RefundRequest GetRefundRequest(Guid id)
+        {
+            return _dataContext.RefundRequests.FirstOrDefault(r => r.Id == id);
+        }
+
         public PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters)
         {
             IQueryable<DriverLicense> beforePaging = _dataContext.DriverLicenses;

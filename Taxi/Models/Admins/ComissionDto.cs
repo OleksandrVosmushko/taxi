@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace Taxi.Models.Admins
 {
-    public class RefundSolutionDto
+    public class ComissionDto
     {
-        [Required]
-        public bool ToRefund { get; set; } = false;
-        [Required]
-        public string  Message { get; set; }
+        [Range(0, 99,
+            ErrorMessage = "Value for {0} must be between {1} and {2}.")]
+        public ulong Value { get; set; }
     }
 }

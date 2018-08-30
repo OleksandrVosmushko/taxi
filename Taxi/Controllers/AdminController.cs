@@ -15,6 +15,8 @@ using Taxi.Models.Admins;
 using Taxi.Models.Drivers;
 using Taxi.Models.Trips;
 using Taxi.Services;
+using TaxiCoinCoreLibrary.ControllerFunctions;
+using TaxiCoinCoreLibrary.RequestObjectPatterns;
 
 namespace Taxi.Controllers
 {
@@ -185,13 +187,76 @@ namespace Taxi.Controllers
             return Ok(refundDtos);
         }
 
-        //[Authorize(Policy = "Admin")]
-        //[HttpPost("refundRequests/solve/{refundRequestId}")]
-        //public IActionResult SolveRefund(Guid refundRequestId, [FromBody] RefundSolutionDto solution)
-        //{
-            
-        //}
+        [Authorize(Policy = "Admin")]
+        [HttpPost("refundRequests/solve/{refundRequestId}")]
+        [ProducesResponseType(204)]
+        public async Task<IActionResult> SolveRefund(Guid refundRequestId, [FromBody] RefundSolutionDto solution)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest();
 
+            var request = _usersRepository.GetRefundRequest(refundRequestId);
+            
+            if (request == null)
+                return NotFound();
+
+            var history = await _tripsRepository.GetTripHistory(request.TripHistoryId);
+
+            if (history == null)
+                return NotFound();
+
+            var user = _usersRepository.GetCustomerById(history.CustomerId);
+            if (solution.ToRefund == true)
+            {
+                var res = Refund.Approve((ulong) history.ContractId, new DefaultControllerPattern(),
+                    new User() {PrivateKey = user.Identity.PrivateKey}, ModelState);
+            }
+            else
+            {
+                var res = Refund.DisApprove((ulong)history.ContractId, new DefaultControllerPattern(),
+                    new User() { PrivateKey = user.Identity.PrivateKey }, ModelState);
+            }
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var adminid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId)?.Value;
+
+            request.Solved = true;
+
+            request.Message += ("\n " + solution.Message);
+
+            _usersRepository.UpdateRefund(request);
+
+            var responce =new AdminResponse()
+            {
+                AdminId = Guid.Parse(adminid),
+                CreationTime = DateTime.UtcNow,
+                IdentityId = user.Identity.Id,
+                Message = solution.Message
+            };
+            
+            await _usersRepository.AddAdminResponse(responce);
+
+            return NoContent();
+        }
+
+        [Authorize(Policy = "Root")]
+        [HttpPost("root/setcomission")]
+        [ProducesResponseType(204)]
+        public IActionResult SetComission([FromBody] ComissionDto value)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            var root = _usersRepository.GetUser(id);
+            var res = Comission.GetCommision(new ComissionControllerPattern() {Comission = value.Value},
+                new User() {PrivateKey = root.PrivateKey}, ModelState);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            return NoContent();
+        }
 
         [Authorize(Policy = "Admin")]
         [HttpGet("driverlicenses/{driverId}")]

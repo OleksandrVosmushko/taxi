@@ -9,9 +9,9 @@ namespace Taxi.Entities
     public class Contract
     {
         [Key]
-        public ulong Id { get; set; }
+        public long Id { get; set; }
 
-        public ulong TokenValue { get; set; }
+        public long TokenValue { get; set; }
 
         public double FromLatitude { get; set; }
 

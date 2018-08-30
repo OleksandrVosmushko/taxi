@@ -16,6 +16,8 @@ namespace Taxi.Services
 
         AppUser GetUser(string id);
         PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
+        void UpdateRefund(RefundRequest request);
+        RefundRequest GetRefundRequest(Guid id);
         PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters); 
         Task AddAdminResponse(AdminResponse response);
         Task<PagedList<AppUser>> GetUsers(UserResourceParameters resourceParameters);

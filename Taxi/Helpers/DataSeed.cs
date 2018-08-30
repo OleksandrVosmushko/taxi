@@ -114,7 +114,8 @@ namespace Taxi.Helpers
                     PhoneNumber = "333",
                     UserName = "root",
                     EmailConfirmed = true,
-                    Id = id
+                    Id = id,
+                    PrivateKey = "90467FCD1A14CEE777EF5D86FE1947BC48171F78D41395CCA9CF5C1189EA6E08"
                 };
 
                 var rootpassword = Environment.GetEnvironmentVariable("TAXI_ROOT_USER") ?? "151515";

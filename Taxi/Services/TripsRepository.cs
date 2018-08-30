@@ -77,7 +77,7 @@ namespace Taxi.Services
 
         public Contract GetContract(ulong id)
         {
-            return _dataContext.Contracts.FirstOrDefault(c => c.Id == id);
+            return _dataContext.Contracts.FirstOrDefault(c => c.Id == (long)id);
         }
 
         public async Task AddTripHistory(TripHistory tripHistory)

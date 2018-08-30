@@ -26,6 +26,7 @@ using Amazon.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Taxi.Hubs;
 using Microsoft.Extensions.Logging;
 
 namespace Taxi
@@ -97,6 +98,7 @@ namespace Taxi
             });
             services.AddScoped<IResourceUriHelper, ResourceUriHelper>();
 
+            services.AddSignalR();
             var awsopt = Configuration.GetAWSOptions();
             var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
             var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
@@ -261,6 +263,11 @@ namespace Taxi
                 //routes.MapRoute(
                 //    name: "default",
                 //    template: "{controller}/{action}/{id?}");
+            });
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<RouteHub>("/route");
             });
         }
     }

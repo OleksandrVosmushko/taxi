@@ -9,6 +9,8 @@ namespace Taxi.Entities
     {
         public Guid Id { get; set; }
 
+        public string ConnectionId { get; set; }
+
         public string IdentityId { get; set; }
 
         public AppUser Identity { get; set; }

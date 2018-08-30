@@ -45,6 +45,10 @@ namespace Taxi.Services
 
         Driver GetDriverById(Guid Id);
 
+        Customer GetCustomerByConnectionId(string connectionId);
+
+        Driver GetDriverByConnectionId(string connectionId);
+
         IEnumerable<Driver> GetDrivers();
 
         IEnumerable<Customer> GetCustomers();

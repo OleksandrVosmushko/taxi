@@ -15,6 +15,9 @@ using Taxi.Models.Trips;
 using Taxi.Services;
 using TaxiCoinCoreLibrary.ControllerFunctions;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
+using Microsoft.Extensions.Configuration;
+using Taxi.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Taxi.Controllers
 {
@@ -26,18 +29,22 @@ namespace Taxi.Controllers
         private IUsersRepository _usersRepository;
         private IUrlHelper _urlHelper;
         private IGoogleMapsService _googleMapsService;
+        private IConfiguration _configuration;
+        private readonly IHubContext<RouteHub> _hubContext;
 
-        public TripsController(IMapper mapper,
+        public TripsController(IHubContext<RouteHub> hubContext, IConfiguration configuration, IMapper mapper,
             ITripsRepository tripsRepo,
             IUsersRepository usersRepository,
             IUrlHelper urlHelper,
             IGoogleMapsService googleMapsService)
         {
+            _configuration = configuration;
             _tripsRepo = tripsRepo;
             _mapper = mapper;
             _usersRepository = usersRepository;
             _urlHelper = urlHelper;
             _googleMapsService = googleMapsService;
+            _hubContext = hubContext;
         }
         
         [Authorize(Policy = "Driver")]
@@ -79,6 +86,9 @@ namespace Taxi.Controllers
                 trip.LastLon = latLon.Longitude;
 
                 trip.LastUpdateTime = node.UpdateTime;
+
+                // Sending driver's position to the customer
+                await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId).SendAsync("postGeoData", trip.LastLat, trip.LastLon);
 
                 await _tripsRepo.UpdateTrip(trip);
 
@@ -146,7 +156,7 @@ namespace Taxi.Controllers
 
 
             tripEntity.Distance = length;
-            tripEntity.Price = 400000;
+            tripEntity.Price = Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance);
             #region Responce
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
@@ -479,6 +489,9 @@ namespace Taxi.Controllers
         {
             var customerId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
 
+            // Set connectionId for Customer
+
+
             var trip = _tripsRepo.GetTrip(Guid.Parse(customerId));
 
             if (trip == null)
@@ -562,6 +575,11 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverByIdentityId(driverId);
+
+            // Set connectionId for Diver
+            //_routeHub.ConnectDriver(driver);
 
             var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
 

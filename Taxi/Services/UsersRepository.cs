@@ -217,6 +217,20 @@ namespace Taxi.Services
             return customer;
         }
 
+        public Customer GetCustomerByConnectionId(string connectionId)
+        {
+            var customer = _dataContext.Customers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+
+            return customer;
+        }
+
+        public Driver GetDriverByConnectionId(string connectionId)
+        {
+            var driver = _dataContext.Drivers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+
+            return driver;
+        }
+
         public Driver GetDriverById(Guid id)
         {
             var driver = _dataContext.Drivers.Include(d => d.Identity)

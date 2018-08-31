@@ -34,6 +34,8 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 return null;
             }
 
+            var js = JsonConvert.SerializeObject(result);
+
             return result;
         }
 

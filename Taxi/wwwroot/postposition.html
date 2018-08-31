@@ -15,14 +15,23 @@
         </form>
     </div>
 
-    <script src="~/js/signalr.min.js"></script>
+<script src="js/signalr.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
     <script>
-        let hubUrl = 'https://localhost:44303/route';
+        let hubUrl = 'https://localhost:44315/route';
+        console.log(hubUrl);
+        
         const hubConnection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl)
-            .configureLogging(signalR.LogLevel.Information)
-            .build();
-
+            .withUrl(hubUrl, {
+                    accessTokenFactory: () => {
+                        return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJxdWlja2RldmVsb3BpbmdAZ21haWwuY29tIiwianRpIjoiZTJkMjY0YTgtNGIzZi00MDI2LWFjMWEtMmEwZDc0ZGI5NmVhIiwiaWF0IjoxNTM1NzE5OTY4LCJpZCI6IjM1ODJiZWU5LWQ1Y2ItNGUwZC04ZDY2LWNlMDc5NjljNmVkMCIsInJvbCI6WyJkcml2ZXJfYWNjZXNzIiwiY3VzdG9tZXJfYWNjZXNzIl0sImN1c3RvbWVySWQiOiJmMmM2NjJhOS0wYjMyLTQwYzktYTFjNS00YmUxZjcyM2U0ZTUiLCJkcml2ZXJJZCI6ImI4ODg4YWQxLTZlODctNGVmNS05NDU2LTY0ODM3ODAxYzNhNCIsIm5iZiI6MTUzNTcxOTk2OCwiZXhwIjoxNTM1NzI3MTY4LCJpc3MiOiJ3ZWJBcGkiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUyODQxLyJ9.JAlNrxhp6MW4q57jqEm5uk8_acEXFisYopqh4JF_UQY";
+                    }
+                })
+            .configureLogging(signalR.LogLevel.Information).build()
+            ;
+        
         document.getElementById("sendGeoData").addEventListener("click", function (data) {
             hubConnection.invoke('ConnectDriver');
             let lonVar = document.getElementById("lon").value;

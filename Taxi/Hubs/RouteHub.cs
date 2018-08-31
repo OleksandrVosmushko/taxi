@@ -15,8 +15,6 @@ namespace Taxi.Hubs
 
         private IUsersRepository _usersRepository;
 
-        public RouteHub() { }
-
         public RouteHub(IUsersRepository usersRepository) {
             _usersRepository = usersRepository;
         }
@@ -31,28 +29,28 @@ namespace Taxi.Hubs
         }
 
         [Authorize(Policy = "Customer")]
-        public void ConnectCustomer()
+        public async void ConnectCustomer()
         {
             var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
-            var customer = _usersRepository.GetCustomerByConnectionId(customerId);
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(customerId));
             customer.ConnectionId = Context.ConnectionId;
-            _usersRepository.UpdateCustomer(customer);
+            await _usersRepository.UpdateCustomer(customer);
         }
 
         [Authorize(Policy = "Driver")]
-        public void ConnectDriver()
+        public async void ConnectDriver()
         {          
             var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
-            var driver = _usersRepository.GetDriverByIdentityId(driverId);
+            var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
             driver.ConnectionId = Context.ConnectionId;
-            _usersRepository.UpdateDriver(driver);
+            await _usersRepository.UpdateDriver(driver);
         }
 
 
         public override Task OnDisconnectedAsync(Exception e)
         {
             var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
-            var customer = _usersRepository.GetCustomerByConnectionId(customerId);
+            var customer = _usersRepository.GetCustomerById(Guid.Parse( customerId));
             if (customer != null)
             {
                 customer.ConnectionId = "";
@@ -60,7 +58,7 @@ namespace Taxi.Hubs
             }
 
             var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
-            var driver = _usersRepository.GetDriverByIdentityId(driverId);
+            var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
             if (driver != null)
             {
                 driver.ConnectionId = "";

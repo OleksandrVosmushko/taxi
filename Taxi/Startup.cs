@@ -15,6 +15,7 @@ using Taxi.Services;
 using Taxi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -155,6 +156,23 @@ namespace Taxi
                 configureOptions.ClaimsIssuer = jwtOptions[nameof(JwtIssuerOptions.Issuer)];
                 configureOptions.TokenValidationParameters = tokenValidationParameters;
                 configureOptions.SaveToken = true;
+
+                configureOptions.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             // api user claim policy
@@ -246,6 +264,7 @@ namespace Taxi
                     AllowAnyMethod().
                     AllowAnyOrigin();
             });
+            //app.UseHsts();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -258,6 +277,12 @@ namespace Taxi
                
                // context.Database.Migrate();
             }
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<RouteHub>("/route");
+            });
+            
             app.UseMvc(routes =>
             {
                 //routes.MapRoute(
@@ -265,10 +290,7 @@ namespace Taxi
                 //    template: "{controller}/{action}/{id?}");
             });
 
-            app.UseSignalR(routes =>
-            {
-                routes.MapHub<RouteHub>("/route");
-            });
+     
         }
     }
 }

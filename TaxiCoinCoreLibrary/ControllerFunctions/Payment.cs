@@ -51,7 +51,7 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(User), e.Message);
                 return null;
             }
-
+            var js = JsonConvert.SerializeObject(result);
             return result;
         }
     }

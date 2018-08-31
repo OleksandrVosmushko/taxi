@@ -14,11 +14,13 @@
         <input id="track" type="button" value="Отримувати положення таксиста" />
     </div>
     <br>
-
-    <script src="~/js/signalr.min.js"></script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAkWDXhzQibv8As2idoch_9eM0JR2wiDpE&callback=initMap">
+    </script>
+    <script src="/js/signalr.min.js"></script>
 
     <script>
-        let hubUrl = 'https://localhost:44303/route';
+        let hubUrl = 'https://localhost:44304/route';
         var hubConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl)
             .configureLogging(signalR.LogLevel.Information)

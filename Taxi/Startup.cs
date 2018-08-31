@@ -91,7 +91,9 @@ namespace Taxi
                 return new UrlHelper(actionContext);
             });
 
-            services.AddSignalR();
+            services.AddSignalR(o => 
+                o.EnableDetailedErrors = true
+            );
 
 
             var awsopt = Configuration.GetAWSOptions();
@@ -237,6 +239,10 @@ namespace Taxi
             app.UseAuthentication();
             app.UseCors(cfg =>
             {
+                //cfg.WithOrigins("https://localhost:44304")
+                //   .AllowAnyHeader()
+                //   .WithMethods("GET", "POST")
+                //   .AllowCredentials();
                 cfg.AllowAnyHeader().
                     AllowAnyMethod().
                     AllowAnyOrigin();

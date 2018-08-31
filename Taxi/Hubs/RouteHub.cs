@@ -15,7 +15,7 @@ namespace Taxi.Hubs
 
         private IUsersRepository _usersRepository;
 
-        public RouteHub() { }
+        //public RouteHub() { }
 
         public RouteHub(IUsersRepository usersRepository) {
             _usersRepository = usersRepository;
@@ -30,7 +30,7 @@ namespace Taxi.Hubs
             }          
         }
 
-        [Authorize(Policy = "Customer")]
+        //[Authorize(Policy = "Customer")]
         public void ConnectCustomer()
         {
             var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
@@ -39,7 +39,7 @@ namespace Taxi.Hubs
             _usersRepository.UpdateCustomer(customer);
         }
 
-        [Authorize(Policy = "Driver")]
+        //[Authorize(Policy = "Driver")]
         public void ConnectDriver()
         {          
             var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;

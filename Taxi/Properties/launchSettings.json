@@ -4,7 +4,7 @@
     "anonymousAuthentication": true,
     "iisExpress": {
       "applicationUrl": "http://localhost:52841/",
-      "sslPort": 0
+      "sslPort": 44304
     }
   },
   "profiles": {
@@ -13,8 +13,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "TAXI_DB_CONN": "Server=aa1keg786fny204.cixy3cknhn6y.us-east-2.rds.amazonaws.com;Port=5432;Database=ebdb;User Id=postgres;Password=********;",
-        
+        "TAXI_DB_CONN": "Server=aa1keg786fny204.cixy3cknhn6y.us-east-2.rds.amazonaws.com;Port=5432;Database=ebdb;User Id=postgres;Password=********;"
       }
     },
     "Taxi": {

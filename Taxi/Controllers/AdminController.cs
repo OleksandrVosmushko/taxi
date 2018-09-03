@@ -63,7 +63,27 @@ namespace Taxi.Controllers
 
             return Ok(adminDto);
         }
-        
+
+        [Authorize(Policy = "Admin")]
+        [HttpGet("payment/{tripHistoryId}")]
+        public async Task<IActionResult> GetPaymentById(Guid tripHistoryId)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var history = await _tripsRepository.GetTripHistory(tripHistoryId);
+            if (history == null)
+                return NotFound();
+            var customer = _usersRepository.GetCustomerById(history.CustomerId);
+            
+            var payment = await Payment.GetById((ulong) history.ContractId,
+                new User() {PrivateKey = customer.Identity.PrivateKey},ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            return Ok(payment);
+        }
+
         [Authorize(Policy = "Admin")]
         [HttpGet("getusers",Name = "GetUsers")]
         public async Task<IActionResult> GetUsers(UserResourceParameters resourceParameters)

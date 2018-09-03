@@ -54,11 +54,11 @@ namespace Taxi.Services
 
         public PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters)
         {
-            IQueryable<RefundRequest> beforePaging = _dataContext.RefundRequests;
+            IQueryable<RefundRequest> beforePaging = _dataContext.RefundRequests.OrderBy(r => r.CreationTime);
 
             if (resourceParameters.IsSolved != null)
             {
-                beforePaging = beforePaging.Where(p => p.Solved == resourceParameters.IsSolved).OrderBy(r => r.CreationTime);
+                beforePaging = beforePaging.Where(p => p.Solved == resourceParameters.IsSolved);
             }
             return PagedList<RefundRequest>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
@@ -75,11 +75,11 @@ namespace Taxi.Services
 
         public PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters)
         {
-            IQueryable<DriverLicense> beforePaging = _dataContext.DriverLicenses;
+            IQueryable<DriverLicense> beforePaging = _dataContext.DriverLicenses.OrderBy(l => l.UpdateTime);
 
             if (resourceParameters.IsApproved != null)
             {
-                beforePaging = beforePaging.Where(p => p.IsApproved == resourceParameters.IsApproved).OrderBy(l => l.UpdateTime);
+                beforePaging = beforePaging.Where(p => p.IsApproved == resourceParameters.IsApproved);
             }
 
             return PagedList<DriverLicense>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
@@ -95,9 +95,9 @@ namespace Taxi.Services
 
         public async Task<PagedList<AppUser>> GetUsers(UserResourceParameters paginationParameters)
         {
-            var beforePaging = //(!string.IsNullOrEmpty(paginationParameters.Rol))?
+            IQueryable<AppUser> beforePaging = //(!string.IsNullOrEmpty(paginationParameters.Rol))?
               //  await _userManager.GetUsersForClaimAsync(new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, paginationParameters.Rol)) :
-                _userManager.Users;
+                _userManager.Users.OrderBy(u => u.Email);
             
 
             if (!string.IsNullOrEmpty(paginationParameters.SearchQuery))
@@ -116,7 +116,7 @@ namespace Taxi.Services
             {
                 beforePaging = beforePaging.Where(u =>
                     _dataContext.UserClaims.FirstOrDefault(c =>
-                        c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null).OrderBy(u => u.Email);
+                        c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null);
             }
 
             return PagedList<AppUser>.Create(beforePaging.Include(u => u.ProfilePicture), paginationParameters.PageNumber, paginationParameters.PageSize);
@@ -129,7 +129,7 @@ namespace Taxi.Services
 
         public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
         {
-            var beforePaging = _dataContext.Admins.Include(a => a.Identity).ThenInclude(i => i.ProfilePicture).OrderBy(a => a.IsApproved);
+            var beforePaging = _dataContext.Admins.OrderBy(a => a.IsApproved).Include(a => a.Identity).ThenInclude(i => i.ProfilePicture);
             return PagedList<Admin>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
         }
 
@@ -380,7 +380,7 @@ namespace Taxi.Services
 
         public PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters)
         {
-            var beforePaging = _dataContext.AdminResponces.Where(a => a.IdentityId == id).OrderByDescending(ar => ar.CreationTime);
+            var beforePaging = _dataContext.AdminResponces.OrderByDescending(ar => ar.CreationTime).Where(a => a.IdentityId == id);
 
             return PagedList<AdminResponse>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }

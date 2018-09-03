@@ -24,7 +24,7 @@
         var hubConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {
                 accessTokenFactory: () => {
-                    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJxdWlja2RldmVsb3BpbmdAZ21haWwuY29tIiwianRpIjoiZTJkMjY0YTgtNGIzZi00MDI2LWFjMWEtMmEwZDc0ZGI5NmVhIiwiaWF0IjoxNTM1NzE5OTY4LCJpZCI6IjM1ODJiZWU5LWQ1Y2ItNGUwZC04ZDY2LWNlMDc5NjljNmVkMCIsInJvbCI6WyJkcml2ZXJfYWNjZXNzIiwiY3VzdG9tZXJfYWNjZXNzIl0sImN1c3RvbWVySWQiOiJmMmM2NjJhOS0wYjMyLTQwYzktYTFjNS00YmUxZjcyM2U0ZTUiLCJkcml2ZXJJZCI6ImI4ODg4YWQxLTZlODctNGVmNS05NDU2LTY0ODM3ODAxYzNhNCIsIm5iZiI6MTUzNTcxOTk2OCwiZXhwIjoxNTM1NzI3MTY4LCJpc3MiOiJ3ZWJBcGkiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0OjUyODQxLyJ9.JAlNrxhp6MW4q57jqEm5uk8_acEXFisYopqh4JF_UQY";
+                    return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxQG1haWwucnUiLCJqdGkiOiJjMDQ1OTgyMi1mODdmLTQzYjQtYmRjNi1jNTNkMmM2YjBkN2UiLCJpYXQiOjE1MzU5ODcwMDgsImlkIjoiZDAxYmExNzctNGQyMS00ZDc1LTk0Y2EtNTcwMmVjZGE3NDg3Iiwicm9sIjpbImRyaXZlcl9hY2Nlc3MiLCJjdXN0b21lcl9hY2Nlc3MiXSwiY3VzdG9tZXJJZCI6ImU2N2U5ODc1LWY2NzQtNDEyMC1iMGVhLTAwZGVhNTFmYTU2MSIsImRyaXZlcklkIjoiN2MzOWEwMWEtYWJiMy00MDZmLWJiYjEtN2M2M2Q3OWU4Y2RjIiwibmJmIjoxNTM1OTg3MDA4LCJleHAiOjE1MzU5OTQyMDgsImlzcyI6IndlYkFwaSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6NTI4NDEvIn0.SyZYa4bAfiWzP3_nYoenbMp_chM1Lv-S3pF5yS2VDNs";
                 }
             })
             .configureLogging(signalR.LogLevel.Information)

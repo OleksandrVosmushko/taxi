@@ -12,9 +12,17 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
 {
     public class Payment
     {
-        public static async Task<string> GetById(UInt64 id, User user)
+        public static async Task<TokenAPI.Payment> GetById(UInt64 id, User user, ModelStateDictionary ModelState)
         {
-            user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            try
+            {
+                user.PublicKey = EthECKey.GetPublicAddress(user.PrivateKey);
+            }
+            catch
+            {
+                ModelState.AddModelError(nameof(user.PublicKey), "Unable to get public key");
+                return null;
+            }
             ContractFunctions contractFunctions = Globals.GetInstance().ContractFunctions;
             TokenAPI.Payment res;
             try
@@ -23,10 +31,11 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             }
             catch (Exception e)
             {
-                return JsonConvert.SerializeObject(e.Message);
+                ModelState.AddModelError(nameof(User), e.Message);
+                return null;
             }
 
-            return JsonConvert.SerializeObject(res);
+            return res;
         }
 
         public static TransactionReceipt Create(UInt64 id, CreatePaymentPattern req, User user, ModelStateDictionary ModelState)

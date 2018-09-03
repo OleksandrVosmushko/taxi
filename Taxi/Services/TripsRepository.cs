@@ -152,15 +152,14 @@ namespace Taxi.Services
 
         public PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters)
         {
-            var beforePaging = _dataContext.TripHistories.Where(t => t.CustomerId == CustomerId)
-                .OrderByDescending(h => h.FinishTime);
+            var beforePaging = _dataContext.TripHistories.OrderByDescending(h => h.FinishTime).Where(t => t.CustomerId == CustomerId);
             return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
         public PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverID, TripHistoryResourceParameters resourceParameters)
         {
-            var beforePaging = _dataContext.TripHistories.Where(t => t.DriverId == DriverID)
-                .OrderByDescending(h => h.FinishTime);
+            var beforePaging = _dataContext.TripHistories.OrderByDescending(h => h.FinishTime).Where(t => t.DriverId == DriverID)
+                ;
             return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
@@ -171,8 +170,8 @@ namespace Taxi.Services
 
         public async Task<List<TripHistoryRouteNode>> GetTripRouteNodes(Guid tripHistoryId)
         {
-            return await _dataContext.TripHistoryRouteNodes.Where(n=>n.TripHistoryId == tripHistoryId)
-                .OrderBy(o=>o.UpdateTime).ToListAsync();
+            return await _dataContext.TripHistoryRouteNodes.OrderBy(o => o.UpdateTime).Where(n=>n.TripHistoryId == tripHistoryId)
+                .ToListAsync();
         }
 
         public void RemoveTrip(Guid customerId)

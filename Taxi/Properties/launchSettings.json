@@ -13,8 +13,7 @@
       "launchBrowser": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "TAXI_DB_CONN": "Server=aa1keg786fny204.cixy3cknhn6y.us-east-2.rds.amazonaws.com;Port=5432;Database=ebdb;User Id=postgres;Password=********;"
-        
+        "TAXI_DB_CONN": "Server=aabtjvzyyfqjpg.cixy3cknhn6y.us-east-2.rds.amazonaws.com;Port=5432;Database=ebdbtx;User Id=postgres;Password=taxi1515;"
       }
     },
     "Taxi": {

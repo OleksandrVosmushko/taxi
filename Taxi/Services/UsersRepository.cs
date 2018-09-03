@@ -58,7 +58,7 @@ namespace Taxi.Services
 
             if (resourceParameters.IsSolved != null)
             {
-                beforePaging = beforePaging.Where(p => p.Solved == resourceParameters.IsSolved);
+                beforePaging = beforePaging.Where(p => p.Solved == resourceParameters.IsSolved).OrderBy(r => r.CreationTime);
             }
             return PagedList<RefundRequest>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
@@ -79,7 +79,7 @@ namespace Taxi.Services
 
             if (resourceParameters.IsApproved != null)
             {
-                beforePaging = beforePaging.Where(p => p.IsApproved == resourceParameters.IsApproved);
+                beforePaging = beforePaging.Where(p => p.IsApproved == resourceParameters.IsApproved).OrderBy(l => l.UpdateTime);
             }
 
             return PagedList<DriverLicense>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
@@ -116,7 +116,7 @@ namespace Taxi.Services
             {
                 beforePaging = beforePaging.Where(u =>
                     _dataContext.UserClaims.FirstOrDefault(c =>
-                        c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null);
+                        c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null).OrderBy(u => u.Email);
             }
 
             return PagedList<AppUser>.Create(beforePaging.Include(u => u.ProfilePicture), paginationParameters.PageNumber, paginationParameters.PageSize);
@@ -129,7 +129,7 @@ namespace Taxi.Services
 
         public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
         {
-            var beforePaging = _dataContext.Admins.Include(a => a.Identity).ThenInclude(i => i.ProfilePicture);
+            var beforePaging = _dataContext.Admins.Include(a => a.Identity).ThenInclude(i => i.ProfilePicture).OrderBy(a => a.IsApproved);
             return PagedList<Admin>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
         }
 

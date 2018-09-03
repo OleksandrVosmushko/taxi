@@ -249,6 +249,7 @@ namespace Taxi
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+          //  app.UseHsts();
             //trying forvarde3d headers
             //app.UseForwardedHeaders(new ForwardedHeadersOptions
             //{
@@ -258,11 +259,13 @@ namespace Taxi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
+          //  app.UseHttpsRedirection();
             app.UseCors(cfg =>
             {
                 cfg.AllowAnyHeader().
                     AllowAnyMethod().
-                    AllowAnyOrigin();
+                    AllowAnyOrigin().
+                    AllowCredentials();
             });
             //app.UseHsts();
             app.UseSwagger();

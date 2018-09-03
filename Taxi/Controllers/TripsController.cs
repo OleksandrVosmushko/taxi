@@ -87,8 +87,16 @@ namespace Taxi.Controllers
 
                 trip.LastUpdateTime = node.UpdateTime;
 
-                // Sending driver's position to the customer
-                await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId).SendAsync("postGeoData", trip.LastLat, trip.LastLon);
+                try
+                {
+                    // Sending driver's position to the customer
+                    await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId)
+                        .SendAsync("postGeoData", trip.LastLat, trip.LastLon);
+                }
+                catch 
+                {
+                    
+                }
 
                 await _tripsRepo.UpdateTrip(trip);
 

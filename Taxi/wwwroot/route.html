@@ -18,7 +18,9 @@
     <script src="js/signalr.min.js"></script>
 
     <script>
-        let hubUrl = 'https://localhost:44315/route';
+        //let hubUrl = 'https://localhost:44315/route';
+        let hubUrl = 'http://localhost:52841/route';
+
         var hubConnection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {
                 accessTokenFactory: () => {

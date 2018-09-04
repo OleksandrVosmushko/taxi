@@ -4,6 +4,13 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <UserSecretsId>b2fc8fee-caf0-4059-9e7a-411f9d6bfa4c</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Auth\bin\**" />
+    <Content Remove="Auth\bin\**" />
+    <EmbeddedResource Remove="Auth\bin\**" />
+    <None Remove="Auth\bin\**" />
+  </ItemGroup>
   <!--<PropertyGroup>
     <PublishDir>..\out</PublishDir>
   </PropertyGroup>-->

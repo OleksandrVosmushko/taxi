@@ -83,6 +83,7 @@ namespace Taxi
                     b.UseNetTopologySuite();
                 }));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
+            services.AddScoped<IDriverLocRepository, DriverLocationRepository>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();

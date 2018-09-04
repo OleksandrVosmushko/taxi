@@ -22,7 +22,7 @@ namespace Taxi.Hubs
 
         public async Task Send(string customerConnectionId, double lat, double lon)
         {
-            if(customerConnectionId != "")
+            if(!string.IsNullOrEmpty(customerConnectionId))
             {
                 await Clients.Client(customerConnectionId).SendAsync("postGeoData", lat, lon);
             }          
@@ -53,7 +53,7 @@ namespace Taxi.Hubs
             var customer = _usersRepository.GetCustomerById(Guid.Parse( customerId));
             if (customer != null)
             {
-                customer.ConnectionId = "";
+                customer.ConnectionId = null;
                 return base.OnDisconnectedAsync(e);
             }
 
@@ -61,7 +61,7 @@ namespace Taxi.Hubs
             var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
             if (driver != null)
             {
-                driver.ConnectionId = "";
+                driver.ConnectionId = null;
                 return base.OnDisconnectedAsync(e);
             }
 

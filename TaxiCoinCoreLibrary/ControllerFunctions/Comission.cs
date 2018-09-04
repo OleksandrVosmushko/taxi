@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Nethereum.Hex.HexTypes;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
 using TaxiCoinCoreLibrary.TokenAPI;
 using TaxiCoinCoreLibrary.Utils;
@@ -35,6 +36,8 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             {
                 ModelState.AddModelError(nameof(User), "Unable to complete the operation");    
             }
+            if (res.Status == new HexBigInteger(0))
+                ModelState.AddModelError(nameof(User), "Operation failed");
 
             return res;
         }

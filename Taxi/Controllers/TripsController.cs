@@ -46,7 +46,33 @@ namespace Taxi.Controllers
             _googleMapsService = googleMapsService;
             _hubContext = hubContext;
         }
-        
+
+        [Authorize(Policy = "Driver")]
+        [HttpPost("driverlocation")]
+        public async Task<IActionResult> UpdateDriverLocation([FromBody] LatLonDto latLon)
+        {
+            var driverId = Guid.Parse(User.Claims
+                .FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value);
+            var trip = _tripsRepo.GetTripByDriver(driverId);
+
+            if (trip == null)
+                return NotFound();
+            
+            try
+            {
+                // Sending driver's position to the customer
+                await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId)
+                    .SendAsync("postGeoData", trip.LastLat, trip.LastLon);
+            }
+            catch
+            {
+
+            }
+
+            return NoContent();
+
+        }
+
         [Authorize(Policy = "Driver")]
         [HttpPost("updateroute")]
         public async Task<IActionResult> UpdateTripRoute([FromBody] LatLonDto latLon)

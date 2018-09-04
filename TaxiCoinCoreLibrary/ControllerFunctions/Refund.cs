@@ -3,6 +3,7 @@ using Nethereum.Signer;
 using Newtonsoft.Json;
 using System;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Nethereum.Hex.HexTypes;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
 using TaxiCoinCoreLibrary.TokenAPI;
 using TaxiCoinCoreLibrary.Utils;
@@ -34,7 +35,8 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 return null;
             }
 
-            var js = JsonConvert.SerializeObject(result);
+            if (result.Status == new HexBigInteger(0))
+                ModelState.AddModelError(nameof(User), "Operation failed");
 
             return result;
         }
@@ -62,6 +64,9 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(User), e.Message);
                 return null;
             }
+            if (result.Status == new HexBigInteger(0))
+                ModelState.AddModelError(nameof(User), "Operation failed");
+
 
             return result;
         }
@@ -88,6 +93,8 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(User), e.Message);
                 return null;
             }
+            if (result.Status == new HexBigInteger(0))
+                ModelState.AddModelError(nameof(User), "Operation failed");
 
             return result;
         }

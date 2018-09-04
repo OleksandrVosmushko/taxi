@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Taxi.Data;
 using Taxi.Entities;
+using Taxi.Services;
 
 namespace Taxi.Helpers
 {
@@ -66,6 +67,43 @@ namespace Taxi.Helpers
                     new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId, Driver.Id.ToString()),
                     new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId, c.Id.ToString())
                  };
+
+                var addClaimRes = userManager.AddClaimsAsync(Driver.Identity, claims).Result;
+            }
+
+            if (context.Drivers.FirstOrDefault(d => d.Id == new Guid("7c39a01a-abb3-406f-bbb1-7c63d79e8cdc")) == null)
+            {
+                var drID = new Guid("7c39a01a-abb3-406f-bbb1-7c63d79e8cdc");
+                var cID = new Guid("e67e9875-f674-4120-b0ea-00dea51fa561");
+                var id = "d01ba177-4d21-4d75-94ca-5702ecda7487";
+                var Driver = new Driver()
+                {
+                    Id = drID,
+                    City = "Kyiv",
+                    IdentityId = id,
+                    Vehicle = new Vehicle()
+                    {
+                        Brand = "BMW",
+                        Model = "M3",
+                        Color = "black",
+                        Number = "777"
+                    }
+                };
+                context.Drivers.Add(Driver);
+
+                var c = new Customer()
+                {
+                    Id = cID,
+                    IdentityId = id
+                };
+                context.Customers.Add(c);
+                context.SaveChanges();
+                var claims = new List<Claim> {
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId, Driver.Id.ToString()),
+                    new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId, c.Id.ToString())
+                };
 
                 var addClaimRes = userManager.AddClaimsAsync(Driver.Identity, claims).Result;
             }

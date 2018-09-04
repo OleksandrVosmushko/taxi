@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NetTopologySuite.Geometries;
 
 namespace Taxi.Entities
 {
     public class Driver
     {
         public Guid Id { get; set; }
+
+        public string ConnectionId { get; set; }
 
         public string IdentityId { get; set; }
 
@@ -23,5 +26,6 @@ namespace Taxi.Entities
 
         public DriverLicense DriverLicense { get; set; }
 
+        public Point Location { get; set; }
     }
 }

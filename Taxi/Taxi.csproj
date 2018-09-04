@@ -6,6 +6,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Auth\bin\**" />
+    <Content Remove="Auth\bin\**" />
+    <EmbeddedResource Remove="Auth\bin\**" />
+    <None Remove="Auth\bin\**" />
+  </ItemGroup>
+  <!--<PropertyGroup>
+    <PublishDir>..\out</PublishDir>
+  </PropertyGroup>-->
+  <ItemGroup>
+    
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="4.0.1" />
     <PackageReference Include="AWSSDK.Core" Version="3.3.24.4" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.3.6" />
@@ -14,7 +24,10 @@
     <PackageReference Include="GeoAPI.Core" Version="1.7.5" />
     <PackageReference Include="Geolocation" Version="1.1.1" />
     <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />  
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0-preview1-35029" />
     <PackageReference Include="NetTopologySuite" Version="1.15.0" />
     <PackageReference Include="NetTopologySuite.IO.PostGis" Version="1.15.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1" />
@@ -33,10 +46,28 @@
     <Content Include="./GetNearQuery.txt" Link="GetNearQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateFromQuery.txt" Link="UpdateFromQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateToQuery.txt" Link="UpdateToQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./UpdateLocQuery.txt" Link="UpdateLocQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./LocationQuery.txt" Link="LocationQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Docker.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\uploads\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaxiCoinCoreLibrary\TaxiCoinCoreLibrary.csproj" />
   </ItemGroup>
 
   <ItemGroup>

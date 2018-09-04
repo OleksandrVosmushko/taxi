@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
 using Taxi.Models.Customers;
 using Taxi.Models.Trips;
@@ -23,16 +24,19 @@ namespace Taxi.Controllers.Accounts
         private UserManager<AppUser> _userManager;
         private IUsersRepository _usersRepository;
         private IEmailSender _emailSender;
-        
+        private IResourceUriHelper _resourceUriHelper;
+
         public CustomersController(UserManager<AppUser> userManager,
             IMapper mapper,
             IUsersRepository usersRepository,
-            IEmailSender emailSender)
+            IEmailSender emailSender,
+            IResourceUriHelper resourceUriHelper)
         {
             _mapper = mapper;
             _userManager = userManager;
             _usersRepository = usersRepository;
             _emailSender = emailSender;
+            _resourceUriHelper = resourceUriHelper;
         }
 
         [Produces(contentType: "application/json")]
@@ -146,6 +150,35 @@ namespace Taxi.Controllers.Accounts
             return NoContent();
         }
 
-   
+        [HttpGet("adminresponses",Name = "GetAdminResponses")]
+        [Authorize(Policy = "Customer")]
+        public async Task<IActionResult> GetAdminResponses(PaginationParameters resourceParameters)
+        {
+            var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            var responses = _usersRepository.GetAdminResponses(id, resourceParameters);
+
+            var prevLink = responses.HasPrevious
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetAdminResponses)) : null;
+
+            var nextLink = responses.HasNext
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetAdminResponses)) : null;
+
+
+            Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(responses, resourceParameters, prevLink, nextLink));
+
+            var responsesDto = new List<AdminResponseToReturnDto>();
+
+            foreach (var v in responses)
+            {
+                var dto = Mapper.Map<AdminResponseToReturnDto>(v);
+                dto.Email = _usersRepository.GetAdminById(v.AdminId).Identity.Email;
+
+                responsesDto.Add(dto);
+            }
+
+            return Ok(responsesDto);
+        }
+
     }
 }

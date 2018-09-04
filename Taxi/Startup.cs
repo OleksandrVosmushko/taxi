@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -14,6 +15,7 @@ using Taxi.Services;
 using Taxi.Models;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -25,6 +27,8 @@ using Amazon.Runtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Taxi.Hubs;
+using Microsoft.Extensions.Logging;
 
 namespace Taxi
 {
@@ -41,6 +45,10 @@ namespace Taxi
               .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
               .AddEnvironmentVariables();
 
+            //test
+            // throw new Exception(AppContext.BaseDirectory);
+            //throw new Exception(Directory.GetCurrentDirectory());
+           // throw new Exception(env.ContentRootPath);
             Configuration = builder.Build();
 
             CurrentEnvironment = env;
@@ -75,6 +83,7 @@ namespace Taxi
                     b.UseNetTopologySuite();
                 }));
             //  services.AddScoped<ApplicationDbContext, ApplicationDbContext>();
+            services.AddScoped<IDriverLocRepository, DriverLocationRepository>();
             services.AddScoped<IUsersRepository, UsersRepository>();
             services.AddTransient<IJwtFactory, JwtFactory>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -89,8 +98,9 @@ namespace Taxi
                     implamantationFactory.GetService<IActionContextAccessor>().ActionContext;
                 return new UrlHelper(actionContext);
             });
+            services.AddScoped<IResourceUriHelper, ResourceUriHelper>();
 
-
+            services.AddSignalR();
             var awsopt = Configuration.GetAWSOptions();
             var keyId = Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID");
             var secretKey = Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY");
@@ -147,6 +157,23 @@ namespace Taxi
                 configureOptions.ClaimsIssuer = jwtOptions[nameof(JwtIssuerOptions.Issuer)];
                 configureOptions.TokenValidationParameters = tokenValidationParameters;
                 configureOptions.SaveToken = true;
+
+                configureOptions.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        // If the request is for our hub...
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            // Read the token out of the query string
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             // api user claim policy
@@ -223,6 +250,7 @@ namespace Taxi
             {
                 app.UseExceptionHandler("/Home/Error");
             }
+          //  app.UseHsts();
             //trying forvarde3d headers
             //app.UseForwardedHeaders(new ForwardedHeadersOptions
             //{
@@ -232,12 +260,15 @@ namespace Taxi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseAuthentication();
+          //  app.UseHttpsRedirection();
             app.UseCors(cfg =>
             {
                 cfg.AllowAnyHeader().
                     AllowAnyMethod().
-                    AllowAnyOrigin();
+                    AllowAnyOrigin().
+                    AllowCredentials();
             });
+            //app.UseHsts();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -250,12 +281,20 @@ namespace Taxi
                
                // context.Database.Migrate();
             }
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<RouteHub>("/route");
+            });
+            
             app.UseMvc(routes =>
             {
                 //routes.MapRoute(
                 //    name: "default",
                 //    template: "{controller}/{action}/{id?}");
             });
+
+     
         }
     }
 }

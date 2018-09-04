@@ -11,6 +11,8 @@ using Taxi.Data;
 using Taxi.Entities;
 using Taxi.Helpers;
 using Taxi.Models;
+using Taxi.Models.Admins;
+using Taxi.Models.Drivers;
 
 namespace Taxi.Services
 {
@@ -32,17 +34,129 @@ namespace Taxi.Services
             _uploadService = uploadService;
         }
 
-        public Admin GetAdminById(Guid adminId)
+
+        public async Task RemoveUser(AppUser user)
         {
-            return _dataContext.Admins.Include(a => a.Identity).FirstOrDefault(ad => ad.Id == adminId);
+            var driver = _dataContext.Drivers.FirstOrDefault(d => d.IdentityId == user.Id);
+            var customer = _dataContext.Customers.FirstOrDefault(d => d.IdentityId == user.Id);
+            if (driver != null)
+                _dataContext.Remove(driver);
+            if (customer != null)
+                _dataContext.Remove(customer);
+            await _dataContext.SaveChangesAsync();
+            await _userManager.DeleteAsync(user);
         }
 
-        //public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
-        //{
-        //    //var beforePaging = _dataContext.Admins.Include(a => a.Identity);
-        //    //    .OrderByDescending(h => h.FinishTime);
-        //    //return PagedList<TripHistory>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
-        //}
+        public AppUser GetUser(string id)
+        {
+            return _dataContext.Users.Include(u => u.ProfilePicture).FirstOrDefault(ur => ur.Id == id);
+        }
+
+        public PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters)
+        {
+            IQueryable<RefundRequest> beforePaging = _dataContext.RefundRequests.OrderBy(r => r.CreationTime);
+
+            if (resourceParameters.IsSolved != null)
+            {
+                beforePaging = beforePaging.Where(p => p.Solved == resourceParameters.IsSolved);
+            }
+            return PagedList<RefundRequest>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+        }
+
+        public void UpdateRefund(RefundRequest request)
+        {
+            _dataContext.SaveChanges();
+        }
+
+        public RefundRequest GetRefundRequest(Guid id)
+        {
+            return _dataContext.RefundRequests.FirstOrDefault(r => r.Id == id);
+        }
+
+        public PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters)
+        {
+            IQueryable<DriverLicense> beforePaging = _dataContext.DriverLicenses.OrderBy(l => l.UpdateTime);
+
+            if (resourceParameters.IsApproved != null)
+            {
+                beforePaging = beforePaging.Where(p => p.IsApproved == resourceParameters.IsApproved);
+            }
+
+            return PagedList<DriverLicense>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
+
+        }
+
+        public async Task AddAdminResponse(AdminResponse response)
+        {
+            await _dataContext.AdminResponces.AddAsync(response);
+
+            await _dataContext.SaveChangesAsync();
+        }
+
+        public async Task<PagedList<AppUser>> GetUsers(UserResourceParameters paginationParameters)
+        {
+            IQueryable<AppUser> beforePaging = //(!string.IsNullOrEmpty(paginationParameters.Rol))?
+              //  await _userManager.GetUsersForClaimAsync(new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, paginationParameters.Rol)) :
+                _userManager.Users.OrderBy(u => u.Email);
+            
+
+            if (!string.IsNullOrEmpty(paginationParameters.SearchQuery))
+            {
+                var searchForWhereClause = paginationParameters.SearchQuery.Trim().ToLowerInvariant();
+                 
+                beforePaging = beforePaging.Where(a => (a.FirstName + " "+ a.LastName + " " + a.Email + " "+ a.PhoneNumber).ToLowerInvariant().Contains(searchForWhereClause));
+            }
+            
+            if (paginationParameters.EmailConfirmed != null)
+            {
+                beforePaging = beforePaging.Where(u => u.EmailConfirmed == paginationParameters.EmailConfirmed );
+            }
+
+            if (!string.IsNullOrEmpty(paginationParameters.Rol))
+            {
+                beforePaging = beforePaging.Where(u =>
+                    _dataContext.UserClaims.FirstOrDefault(c =>
+                        c.UserId == u.Id && c.ClaimValue == paginationParameters.Rol) != null);
+            }
+
+            return PagedList<AppUser>.Create(beforePaging.Include(u => u.ProfilePicture), paginationParameters.PageNumber, paginationParameters.PageSize);
+        }
+
+        public Admin GetAdminById(Guid adminId)
+        {
+            return _dataContext.Admins.Include(a => a.Identity).ThenInclude(a => a.ProfilePicture).FirstOrDefault(ad => ad.Id == adminId);
+        }
+
+        public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
+        {
+            var beforePaging = _dataContext.Admins.OrderBy(a => a.IsApproved).Include(a => a.Identity).ThenInclude(i => i.ProfilePicture);
+            return PagedList<Admin>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
+        }
+
+        public async Task AddAdmin(Admin admin)
+        {
+            await _dataContext.Admins.AddAsync(admin);
+
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId, admin.Id.ToString())
+            };
+            var identity = await _userManager.FindByIdAsync(admin.IdentityId);
+
+            var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+
+            if (admin.IsApproved == true)
+                await ApproveAdmin(admin);
+        }
+
+        public async Task ApproveAdmin(Admin admin)
+        {
+            var claims = new List<Claim> {
+                new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.AdminAccess),
+            };
+            var identity = await _userManager.FindByIdAsync(admin.IdentityId);
+
+            var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+        }
 
         public async Task AddCustomer(Customer customer)
         {
@@ -57,7 +171,7 @@ namespace Taxi.Services
 
             var addClaimRes = await _userManager.AddClaimsAsync(customer.Identity, claims);
         }
-
+        
         public async Task UpdateCustomer(Customer customer)
         {
             await _dataContext.SaveChangesAsync();
@@ -98,9 +212,23 @@ namespace Taxi.Services
         
         public Customer GetCustomerById(Guid id)
         {
-            var customer = _dataContext.Customers.Include(d => d.Identity).Include(c=>c.CurrentTrip).SingleOrDefault(o => o.Id == id);
+            var customer = _dataContext.Customers.Include(d => d.Identity).Include(c=>c.CurrentTrip).FirstOrDefault(o => o.Id == id);
 
             return customer;
+        }
+
+        public Customer GetCustomerByConnectionId(string connectionId)
+        {
+            var customer = _dataContext.Customers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+
+            return customer;
+        }
+
+        public Driver GetDriverByConnectionId(string connectionId)
+        {
+            var driver = _dataContext.Drivers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+
+            return driver;
         }
 
         public Driver GetDriverById(Guid id)
@@ -248,6 +376,13 @@ namespace Taxi.Services
         public async Task UpdateDriverLicense(DriverLicense driverLicense)
         {
             await _dataContext.SaveChangesAsync();
+        }
+
+        public PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters)
+        {
+            var beforePaging = _dataContext.AdminResponces.OrderByDescending(ar => ar.CreationTime).Where(a => a.IdentityId == id);
+
+            return PagedList<AdminResponse>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
         public async Task<bool> RemoveDriverLicense(DriverLicense license)

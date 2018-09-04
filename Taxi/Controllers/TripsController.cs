@@ -13,6 +13,11 @@ using Taxi.Helpers;
 using Taxi.Models;
 using Taxi.Models.Trips;
 using Taxi.Services;
+using TaxiCoinCoreLibrary.ControllerFunctions;
+using TaxiCoinCoreLibrary.RequestObjectPatterns;
+using Microsoft.Extensions.Configuration;
+using Taxi.Hubs;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Taxi.Controllers
 {
@@ -24,20 +29,50 @@ namespace Taxi.Controllers
         private IUsersRepository _usersRepository;
         private IUrlHelper _urlHelper;
         private IGoogleMapsService _googleMapsService;
+        private IConfiguration _configuration;
+        private readonly IHubContext<RouteHub> _hubContext;
 
-        public TripsController(IMapper mapper,
+        public TripsController(IHubContext<RouteHub> hubContext, IConfiguration configuration, IMapper mapper,
             ITripsRepository tripsRepo,
             IUsersRepository usersRepository,
             IUrlHelper urlHelper,
             IGoogleMapsService googleMapsService)
         {
+            _configuration = configuration;
             _tripsRepo = tripsRepo;
             _mapper = mapper;
             _usersRepository = usersRepository;
             _urlHelper = urlHelper;
             _googleMapsService = googleMapsService;
+            _hubContext = hubContext;
         }
-        
+
+        [Authorize(Policy = "Driver")]
+        [HttpPost("driverlocation")]
+        public async Task<IActionResult> UpdateDriverLocation([FromBody] LatLonDto latLon)
+        {
+            var driverId = Guid.Parse(User.Claims
+                .FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value);
+            var trip = _tripsRepo.GetTripByDriver(driverId);
+
+            if (trip == null)
+                return NotFound();
+            
+            try
+            {
+                // Sending driver's position to the customer
+                await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId)
+                    .SendAsync("postGeoData", latLon.Latitude, latLon.Longitude);
+            }
+            catch
+            {
+
+            }
+
+            return NoContent();
+
+        }
+
         [Authorize(Policy = "Driver")]
         [HttpPost("updateroute")]
         public async Task<IActionResult> UpdateTripRoute([FromBody] LatLonDto latLon)
@@ -77,6 +112,17 @@ namespace Taxi.Controllers
                 trip.LastLon = latLon.Longitude;
 
                 trip.LastUpdateTime = node.UpdateTime;
+
+                try
+                {
+                    // Sending driver's position to the customer
+                    await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId)
+                        .SendAsync("postGeoData", trip.LastLat, trip.LastLon);
+                }
+                catch 
+                {
+                    
+                }
 
                 await _tripsRepo.UpdateTrip(trip);
 
@@ -144,7 +190,7 @@ namespace Taxi.Controllers
 
 
             tripEntity.Distance = length;
-            tripEntity.Price = 0;
+            tripEntity.Price = (long)Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance);
             #region Responce
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(tripEntity);
@@ -190,6 +236,14 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
             }
             //TODO : refund
+            var customer = _usersRepository.GetCustomerById(Guid.Parse(customerid));
+
+            var res = Refund.Create((ulong)trip.ContractId, new DefaultControllerPattern(),
+                new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             _tripsRepo.RemoveTrip(Guid.Parse(customerid));
 
             return NoContent();
@@ -235,7 +289,14 @@ namespace Taxi.Controllers
             }
 
             var trip = _tripsRepo.GetTrip(customer.Id, true);
+
             // TODO:Money to Driver
+            var result = Order.CompleteOrder((ulong)trip.ContractId, new DefaultControllerPattern(),
+                new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
             await _tripsRepo.AddTripHistory(tripHistory);
@@ -273,7 +334,20 @@ namespace Taxi.Controllers
                 return NotFound();
             }
 
-            
+            if (trip.DriverId == null)
+            {
+                ModelState.AddModelError(nameof(Trip), "Driver not assigned");
+                return BadRequest(ModelState);
+            }
+
+            var user = _usersRepository.GetCustomerById(trip.CustomerId);
+
+            var refundCreationRes = Refund.Create((ulong)trip.ContractId, new DefaultControllerPattern(),
+                new User() {PrivateKey = user.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
             await _tripsRepo.AddTripHistory(tripHistory);
@@ -285,7 +359,12 @@ namespace Taxi.Controllers
             refundRequest.CustomerId = customer.Id;
 
             refundRequest.TripHistoryId = tripHistory.Id;
-            
+
+            refundRequest.IdentityId = User.Claims
+                .FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
+
+            _tripsRepo.AddRefundRequest(refundRequest);
+
             _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
 
             //TODO: Admin check refund
@@ -340,7 +419,28 @@ namespace Taxi.Controllers
 
             tripEntity.Distance = length;
 
+            tripEntity.Price = (long)Helpers.Price.getPriceInTokens(_configuration, tripEntity.Distance); ;
             #endregion
+
+            var contract = new Contract()
+            {
+                FromLatitude = tripCreationDto.From.Latitude,
+                FromLongitude = tripCreationDto.From.Longitude,
+                ToLatitude = tripCreationDto.To.Latitude,
+                ToLongitude = tripCreationDto.To.Longitude,
+                TokenValue = tripEntity.Price
+            };
+
+            _tripsRepo.AddContract(contract);
+
+            var res = Payment.Create((ulong)contract.Id, new CreatePaymentPattern(){Value = (ulong)contract.TokenValue},new User{PrivateKey = customer.Identity.PrivateKey}, ModelState);
+            //swap
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+           
+
+            tripEntity.ContractId = contract.Id;
 
             _tripsRepo.InsertTrip(tripEntity, tripCreationDto.From.Latitude,
                 tripCreationDto.From.Longitude,
@@ -423,6 +523,9 @@ namespace Taxi.Controllers
         {
             var customerId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
 
+            // Set connectionId for Customer
+
+
             var trip = _tripsRepo.GetTrip(Guid.Parse(customerId));
 
             if (trip == null)
@@ -442,7 +545,7 @@ namespace Taxi.Controllers
 
         [Authorize(Policy = "Driver")]
         [HttpPost("taketrip")]
-        [ProducesResponseType(204)]
+        //[ProducesResponseType(204)]
         public async Task<IActionResult> AddDriverToTrip(Guid customerId)
         {
             if (!ModelState.IsValid)
@@ -454,6 +557,13 @@ namespace Taxi.Controllers
            
             if (trip == null || driverId == null || trip.DriverId != null) 
                 return BadRequest();
+            var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
+
+            var orderRes = Order.GetOrder((ulong)trip.ContractId, new DefaultControllerPattern(),
+                new User() {PrivateKey = driver.Identity.PrivateKey}, ModelState);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             trip.DriverId = Guid.Parse(driverId);
 
@@ -463,9 +573,33 @@ namespace Taxi.Controllers
 
             if (res != true)
                 return BadRequest();
-            return NoContent();
+
+            return Ok(orderRes);
         }
         
+        [Authorize(Policy = "Driver")]
+        [HttpGet("driver/tripstatus")]
+        public IActionResult GetTripStatusByDriver()
+        {
+            var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
+
+            if (trip == null)
+                return NotFound();
+
+            var tripStatusDto = Mapper.Map<TripStatusDto>(trip);
+
+            var from = trip.From;
+            var to = trip.To;
+
+            tripStatusDto.From = Taxi.Helpers.Location.PointToPlaceDto(from);
+
+            tripStatusDto.To = Taxi.Helpers.Location.PointToPlaceDto(to);
+
+            return Ok(tripStatusDto);
+        }
+
         [Authorize (Policy = "Driver")]
         [HttpPost("starttrip")]
         [ProducesResponseType(200)]
@@ -475,6 +609,11 @@ namespace Taxi.Controllers
                 return BadRequest(ModelState);
 
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
+
+            var driver = _usersRepository.GetDriverByIdentityId(driverId);
+
+            // Set connectionId for Diver
+            //_routeHub.ConnectDriver(driver);
 
             var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
 
@@ -520,6 +659,7 @@ namespace Taxi.Controllers
 
             return Ok(toReturn);
         }  
+
 
         [Authorize(Policy = "Driver")]
         [HttpPost("finishtrip")]

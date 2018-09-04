@@ -18,6 +18,6 @@ namespace Taxi.Entities
         
         public string  PrivateKey { get; set; }
 
-        public List<AdminResponce> AdminResponces { get; set; } = new List<AdminResponce>();
+        public List<AdminResponse> AdminResponces { get; set; } = new List<AdminResponse>();
     }
 }

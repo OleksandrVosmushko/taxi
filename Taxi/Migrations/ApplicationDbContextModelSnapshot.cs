@@ -144,7 +144,7 @@ namespace Taxi.Migrations
                     b.ToTable("Admins");
                 });
 
-            modelBuilder.Entity("Taxi.Entities.AdminResponce", b =>
+            modelBuilder.Entity("Taxi.Entities.AdminResponse", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
@@ -222,10 +222,32 @@ namespace Taxi.Migrations
                     b.ToTable("AspNetUsers");
                 });
 
+            modelBuilder.Entity("Taxi.Entities.Contract", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<double>("FromLatitude");
+
+                    b.Property<double>("FromLongitude");
+
+                    b.Property<double>("ToLatitude");
+
+                    b.Property<double>("ToLongitude");
+
+                    b.Property<long>("TokenValue");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Contracts");
+                });
+
             modelBuilder.Entity("Taxi.Entities.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("ConnectionId");
 
                     b.Property<string>("IdentityId");
 
@@ -243,7 +265,11 @@ namespace Taxi.Migrations
 
                     b.Property<string>("City");
 
+                    b.Property<string>("ConnectionId");
+
                     b.Property<string>("IdentityId");
+
+                    b.Property<Point>("Location");
 
                     b.HasKey("Id");
 
@@ -260,6 +286,8 @@ namespace Taxi.Migrations
                     b.Property<Guid>("DriverId");
 
                     b.Property<string>("ImageId");
+
+                    b.Property<bool>("IsApproved");
 
                     b.Property<DateTime>("LicensedFrom");
 
@@ -333,6 +361,8 @@ namespace Taxi.Migrations
 
                     b.Property<Guid>("CustomerId");
 
+                    b.Property<string>("IdentityId");
+
                     b.Property<string>("Message");
 
                     b.Property<bool>("Solved");
@@ -350,6 +380,8 @@ namespace Taxi.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<long>("ContractId");
 
                     b.Property<DateTime>("CreationTime");
 
@@ -371,7 +403,7 @@ namespace Taxi.Migrations
 
                     b.Property<DateTime>("LastUpdateTime");
 
-                    b.Property<decimal>("Price");
+                    b.Property<long>("Price");
 
                     b.Property<DateTime>("StartTime");
 
@@ -393,6 +425,8 @@ namespace Taxi.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<long>("ContractId");
+
                     b.Property<DateTime>("CreationTime");
 
                     b.Property<Guid>("CustomerId");
@@ -407,7 +441,7 @@ namespace Taxi.Migrations
 
                     b.Property<Point>("From");
 
-                    b.Property<decimal>("Price");
+                    b.Property<long>("Price");
 
                     b.Property<DateTime>("StartTime");
 
@@ -537,7 +571,7 @@ namespace Taxi.Migrations
                         .HasForeignKey("IdentityId");
                 });
 
-            modelBuilder.Entity("Taxi.Entities.AdminResponce", b =>
+            modelBuilder.Entity("Taxi.Entities.AdminResponse", b =>
                 {
                     b.HasOne("Taxi.Entities.AppUser")
                         .WithMany("AdminResponces")

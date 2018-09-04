@@ -31,6 +31,7 @@ namespace Taxi.Controllers
         private IUsersRepository _userRepository;
         private IMapper _mapper;
         private IHttpContextAccessor _httpContextAccessor;
+        private const string baseWebUrl = "https://devtaxiapp.herokuapp.com";
 
         public AuthController(UserManager<AppUser> userManager, 
             IJwtFactory jwtFactory,
@@ -280,13 +281,13 @@ namespace Taxi.Controllers
             //change links
             if (confirmResult.Succeeded)
             {
-                //return Redirect("/?confirmed=1");
-                return Ok("email_confirmed");
+                return Redirect(baseWebUrl+"/?letter=Success");
+                //return Ok("email_confirmed");
             }
             else
             {
-                //    return Redirect("/error/email-confirm");
-                return BadRequest();
+                return Redirect(baseWebUrl+"/?letter=Failed");
+                //return BadRequest();
             }
         }
         [Produces(contentType: "application/json")]
@@ -315,8 +316,8 @@ namespace Taxi.Controllers
         [HttpGet("reset", Name = "ResetPassword")]
         public IActionResult ResetPassword(string uid, string token)
         {
-            //probably redirect to website
-            return Ok(token);
+            return Redirect(baseWebUrl + $"/reset-password?id={uid}&token={token}");
+
         }
         [Produces(contentType: "application/json")]
         [HttpPost("reset")]
@@ -324,7 +325,7 @@ namespace Taxi.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-            var user = await _userManager.FindByEmailAsync(setPasswordDto.Email);
+            var user = await _userManager.FindByIdAsync(setPasswordDto.Id);
 
             if (user == null)
             {

@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Nethereum.Hex.HexTypes;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
 using TaxiCoinCoreLibrary.TokenAPI;
 using TaxiCoinCoreLibrary.Utils;
@@ -60,6 +61,7 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(user), "Unable to get balance");
                 return null;
             }
+            
             return res;
         }
     }

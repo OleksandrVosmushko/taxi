@@ -3,6 +3,7 @@ using Nethereum.Signer;
 using Newtonsoft.Json;
 using System;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Nethereum.Hex.HexTypes;
 using TaxiCoinCoreLibrary.RequestObjectPatterns;
 using TaxiCoinCoreLibrary.TokenAPI;
 using TaxiCoinCoreLibrary.Utils;
@@ -26,7 +27,10 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             TransactionReceipt result;
             //removed try catch
             result = TokenFunctionsResults<UInt64>.InvokeByTransaction(user, FunctionNames.Deposit, Value: req.Value, Gas: req.Gas);
-          
+
+            if (result.Status == new HexBigInteger(0))
+                ModelState.AddModelError(nameof(User), "Operation failed");
+
             return result;
         }
     }

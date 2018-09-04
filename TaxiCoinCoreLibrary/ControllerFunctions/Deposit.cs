@@ -27,8 +27,7 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             TransactionReceipt result;
             //removed try catch
             result = TokenFunctionsResults<UInt64>.InvokeByTransaction(user, FunctionNames.Deposit, Value: req.Value, Gas: req.Gas);
-
-            if (result.Status == new HexBigInteger(0))
+            if (result.Status.Value.IsZero)
                 ModelState.AddModelError(nameof(User), "Operation failed");
 
             return result;

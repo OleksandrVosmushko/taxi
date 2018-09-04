@@ -36,7 +36,7 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
             {
                 ModelState.AddModelError(nameof(User), "Unable to complete the operation");    
             }
-            if (res.Status == new HexBigInteger(0))
+            if (res.Status.Value.IsZero)
                 ModelState.AddModelError(nameof(User), "Operation failed");
 
             return res;

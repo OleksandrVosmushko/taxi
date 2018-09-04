@@ -35,8 +35,9 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(user), e.Message);
                 return null;
             }
-            if (result.Status == new HexBigInteger(0))
+            if (result.Status.Value.IsZero)
                 ModelState.AddModelError(nameof(User), "Operation failed");
+
             return result;
         }
 
@@ -62,8 +63,9 @@ namespace TaxiCoinCoreLibrary.ControllerFunctions
                 ModelState.AddModelError(nameof(User), e.Message);
                 return null;
             }
-            if (result.Status == new HexBigInteger(0))
+            if (result.Status.Value.IsZero)
                 ModelState.AddModelError(nameof(User), "Operation failed");
+
             return result;
         }
     }

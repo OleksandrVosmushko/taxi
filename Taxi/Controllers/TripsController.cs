@@ -62,7 +62,7 @@ namespace Taxi.Controllers
             {
                 // Sending driver's position to the customer
                 await _hubContext.Clients.Client(_usersRepository.GetCustomerById(trip.CustomerId).ConnectionId)
-                    .SendAsync("postGeoData", trip.LastLat, trip.LastLon);
+                    .SendAsync("postGeoData", latLon.Latitude, latLon.Longitude);
             }
             catch
             {

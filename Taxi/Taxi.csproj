@@ -46,6 +46,8 @@
     <Content Include="./GetNearQuery.txt" Link="GetNearQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateFromQuery.txt" Link="UpdateFromQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="./UpdateToQuery.txt" Link="UpdateToQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./UpdateLocQuery.txt" Link="UpdateLocQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./LocationQuery.txt" Link="LocationQuery.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <CopyToPublishDirectory>Always</CopyToPublishDirectory>

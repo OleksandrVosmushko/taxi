@@ -29,43 +29,42 @@ namespace Taxi.Hubs
         }
 
         [Authorize(Policy = "Customer")]
-        public void ConnectCustomer()
+        public async Task ConnectCustomer()
         {
             var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
             var customer = _usersRepository.GetCustomerById(Guid.Parse(customerId));
             customer.ConnectionId = Context.ConnectionId;
-            _usersRepository.UpdateCustomer(customer).Wait();
+            await _usersRepository.UpdateCustomer(customer);
         }
 
         [Authorize(Policy = "Driver")]
-        public void ConnectDriver()
+        public async Task ConnectDriver()
         {          
             var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
             var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
             driver.ConnectionId = Context.ConnectionId;
-            _usersRepository.UpdateDriver(driver).Wait();
+            await _usersRepository.UpdateDriver(driver);
         }
 
 
-        public override Task OnDisconnectedAsync(Exception e)
+        public override async Task OnDisconnectedAsync(Exception e)
         {
-            var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
-            var customer = _usersRepository.GetCustomerById(Guid.Parse( customerId));
+            //var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
+            var connId = Context.ConnectionId;
+            var customer = _usersRepository.GetCustomerByConnectionId( connId);
             if (customer != null)
             {
                 customer.ConnectionId = null;
-                return base.OnDisconnectedAsync(e);
+                await _usersRepository.UpdateCustomer(customer);
             }
-
-            var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
-            var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
+            
+            var driver = _usersRepository.GetDriverByConnectionId( connId);
             if (driver != null)
             {
                 driver.ConnectionId = null;
-                return base.OnDisconnectedAsync(e);
-            }
+                await _usersRepository.UpdateDriver(driver);            }
 
-            return base.OnDisconnectedAsync(e);
+            await base.OnDisconnectedAsync(e);
         }
     }
 }

@@ -219,14 +219,14 @@ namespace Taxi.Services
 
         public Customer GetCustomerByConnectionId(string connectionId)
         {
-            var customer = _dataContext.Customers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+            var customer = _dataContext.Customers.SingleOrDefault(o => o.ConnectionId == connectionId);
 
             return customer;
         }
 
         public Driver GetDriverByConnectionId(string connectionId)
         {
-            var driver = _dataContext.Drivers.Include(d => d.Identity).Include(c => c.CurrentTrip).SingleOrDefault(o => o.ConnectionId == connectionId);
+            var driver = _dataContext.Drivers.SingleOrDefault(o => o.ConnectionId == connectionId);
 
             return driver;
         }

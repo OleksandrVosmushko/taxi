@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Helpers;
+using Taxi.Models.Admins;
 using Taxi.Models.Customers;
 using Taxi.Models.Drivers;
 using Taxi.Models.Trips;
@@ -54,18 +55,44 @@ namespace Taxi.Models.MappingProfile
             CreateMap<Vehicle, VehicleToReturnDto>().ForAllMembers(opts => opts.Condition((src, dest, srcMember) => srcMember != null));
             
             CreateMap<Trip, TripHistory>().ForMember(x => x.Id, opt => opt.Ignore());
-
-            CreateMap<Place, FinishTripPlace>().ForMember(x => x.Id, opt => opt.Ignore());
-
+            
             CreateMap<LatLonDto, TripRouteNode>();
+
+            CreateMap<LatLonDto, PlaceDto>();
 
             CreateMap<PlaceDto, TripRouteNode>();//unused
 
             CreateMap<TripRouteNode, RouteNodeDto>();
 
-            CreateMap<Trip, TripStatusDto>();
+            CreateMap<Trip, TripStatusDto>().ForMember(x => x.From, opt => opt.Ignore()).ForMember(x => x.To, opt => opt.Ignore());
 
             CreateMap<DriverLicense, DriverLicenseDto>();
+
+            CreateMap<TripRouteNode, TripHistoryRouteNode>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<RefundMessageDto, RefundRequest>();
+
+            CreateMap<AdminRegistrationDto, AppUser>().ForMember(au => au.UserName, map => map.MapFrom(vm => vm.Email));
+
+            CreateMap<AdminRegistrationDto, Admin>();
+
+            CreateMap<Admin, Customer>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<AdminRegistrationDto, AdminDto>();
+
+            CreateMap<Admin, AdminDto>().ForMember(x => x.Id, map => map.MapFrom(vm => vm.Id));
+
+            CreateMap<AppUser, AdminDto>().ForMember(x => x.Id, opt => opt.Ignore());
+
+            CreateMap<AppUser, UserDto>();
+
+            CreateMap<AdminResponseDto, AdminResponse>();
+
+            CreateMap<RefundRequest, RefundRequestDto>();
+
+            CreateMap<TripHistory, AdminTripHistoryDto>().ForMember(x => x.From, opt => opt.Ignore()).ForMember(x => x.To, opt => opt.Ignore());
+
+            CreateMap<AdminResponse, AdminResponseToReturnDto>();
         }
     }
 }

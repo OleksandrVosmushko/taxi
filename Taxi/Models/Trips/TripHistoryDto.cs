@@ -20,7 +20,7 @@ namespace Taxi.Models.Trips
 
         public DateTime FinishTime { get; set; }
 
-        public decimal Price { get; set; }
+        public long Price { get; set; }
 
         public double Distance { get; set; }
     }

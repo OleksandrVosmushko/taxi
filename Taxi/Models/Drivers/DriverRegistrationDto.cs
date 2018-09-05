@@ -27,7 +27,10 @@ namespace Taxi.Models
         public string FirstName { get; set; }
 
         [Required]
-
         public string LastName { get; set; }
+     
+        [Required]
+        [StringLength(64,MinimumLength = 64)]
+        public string PrivateKey { get; set; }
     }
 }

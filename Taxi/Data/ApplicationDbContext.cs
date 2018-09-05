@@ -12,24 +12,27 @@ namespace Taxi.Data
     {
         public ApplicationDbContext(DbContextOptions options): base (options)
         {
-            
+         
         }
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //{
+        //    optionsBuilder.UseNpgsql()
+
+        //    base.OnConfiguring(optionsBuilder);
+        //}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Trip>()
-            .HasMany(c => c.Places)
-            .WithOne(a => a.Trip)
-            .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<TripHistory>()
-                .HasMany(c => c.RouteNodes)
-                .WithOne(a => a.TripHistory)
-                .OnDelete(DeleteBehavior.Cascade);
-
-
+            modelBuilder.HasPostgresExtension("postgis");
+            modelBuilder.Entity<Contract>()
+                .Property(c => c.Id)
+                .ValueGeneratedOnAdd();
             base.OnModelCreating(modelBuilder);
+            
+            
         }
+
+        public DbSet<Contract> Contracts { get; set; }
         public DbSet<Customer> Customers { get; set; }
 
         public DbSet<Driver> Drivers { get; set; }
@@ -37,9 +40,7 @@ namespace Taxi.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<Trip> Trips { get; set; }
-
-        public DbSet<Place> Places { get; set; }
-
+        
         public DbSet<Vehicle> Vehicles { get; set; }
 
         public DbSet<Picture> Pictures { get; set; }
@@ -47,13 +48,17 @@ namespace Taxi.Data
         public DbSet<ProfilePicture> ProfilePictures { get; set; }
 
         public DbSet<TripHistory> TripHistories { get; set; }
-
-        public DbSet<FinishTripPlace> FinishTripPlaces { get; set; }
-
+        
         public DbSet<TripRouteNode> TripRouteNodes { get; set; }
 
         public DbSet<DriverLicense> DriverLicenses { get; set; }
 
         public DbSet<Admin> Admins { get; set; }
+
+        public DbSet<TripHistoryRouteNode> TripHistoryRouteNodes { get; set; }
+
+        public DbSet<RefundRequest> RefundRequests { get; set; }
+
+        public DbSet<AdminResponse> AdminResponces { get; set; }
     }
 }

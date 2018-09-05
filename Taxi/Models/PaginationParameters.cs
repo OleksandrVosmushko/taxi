@@ -8,7 +8,7 @@ namespace Taxi.Models
     public class PaginationParameters
     {
         private int _pageSize = 10;
-        private const int maxPageSize = 20;
+        private const int maxPageSize = 100;
         private int _pageNumber = 1;
 
         public int PageNumber

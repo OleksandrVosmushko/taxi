@@ -3,13 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
+using Taxi.Helpers;
 using Taxi.Models;
+using Taxi.Models.Admins;
+using Taxi.Models.Drivers;
 
 namespace Taxi.Services
 {
     public interface IUsersRepository
     {
+        Task RemoveUser(AppUser user);
+
+        AppUser GetUser(string id);
+        PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
+        void UpdateRefund(RefundRequest request);
+        RefundRequest GetRefundRequest(Guid id);
+        PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters); 
+        Task AddAdminResponse(AdminResponse response);
+        Task<PagedList<AppUser>> GetUsers(UserResourceParameters resourceParameters);
         Admin GetAdminById(Guid adminId);
+
+        PagedList<Admin> GetAdmins(PaginationParameters parameters);
+
+        Task AddAdmin(Admin admin);
+
+        Task ApproveAdmin(Admin admin);
+
         Task AddCustomer(Customer customer);
 
         Task AddDriver(Driver driver);
@@ -25,6 +44,10 @@ namespace Taxi.Services
         Customer GetCustomerById(Guid Id);
 
         Driver GetDriverById(Guid Id);
+
+        Customer GetCustomerByConnectionId(string connectionId);
+
+        Driver GetDriverByConnectionId(string connectionId);
 
         IEnumerable<Driver> GetDrivers();
 
@@ -57,5 +80,6 @@ namespace Taxi.Services
         Task<bool> AddDriverLicense(DriverLicense driverLicense);
 
         Task UpdateDriverLicense(DriverLicense driverLicense);
+        PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters);
     }
 }

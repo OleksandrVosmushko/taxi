@@ -1,20 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <UserSecretsId>b2fc8fee-caf0-4059-9e7a-411f9d6bfa4c</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Auth\bin\**" />
+    <Content Remove="Auth\bin\**" />
+    <EmbeddedResource Remove="Auth\bin\**" />
+    <None Remove="Auth\bin\**" />
+  </ItemGroup>
+  <!--<PropertyGroup>
+    <PublishDir>..\out</PublishDir>
+  </PropertyGroup>-->
+  <ItemGroup>
+    
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="4.0.1" />
     <PackageReference Include="AWSSDK.Core" Version="3.3.24.4" />
     <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.3.6" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.20" />
+    <PackageReference Include="GeoAPI" Version="1.7.5" />
+    <PackageReference Include="GeoAPI.Core" Version="1.7.5" />
     <PackageReference Include="Geolocation" Version="1.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.9" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.App" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />  
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0-preview1-35029" />
+    <PackageReference Include="NetTopologySuite" Version="1.15.0" />
+    <PackageReference Include="NetTopologySuite.IO.PostGis" Version="1.15.0" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="2.1.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="2.0.0-preview1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite" Version="2.1.0" />
     <PackageReference Include="RangeTree" Version="1.0.6" />
     <PackageReference Include="S2Geometry" Version="1.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="3.0.0" />
@@ -23,7 +41,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.4" />
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.1.0-preview1-final" />
+    <Content Include="./InsertTripQuery.txt" Link="InsertTripQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./GetNearQuery.txt" Link="GetNearQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./UpdateFromQuery.txt" Link="UpdateFromQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./UpdateToQuery.txt" Link="UpdateToQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./UpdateLocQuery.txt" Link="UpdateLocQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="./LocationQuery.txt" Link="LocationQuery.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Docker.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="appsettings.Development.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -31,8 +67,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="IntervalTree">
-      <HintPath>dlls\IntervalTree.dll</HintPath>
+    <ProjectReference Include="..\TaxiCoinCoreLibrary\TaxiCoinCoreLibrary.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms">
+      <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.1\System.Windows.Forms.dll</HintPath>
     </Reference>
   </ItemGroup>
 

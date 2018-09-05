@@ -38,7 +38,7 @@ namespace Taxi.Controllers
             _hostingEnvironment = env;
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpGet("driverlicense/image")]
         public async Task<IActionResult> GetLicensePicture()
         {
@@ -58,7 +58,7 @@ namespace Taxi.Controllers
             return File(res.Stream, res.ContentType);
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpPut("driverlicense")]
         public async Task<IActionResult> CreateLicence([FromBody]LicenseCreationDto licenseCreation)
         {
@@ -103,7 +103,7 @@ namespace Taxi.Controllers
         }
 
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpPut("driverlicense/image")]
         [Consumes("multipart/form-data")]
         public async Task<IActionResult> SetLicensePicture(List<IFormFile> files)
@@ -149,6 +149,7 @@ namespace Taxi.Controllers
                 await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
                 driver.DriverLicense.UpdateTime = DateTime.UtcNow;
                 driver.DriverLicense.ImageId = imageId;
+                driver.DriverLicense.IsApproved = false;
                 await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
                 System.IO.File.Delete(filename);
                 return Ok();
@@ -156,7 +157,7 @@ namespace Taxi.Controllers
             return BadRequest();
         }
 
-        [Authorize(Policy = "Driver")]
+        [Authorize(Policy = "DriverReg")]
         [HttpGet("driverlicense")]
         public  IActionResult GetDriverLicense()
         {
@@ -164,7 +165,7 @@ namespace Taxi.Controllers
 
             var driver = _usersRepository.GetDriverById(Guid.Parse(driverId));
 
-            if (driver.DriverLicense == null)
+            if (driver?.DriverLicense == null)
                 return NotFound();
 
             var licenseToReturn = Mapper.Map<DriverLicenseDto>(driver.DriverLicense);

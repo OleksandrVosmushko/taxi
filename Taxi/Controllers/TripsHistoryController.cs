@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Taxi.Helpers;
 using Taxi.Models;
+using Taxi.Models.Admins;
 using Taxi.Models.Trips;
 using Taxi.Services;
 
@@ -17,43 +18,18 @@ namespace Taxi.Controllers
     {
         private ITripsRepository _tripsRepository;
         private IUrlHelper _urlHelper;
+        private IResourceUriHelper _resourceUriHelper;
 
         public TripsHistoryController(ITripsRepository tripsRepository,
-            IUrlHelper urlHelper)
+            IUrlHelper urlHelper,
+            IResourceUriHelper resourceUriHelper)
         {
             _urlHelper = urlHelper;
             _tripsRepository = tripsRepository;
+            _resourceUriHelper = resourceUriHelper;
         }
-        private string CreateResourceUri(PaginationParameters resourceParameters, ResourceUriType type, string getMethodName)
-        {
-            switch (type)
-            {
-                case ResourceUriType.PrevoiusPage:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber - 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.NextPage:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber + 1,
-                            pageSize = resourceParameters.PageSize
-                        });
-                case ResourceUriType.Current:
-                default:
-                    return _urlHelper.Link(getMethodName,
-                        new
-                        {
-                            pageNumber = resourceParameters.PageNumber,
-                            pageSize = resourceParameters.PageSize
-                        });
-            }
-        }
-      
-
+        
+        
         [HttpGet("driver", Name = "GetDriverHistory")]
         [Authorize(Policy = "Driver")]
         public async Task<IActionResult> GetDriverHistory(TripHistoryResourceParameters resourceParameters)
@@ -64,10 +40,10 @@ namespace Taxi.Controllers
 
 
             var prevLink = trips.HasPrevious
-                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetDriverHistory)) : null;
 
             var nextLink = trips.HasNext
-                ? CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetDriverHistory)) : null;
 
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));
 
@@ -76,8 +52,8 @@ namespace Taxi.Controllers
             foreach(var t in trips)
             {
 
-                var from = t.Places.FirstOrDefault(p => p.IsFrom == true);
-                var to = t.Places.FirstOrDefault(p => p.IsTo == true);
+                var from = t.From;
+                var to = t.To;
 
                 tripsToReturn.Add(new TripHistoryDto()
                 {
@@ -85,16 +61,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.PointToPlaceDto(from),
+                    To = Helpers.Location.PointToPlaceDto(to),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance
@@ -130,6 +98,48 @@ namespace Taxi.Controllers
 
             return Ok(routesDto);
         }
+
+        [HttpGet("{id}")]
+        [Authorize(Policy = "Admin")]
+        public async Task<IActionResult> GetTripHistory(Guid id)
+        {
+
+            var trip = await _tripsRepository.GetTripHistory(id);
+
+            if (trip == null)
+                return NotFound();
+
+            var tripsToReturn = Mapper.Map<AdminTripHistoryDto>(trip);
+
+            tripsToReturn.From = Helpers.Location.PointToPlaceDto(trip.From);
+
+            tripsToReturn.To = Helpers.Location.PointToPlaceDto(trip.To);
+
+            return Ok(tripsToReturn);
+        }
+
+        [HttpGet("admin/triproute/{tripHistoryId}")]
+        [Authorize(Policy = "Admin")]
+        public async Task<IActionResult> GetTripRoute(Guid tripHistoryId)
+        {
+            var trip = await _tripsRepository.GetTripHistory(tripHistoryId);
+
+            if (trip == null)
+                return NotFound();
+            
+            var tripRoute = await _tripsRepository.GetTripRouteNodes(tripHistoryId);
+
+            var routesDto = new List<RouteNodeDto>();
+
+            foreach (var r in tripRoute)
+            {
+                routesDto.Add(Mapper.Map<RouteNodeDto>(r));
+            }
+
+            return Ok(routesDto);
+        }
+
+
         [HttpGet("customer/triproute/{tripHistoryId}")]
         [Authorize(Policy = "Customer")]
         public async Task<IActionResult> GetCustomerTripRoute(Guid tripHistoryId)
@@ -167,10 +177,10 @@ namespace Taxi.Controllers
             var trips =  _tripsRepository.GetTripHistoriesForCustomer(Guid.Parse(customerId),resourceParameters);
 
             var prevLink = trips.HasPrevious
-                ? CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetCustomerHistory)):null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.PrevoiusPage, nameof(GetCustomerHistory)):null;
 
             var nextLink = trips.HasNext
-                ?CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetCustomerHistory)) : null;
+                ? _resourceUriHelper.CreateResourceUri(resourceParameters, ResourceUriType.NextPage, nameof(GetCustomerHistory)) : null;
 
             
             Response.Headers.Add("X-Pagination", Helpers.PaginationMetadata.GeneratePaginationMetadata(trips, resourceParameters, prevLink, nextLink));
@@ -179,8 +189,8 @@ namespace Taxi.Controllers
 
             foreach (var t in trips)
             {
-                var from = t.Places.FirstOrDefault(p => p.IsFrom == true);
-                var to = t.Places.FirstOrDefault(p => p.IsTo == true);
+                var from = t.From;
+                var to = t.To;
                 
                 tripsToReturn.Add(new TripHistoryDto()
                 {
@@ -188,16 +198,8 @@ namespace Taxi.Controllers
                     DriverId = t.DriverId,
 
                     Id = t.Id,
-                    From = new PlaceDto
-                    {
-                        Longitude = from.Longitude,
-                        Latitude = from.Latitude
-                    },
-                    To = new PlaceDto
-                    {
-                        Longitude = to.Longitude,
-                        Latitude = to.Latitude
-                    },
+                    From = Helpers.Location.PointToPlaceDto(from),
+                    To = Helpers.Location.PointToPlaceDto(to),
                     FinishTime = t.FinishTime,
                     Price = t.Price,
                     Distance = t.Distance

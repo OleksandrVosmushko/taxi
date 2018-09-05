@@ -4,23 +4,24 @@ using System.Linq;
 using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Helpers;
+using Taxi.Models;
 using Taxi.Models.Trips;
 
 namespace Taxi.Services
 {
     public interface ITripsRepository
     {
-        bool SetTrip(Trip trip);
+       // bool SetTrip(Trip trip);
 
-        Task<List<TripRouteNode>> GetTripRouteNodes(Guid tripId);
+        Task<List<TripHistoryRouteNode>> GetTripRouteNodes(Guid tripId);
 
         void RemoveTrip(Guid customerId);
         
-        Trip GetTrip(Guid customerId);
+        Trip GetTrip(Guid customerId, bool includeRoutes = false);
 
-        bool UpdateTripLocation(double lon, double lat, Guid customerId);
+   //     bool UpdateTripLocation(double lon, double lat, Guid customerId);
 
-        List<TripDto> GetNearTrips(double lon, double lat);
+        PagedList<TripDto> GetNearTrips(double lon, double lat, PaginationParameters paginationParameters);
 
         Trip GetTripByDriver(Guid driverId, bool includeRoutes  = false);
         
@@ -31,9 +32,13 @@ namespace Taxi.Services
         PagedList<TripHistory> GetTripHistoriesForCustomer(Guid CustomerId, TripHistoryResourceParameters resourceParameters);
 
         PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverId, TripHistoryResourceParameters resourceParameters);
-
-        Task UpdateTrip(Trip trip);
-
+        Task<bool> UpdateTrip(Trip trip, PlaceDto from = null, PlaceDto to = null);
         Task AddNode(TripRouteNode node);
+        void InsertTrip(Trip tripEntity, double lat1, double lon1, double lat2, double lon2);
+        void AddRefundRequest(RefundRequest refundRequest);
+        void AddContract(Contract contract);
+
+        Contract GetContract(ulong id);
     }
 }
+   

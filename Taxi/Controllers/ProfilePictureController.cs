@@ -48,7 +48,7 @@ namespace Taxi.Controllers
             if (user?.ProfilePicture == null)
                 return NotFound();
 
-            FileDto res = await _uploadService.GetObjectAsync(user.ProfilePicture.Id);
+            FileDto res = await _uploadService.GetObjectAsync(user.ProfilePicture?.Id);
 
             if (res == null)
                 return NotFound();

@@ -13,11 +13,10 @@ namespace Taxi.Controllers
     [Route ("api/location")]
     public class LocationController: Controller
     {
-        private IDriverLocationRepository _driverLocationRepository;
-
-        public LocationController(IDriverLocationRepository driverLocationRepository)
+        private IDriverLocRepository _locationRepository;
+        public LocationController( IDriverLocRepository locationRepository)
         {
-            _driverLocationRepository = driverLocationRepository;
+            _locationRepository = locationRepository;
         }
 
         //[Authorize(Policy = "Driver")]
@@ -39,66 +38,62 @@ namespace Taxi.Controllers
         [Authorize(Policy = "Driver")]
         [ProducesResponseType(204)]
         [HttpPut("driver")]
-        public IActionResult UpdateDriverLocation([FromBody]LatLonDto latLonDto)
+        public async Task<IActionResult> UpdateDriverLocation([FromBody]LatLonDto latLonDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
 
-            var res = _driverLocationRepository.UpdateUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude, DateTime.Now);
+            //var res = _driverLocationRepository.UpdateUser(Guid.Parse(driverid), latLonDto.Longitude, latLonDto.Latitude, DateTime.Now);
+
+            var res = await _locationRepository.UpdateLocation(Guid.Parse(driverid), latLonDto.Latitude, latLonDto.Longitude);
 
             if (res != true)
                 return BadRequest();
+
             return NoContent();
         }
 
-        [Authorize(Policy = "Driver")]
-        [ProducesResponseType(204)]
-        [HttpDelete("driver")]
-        public IActionResult RemoveDriverFromMap()
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
+        //[Authorize(Policy = "Driver")]
+        //[ProducesResponseType(204)]
+        //[HttpDelete("driver")]
+        //public IActionResult RemoveDriverFromMap()
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
+        //    var driverid = User.Claims.Single(c => c.Type == Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
 
-            var res = _driverLocationRepository.RemoveUser(Guid.Parse(driverid));
-            if (res != true)
-                return BadRequest();
+        //    var res = _driverLocationRepository.RemoveUser(Guid.Parse(driverid));
+        //    if (res != true)
+        //        return BadRequest();
             
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
         [Authorize(Policy = "Customer")]
         [ProducesResponseType(200)]
         [HttpGet]
-        public IActionResult GetNearDrivers(LatLonDto latLonDto)
+        public async Task<IActionResult> GetNearDrivers(LatLonDto latLonDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var ids = _driverLocationRepository.Search(latLonDto.Longitude, latLonDto.Latitude, 10000);
 
+            var drivers = await _locationRepository.GetNear(latLonDto.Latitude, latLonDto.Longitude);
+            
             var driverLocationToReturn = new List<DriverLocationDto>();
 
-            foreach (var i in ids)
+            foreach (var driver in drivers)
             {
-                var s2cell = _driverLocationRepository.GetDriverLocation(i);
-
-                if ((DateTime.Now - s2cell.UpdateTime).TotalSeconds < 60)
+                var place = Helpers.Location.PointToPlaceDto(driver.Location);
+                driverLocationToReturn.Add(new DriverLocationDto()
                 {
-                    var latlon = s2cell.CellId.ToLatLng();
-
-                    driverLocationToReturn.Add(new DriverLocationDto()
-                    {
-                        DriverId = i,
-                        Latitude = latlon.LatDegrees,
-                        Longitude = latlon.LngDegrees
-                    });
-                }
-                else
-                {
-                    _driverLocationRepository.RemoveUser(i);
-                }
+                    DriverId = driver.Id,
+                    Latitude = place.Latitude,
+                    Longitude = place.Longitude
+                });
             }
+
+          
             return Ok(driverLocationToReturn);
         }
     }

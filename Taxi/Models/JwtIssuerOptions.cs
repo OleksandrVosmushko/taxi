@@ -31,7 +31,7 @@ namespace Taxi.Models
 
 
 
-        public DateTime RefleshExpiration => DateTime.UtcNow.AddDays(7);
+        public DateTime RefleshExpiration => DateTime.UtcNow.AddDays(60);
         /// <summary>
         /// 4.1.5.  "nbf" (Not Before) Claim - The "nbf" (not before) claim identifies the time before which the JWT MUST NOT be accepted for processing.
         /// </summary>

@@ -13,7 +13,7 @@ namespace Taxi.Models.Trips
 
         public Guid CustomerId { get; set; }
 
-        public double TraveledDistance { get; set; }
+     //   public double TraveledDistance { get; set; }
         
         public PlaceDto LastUpdatePoint { get; set; }
     }

@@ -51,6 +51,7 @@ namespace Taxi.Hubs
         {
             //var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
             var connId = Context.ConnectionId;
+            
             var customer = _usersRepository.GetCustomerByConnectionId( connId);
             if (customer != null)
             {

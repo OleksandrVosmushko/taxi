@@ -37,13 +37,41 @@ namespace Taxi.Services
 
         public async Task RemoveUser(AppUser user)
         {
-            var driver = _dataContext.Drivers.FirstOrDefault(d => d.IdentityId == user.Id);
+            var driver = _dataContext.Drivers.Include(d=> d.DriverLicense).Include(dr=>dr.Vehicle).ThenInclude(v=>v.Pictures).FirstOrDefault(d => d.IdentityId == user.Id);
             var customer = _dataContext.Customers.FirstOrDefault(d => d.IdentityId == user.Id);
+            var admin = _dataContext.Admins.FirstOrDefault(d => d.IdentityId == user.Id);
+
+            _dataContext.Entry(user).Reference(u => u.ProfilePicture).Load();
+            _dataContext.Entry(user).Collection(u => u.RefreshTokens).Load();
+            _dataContext.Entry(user).Collection(u => u.AdminResponces).Load();
+
+            if (user.AdminResponces.Count > 0)
+                _dataContext.RemoveRange(user.AdminResponces);
+
+            if (user.RefreshTokens.Count > 0)
+                _dataContext.RemoveRange(user.RefreshTokens);
+            
+            if (user.ProfilePicture != null)
+                await RemoveProfilePicture(user);
+
+            if (admin != null)
+                _dataContext.Remove(admin);
+
             if (driver != null)
+            {
+                if (driver.DriverLicense!= null)
+                    await RemoveDriverLicense(driver.DriverLicense);
+
+                if (driver.Vehicle != null)
+                    await RemoveVehicle(driver.Vehicle);
                 _dataContext.Remove(driver);
+            }
+            
             if (customer != null)
                 _dataContext.Remove(customer);
+
             await _dataContext.SaveChangesAsync();
+
             await _userManager.DeleteAsync(user);
         }
 

@@ -29,6 +29,7 @@ namespace Taxi.Data
                 .ValueGeneratedOnAdd();
             base.OnModelCreating(modelBuilder);
             
+            
         }
 
         public DbSet<Contract> Contracts { get; set; }

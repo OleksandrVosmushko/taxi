@@ -71,9 +71,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="IntervalTree">
-      <HintPath>dlls\IntervalTree.dll</HintPath>
-    </Reference>
     <Reference Include="System.Windows.Forms">
       <HintPath>..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.1\System.Windows.Forms.dll</HintPath>
     </Reference>

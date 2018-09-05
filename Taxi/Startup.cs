@@ -88,7 +88,6 @@ namespace Taxi
             services.AddTransient<IJwtFactory, JwtFactory>();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddScoped<ITripsRepository, TripsRepository>();
-            services.AddSingleton<IDriverLocationRepository, DriverLocationIndex>();
             services.AddScoped<IUploadService, UploadSevice>();
             services.AddScoped<IGoogleMapsService, GoogleMapsService>();
             services.TryAddSingleton<IActionContextAccessor, ActionContextAccessor>();

@@ -224,17 +224,17 @@ namespace Taxi.Controllers
 
             if (history == null)
                 return NotFound();
-
             var user = _usersRepository.GetCustomerById(history.CustomerId);
+            var root = (await _usersRepository.GetUsers(new UserResourceParameters(){Rol = Helpers.Constants.Strings.JwtClaims.RootUserAccess})).FirstOrDefault();
             if (solution.ToRefund == true)
             {
                 var res = Refund.Approve((ulong) history.ContractId, new DefaultControllerPattern(),
-                    new User() {PrivateKey = user.Identity.PrivateKey}, ModelState);
+                    new User() {PrivateKey = root.PrivateKey}, ModelState);
             }
             else
             {
                 var res = Refund.DisApprove((ulong)history.ContractId, new DefaultControllerPattern(),
-                    new User() { PrivateKey = user.Identity.PrivateKey }, ModelState);
+                    new User() { PrivateKey = root.PrivateKey }, ModelState);
             }
 
             if (!ModelState.IsValid)

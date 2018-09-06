@@ -87,7 +87,7 @@ namespace Taxi.Controllers
 
             if (res != true)
             {
-                return BadRequest();
+                return Conflict();
             }
             var vehicleToReturn = _mapper.Map<VehicleToReturnDto>(vehicleEntity);
             return CreatedAtRoute("GetVehicle", new { id = vehicleEntity.Id }, vehicleToReturn);
@@ -112,7 +112,10 @@ namespace Taxi.Controllers
                 return NotFound();
             }
 
-            await _usersRepository.RemoveVehicle(vehicle);
+            var res = await _usersRepository.RemoveVehicle(vehicle);
+
+            if (!res)
+                return Conflict();
 
             return NoContent();
         }
@@ -206,7 +209,9 @@ namespace Taxi.Controllers
 
             foreach(var v in driver.Vehicle.Pictures.ToList())
             {
-                await _usersRepository.RemoveVehicleImage(driver, v.Id);
+                var res = await _usersRepository.RemoveVehicleImage(driver, v.Id);
+                if (!res)
+                    return Conflict();
             }
 
             var toReturn = new List<ImageToReturnDto>();
@@ -231,7 +236,9 @@ namespace Taxi.Controllers
                     }//these code snippets saves the uploaded files to the project directory
                     var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
                     await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
-                    await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    var res = await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    if (!res)
+                        return Conflict();
                     System.IO.File.Delete(filename);
                     toReturn.Add(new ImageToReturnDto() { ImageId = imageId });
                 }
@@ -282,7 +289,9 @@ namespace Taxi.Controllers
                     }//these code snippets saves the uploaded files to the project directory
                     var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
                     await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
-                    await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    var res = await _usersRepository.AddPictureToVehicle(driver.Vehicle, imageId);
+                    if (!res)
+                        return Conflict();
                     System.IO.File.Delete(filename);
                     toReturn.Add(new ImageToReturnDto() { ImageId = imageId});
                 }

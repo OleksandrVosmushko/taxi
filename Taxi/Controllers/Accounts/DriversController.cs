@@ -54,11 +54,14 @@ namespace Taxi.Controllers.Accounts
             var driver = _mapper.Map<Driver>(model);
             driver.IdentityId = userIdentity.Id;
 
-            await _usersRepository.AddDriver(driver);
+            var addDbres = await _usersRepository.AddDriver(driver);
 
             var customerFromDriver = _mapper.Map<Customer>(driver);
 
-            await _usersRepository.AddCustomer(customerFromDriver);
+            var addres = await _usersRepository.AddCustomer(customerFromDriver);
+
+            if (!addres || !addDbres)
+                return Conflict();
 
             var driverDto = _mapper.Map<DriverDto>(model);
 
@@ -137,10 +140,13 @@ namespace Taxi.Controllers.Accounts
             {
                 var result = await _userManager.ChangePasswordAsync(driver.Identity, driverDto.CurrentPassword, driverDto.NewPassword);
                 if (!result.Succeeded)
-                    return BadRequest();
+                    return Conflict();
             }
 
-            await _usersRepository.UpdateDriver(driver);
+            var res = await _usersRepository.UpdateDriver(driver);
+
+            if (!res)
+                return Conflict();
 
             return NoContent();
         }

@@ -49,7 +49,7 @@ namespace Taxi.Controllers
             var res = await _locationRepository.UpdateLocation(Guid.Parse(driverid), latLonDto.Latitude, latLonDto.Longitude);
 
             if (res != true)
-                return BadRequest();
+                return Conflict();
 
             return NoContent();
         }

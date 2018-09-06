@@ -77,7 +77,9 @@ namespace Taxi.Controllers
             
             if (user.ProfilePicture != null)
             {
-                await _usersRepository.RemoveProfilePicture(user);
+                var res = await _usersRepository.RemoveProfilePicture(user);
+                if (!res)
+                    return Conflict();
                 //remove picture from data context
             }
             if (formFile.Length > 0)
@@ -95,7 +97,9 @@ namespace Taxi.Controllers
                 }//these code snippets saves the uploaded files to the project directory
                 var imageId = Guid.NewGuid().ToString() + Path.GetExtension(filename);
                 await _uploadService.PutObjectToStorage(imageId.ToString(), filename);//this is the method to upload saved file to S3
-                await _usersRepository.AddProfilePicture(user, new ProfilePicture() { Id = imageId});
+                var res = await _usersRepository.AddProfilePicture(user, new ProfilePicture() { Id = imageId});
+                if (!res)
+                    return Conflict();
                 System.IO.File.Delete(filename);
                 return Ok(new ImageToReturnDto() { ImageId = imageId });
             }
@@ -113,7 +117,9 @@ namespace Taxi.Controllers
 
             if (user.ProfilePicture != null)
             {
-                await _usersRepository.RemoveProfilePicture(user);
+                var res = await _usersRepository.RemoveProfilePicture(user);
+                if (!res)
+                    return Conflict();
                 //remove picture from data context
             }
             else return NotFound();

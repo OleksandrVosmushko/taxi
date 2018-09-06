@@ -34,7 +34,9 @@ namespace Taxi.Hubs
             var customerId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value;
             var customer = _usersRepository.GetCustomerById(Guid.Parse(customerId));
             customer.ConnectionId = Context.ConnectionId;
-            await _usersRepository.UpdateCustomer(customer);
+            var res = await _usersRepository.UpdateCustomer(customer);
+            if (!res)
+                throw new Exception("update failed");
         }
 
         [Authorize(Policy = "Driver")]
@@ -43,7 +45,9 @@ namespace Taxi.Hubs
             var driverId = Context.User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
             var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
             driver.ConnectionId = Context.ConnectionId;
-            await _usersRepository.UpdateDriver(driver);
+            var res = await _usersRepository.UpdateDriver(driver);
+            if (!res)
+                throw new Exception("update failed");
         }
 
 
@@ -56,15 +60,21 @@ namespace Taxi.Hubs
             if (customer != null)
             {
                 customer.ConnectionId = null;
-                await _usersRepository.UpdateCustomer(customer);
+                var res = await _usersRepository.UpdateCustomer(customer);
+                if (!res)
+                    throw new Exception("update failed");
             }
             
             var driver = _usersRepository.GetDriverByConnectionId( connId);
             if (driver != null)
             {
                 driver.ConnectionId = null;
-                await _usersRepository.UpdateDriver(driver);            }
+                var res = await _usersRepository.UpdateDriver(driver);
+                if (!res)
+                    throw new Exception("update failed");
+            }
 
+                
             await base.OnDisconnectedAsync(e);
         }
     }

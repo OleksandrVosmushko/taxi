@@ -103,8 +103,10 @@ namespace Taxi.Controllers
 
                 node.TripId = trip.Id;
 
-                await _tripsRepo.AddNode(node);
+                var addres = await _tripsRepo.AddNode(node);
 
+                if (!addres)
+                    return Conflict();
             //    trip.Distance += delta;
 
                 trip.LastLat = latLon.Latitude;
@@ -124,7 +126,9 @@ namespace Taxi.Controllers
                     
                 }
 
-                await _tripsRepo.UpdateTrip(trip);
+                var res = await _tripsRepo.UpdateTrip(trip);
+                if (!res)
+                    return Conflict();
 
             }
 
@@ -244,7 +248,10 @@ namespace Taxi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            _tripsRepo.RemoveTrip(Guid.Parse(customerid));
+            var result = _tripsRepo.RemoveTrip(Guid.Parse(customerid));
+
+            if (!result)
+                return Conflict();
 
             return NoContent();
         }
@@ -266,7 +273,7 @@ namespace Taxi.Controllers
             var res = await _tripsRepo.UpdateTrip(trip, Mapper.Map<PlaceDto>(location));
 
             if (res == false)
-                return BadRequest();
+                return Conflict();
 
             return NoContent();
         }
@@ -299,9 +306,12 @@ namespace Taxi.Controllers
 
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
-            await _tripsRepo.AddTripHistory(tripHistory);
+            var addres = await _tripsRepo.AddTripHistory(tripHistory);
 
-            _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+            var res =_tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+
+            if (!res || !addres)
+                return Conflict();
 
             var from = tripHistory.From;
             var to = tripHistory.To;
@@ -350,7 +360,10 @@ namespace Taxi.Controllers
 
             var tripHistory = Helpers.ComplexMapping.HistoryFromTrip(trip);
 
-            await _tripsRepo.AddTripHistory(tripHistory);
+            var updres = await _tripsRepo.AddTripHistory(tripHistory);
+
+            if (!updres)
+                return Conflict();
 
             var refundRequest = Mapper.Map<RefundRequest>(refundMessage);
 
@@ -363,9 +376,15 @@ namespace Taxi.Controllers
             refundRequest.IdentityId = User.Claims
                 .FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
 
-            _tripsRepo.AddRefundRequest(refundRequest);
+            var addres = _tripsRepo.AddRefundRequest(refundRequest);
 
-            _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+            if (!addres)
+                return Conflict();
+
+            var res = _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+
+            if (!res)
+                return Conflict();
 
             //TODO: Admin check refund
 
@@ -431,7 +450,10 @@ namespace Taxi.Controllers
                 TokenValue = tripEntity.Price
             };
 
-            _tripsRepo.AddContract(contract);
+            var addres = _tripsRepo.AddContract(contract);
+
+            if (!addres)
+                return Conflict();
 
             var res = Payment.Create((ulong)contract.Id, new CreatePaymentPattern(){Value = (ulong)contract.TokenValue},new User{PrivateKey = customer.Identity.PrivateKey}, ModelState);
             //swap
@@ -572,7 +594,7 @@ namespace Taxi.Controllers
             var res = await _tripsRepo.UpdateTrip(trip);
 
             if (res != true)
-                return BadRequest();
+                return Conflict();
 
             return Ok(orderRes);
         }
@@ -629,8 +651,10 @@ namespace Taxi.Controllers
 
             node.TripId = trip.Id;
 
-            await _tripsRepo.AddNode(node);
+            var addres = await _tripsRepo.AddNode(node);
 
+            if (!addres)
+                return Conflict();
           //  trip.Distance = 0;
 
             trip.LastLat = location.Latitude;
@@ -643,7 +667,7 @@ namespace Taxi.Controllers
             var res = await _tripsRepo.UpdateTrip(trip, Mapper.Map<PlaceDto>(location));
 
             if (res != true)
-                return BadRequest();
+                return Conflict();
             
             var from = trip.From;
             var to = trip.To;
@@ -684,7 +708,10 @@ namespace Taxi.Controllers
 
             node.TripId = trip.Id;
 
-            await _tripsRepo.AddNode(node);
+            var addres = await _tripsRepo.AddNode(node);
+
+            if (!addres)
+                return Conflict();
 
             var delta = Helpers.Location.CalculateKilometersDistance(trip.LastLat, trip.LastLon, finishTrip.Latitude, finishTrip.Longitude);
 
@@ -699,7 +726,7 @@ namespace Taxi.Controllers
             var res = await _tripsRepo.UpdateTrip(trip, null, Mapper.Map<PlaceDto>(finishTrip));
 
             if (res == false)
-                return BadRequest();
+                return Conflict();
             #endregion
 
             var tripStatusDto = Mapper.Map<TripStatusDto>(trip);

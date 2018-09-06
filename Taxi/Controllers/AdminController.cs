@@ -173,7 +173,9 @@ namespace Taxi.Controllers
 
             responce.AdminId = Guid.Parse( adminid);
             
-            await _usersRepository.AddAdminResponse(responce);
+            var res = await _usersRepository.AddAdminResponse(responce);
+            if (!res)
+                return Conflict();
 
             return Ok();
         }
@@ -214,7 +216,7 @@ namespace Taxi.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest();
-
+            
             var request = _usersRepository.GetRefundRequest(refundRequestId);
             
             if (request == null)
@@ -246,7 +248,10 @@ namespace Taxi.Controllers
 
             request.Message += ("\n " + solution.Message);
 
-            _usersRepository.UpdateRefund(request);
+            var updres = _usersRepository.UpdateRefund(request);
+
+            if (!updres)
+                return Conflict();
 
             var responce =new AdminResponse()
             {
@@ -256,7 +261,9 @@ namespace Taxi.Controllers
                 Message = solution.Message
             };
             
-            await _usersRepository.AddAdminResponse(responce);
+            var addres = await _usersRepository.AddAdminResponse(responce);
+            if (!addres)
+                return Conflict();
 
             return NoContent();
         }
@@ -349,8 +356,10 @@ namespace Taxi.Controllers
 
             driver.DriverLicense.IsApproved = true;
 
-            await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
-            
+            var res = await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
+
+            if (!res)
+                return Conflict();
             return Ok();
         }
         
@@ -375,7 +384,10 @@ namespace Taxi.Controllers
                     return StatusCode(403);
             }
 
-            await _usersRepository.RemoveUser(user);
+            var res = await _usersRepository.RemoveUser(user);
+
+            if (!res)
+                return Conflict();
 
             return NoContent();
         }
@@ -424,8 +436,10 @@ namespace Taxi.Controllers
 
             var admin = new Admin(){IdentityId = id, IsApproved = true};
 
-            await _usersRepository.AddAdmin(admin);
+            var res = await _usersRepository.AddAdmin(admin);
 
+            if (!res)
+                return Conflict();
             return Ok();
         }
 
@@ -441,8 +455,10 @@ namespace Taxi.Controllers
             if (admin == null)
                 return NotFound();
             
-            await _usersRepository.ApproveAdmin(admin);
+            var res = await _usersRepository.ApproveAdmin(admin);
 
+            if (!res)
+                return Conflict();
             return Ok();
         }
 
@@ -467,11 +483,14 @@ namespace Taxi.Controllers
 
             admin.IdentityId = userIdentity.Id;
 
-            await _usersRepository.AddAdmin(admin);
-
+            var addres = await _usersRepository.AddAdmin(admin);
+            
             var customerFromAdmin = Mapper.Map<Customer>(admin);
 
-            await _usersRepository.AddCustomer(customerFromAdmin);
+            var addDbres = await _usersRepository.AddCustomer(customerFromAdmin);
+
+            if (!addDbres || !addres)
+                return Conflict();
 
             var adminDto = Mapper.Map<AdminDto>(model);
 

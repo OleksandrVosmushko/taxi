@@ -35,7 +35,7 @@ namespace Taxi.Services
         }
 
 
-        public async Task RemoveUser(AppUser user)
+        public async Task<bool> RemoveUser(AppUser user)
         {
             var driver = _dataContext.Drivers.Include(d=> d.DriverLicense).Include(dr=>dr.Vehicle).ThenInclude(v=>v.Pictures).FirstOrDefault(d => d.IdentityId == user.Id);
             var customer = _dataContext.Customers.FirstOrDefault(d => d.IdentityId == user.Id);
@@ -63,16 +63,26 @@ namespace Taxi.Services
                     await RemoveDriverLicense(driver.DriverLicense);
 
                 if (driver.Vehicle != null)
+                {
                     await RemoveVehicle(driver.Vehicle);
+                }
+
                 _dataContext.Remove(driver);
             }
             
             if (customer != null)
                 _dataContext.Remove(customer);
+            try
+            {
+                await _dataContext.SaveChangesAsync();
 
-            await _dataContext.SaveChangesAsync();
-
-            await _userManager.DeleteAsync(user);
+                await _userManager.DeleteAsync(user);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public AppUser GetUser(string id)
@@ -91,9 +101,17 @@ namespace Taxi.Services
             return PagedList<RefundRequest>.Create(beforePaging, resourceParameters.PageNumber, resourceParameters.PageSize);
         }
 
-        public void UpdateRefund(RefundRequest request)
+        public bool UpdateRefund(RefundRequest request)
         {
-            _dataContext.SaveChanges();
+            try
+            {
+                _dataContext.SaveChanges();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public RefundRequest GetRefundRequest(Guid id)
@@ -114,11 +132,18 @@ namespace Taxi.Services
 
         }
 
-        public async Task AddAdminResponse(AdminResponse response)
+        public async Task<bool> AddAdminResponse(AdminResponse response)
         {
             await _dataContext.AdminResponces.AddAsync(response);
-
-            await _dataContext.SaveChangesAsync();
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<PagedList<AppUser>> GetUsers(UserResourceParameters paginationParameters)
@@ -161,9 +186,18 @@ namespace Taxi.Services
             return PagedList<Admin>.Create(beforePaging, paginationParameters.PageNumber, paginationParameters.PageSize);
         }
 
-        public async Task AddAdmin(Admin admin)
+        public async Task<bool> AddAdmin(Admin admin)
         {
             await _dataContext.Admins.AddAsync(admin);
+
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
 
             var claims = new List<Claim> {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId, admin.Id.ToString())
@@ -174,23 +208,43 @@ namespace Taxi.Services
 
             if (admin.IsApproved == true)
                 await ApproveAdmin(admin);
+
+            return true;
         }
 
-        public async Task ApproveAdmin(Admin admin)
+        public async Task<bool> ApproveAdmin(Admin admin)
         {
+            admin.IsApproved = true;
+
             var claims = new List<Claim> {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.AdminAccess),
             };
             var identity = await _userManager.FindByIdAsync(admin.IdentityId);
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+                var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+            }
+            catch
+            {
+                return false;
+            }
 
-            var addClaimRes = await _userManager.AddClaimsAsync(identity, claims);
+            return true;
         }
 
-        public async Task AddCustomer(Customer customer)
+        public async Task<bool> AddCustomer(Customer customer)
         {
             await _dataContext.Customers.AddAsync(customer);
-         
-            await _dataContext.SaveChangesAsync();
+
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
 
             var claims = new List<Claim> {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.CustomerAccess),
@@ -198,30 +252,56 @@ namespace Taxi.Services
             };
 
             var addClaimRes = await _userManager.AddClaimsAsync(customer.Identity, claims);
+            return true;
         }
         
-        public async Task UpdateCustomer(Customer customer)
+        public async Task<bool> UpdateCustomer(Customer customer)
         {
-            await _dataContext.SaveChangesAsync();
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public async Task UpdateDriver(Driver Driver)
+        public async Task<bool> UpdateDriver(Driver Driver)
         {
-            await _dataContext.SaveChangesAsync();
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public async Task AddDriver(Driver driver)
+        public async Task<bool> AddDriver(Driver driver)
         {
             await _dataContext.Drivers.AddAsync(driver);
-            await _dataContext.SaveChangesAsync();
 
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             var claims = new List<Claim> {
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.Rol, Helpers.Constants.Strings.JwtClaims.DriverAccess),
                 new Claim(Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId, driver.Id.ToString())
             };
             
             var addClaimRes = await _userManager.AddClaimsAsync(driver.Identity, claims);
-            
+            return true;
         }
 
         public Driver GetDriverByIdentityId(string identityId)
@@ -336,15 +416,23 @@ namespace Taxi.Services
             return true;
         }
 
-        public async Task RemoveVehicle(Vehicle vehicle)
+        public async Task<bool> RemoveVehicle(Vehicle vehicle)
         {
             foreach (var p in vehicle.Pictures)
             {
                 await _uploadService.DeleteObjectAsync(p.Id);
             }
             _dataContext.Remove(vehicle);
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
 
-            await _dataContext.SaveChangesAsync();
+            return true;
         }
         
         public async Task<Vehicle> GetVehicle(Guid vehicleId)
@@ -352,10 +440,19 @@ namespace Taxi.Services
             return await _dataContext.Vehicles.Include(o => o.Pictures).FirstOrDefaultAsync(v => v.Id == vehicleId);
         }
 
-        public async Task AddPictureToVehicle(Vehicle v, string id)
+        public async Task<bool> AddPictureToVehicle(Vehicle v, string id)
         {
             v.Pictures.Add(new Picture() { Id = id });
-            await _dataContext.SaveChangesAsync(); 
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }  
 
         public async Task<bool> RemoveProfilePicture(AppUser user)
@@ -364,8 +461,14 @@ namespace Taxi.Services
 
             _dataContext.ProfilePictures.Remove(user.ProfilePicture);
 
-            await _dataContext.SaveChangesAsync();
-
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
 
@@ -373,8 +476,14 @@ namespace Taxi.Services
         {
             user.ProfilePicture = picture;
 
-            await _dataContext.SaveChangesAsync();
-
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
 
@@ -387,8 +496,14 @@ namespace Taxi.Services
 
             await _uploadService.DeleteObjectAsync(imageId);
 
-            await _dataContext.SaveChangesAsync();
-
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
 
@@ -396,14 +511,29 @@ namespace Taxi.Services
         {
             await _dataContext.DriverLicenses.AddAsync(driverLicense);
 
-            await _dataContext.SaveChangesAsync();
-
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
 
-        public async Task UpdateDriverLicense(DriverLicense driverLicense)
+        public async Task<bool> UpdateDriverLicense(DriverLicense driverLicense)
         {
-            await _dataContext.SaveChangesAsync();
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters)
@@ -419,8 +549,14 @@ namespace Taxi.Services
 
             await _uploadService.DeleteObjectAsync(license.ImageId);
 
-            await _dataContext.SaveChangesAsync();
-            
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
             return true;
         }
     }

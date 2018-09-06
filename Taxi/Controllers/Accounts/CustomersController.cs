@@ -87,7 +87,10 @@ namespace Taxi.Controllers.Accounts
             var customer = _mapper.Map<Customer>(model);
             customer.IdentityId = userIdentity.Id;
 
-            await _usersRepository.AddCustomer(customer);
+            var addres = await _usersRepository.AddCustomer(customer);
+
+            if (!addres)
+                return Conflict();
 
             var customerDto = _mapper.Map<CustomerDto>(model);
 
@@ -145,7 +148,10 @@ namespace Taxi.Controllers.Accounts
                 }
             }
 
-            await _usersRepository.UpdateCustomer(customer);
+            var res = await _usersRepository.UpdateCustomer(customer);
+
+            if (!res)
+                return Conflict();
 
             return NoContent();
         }

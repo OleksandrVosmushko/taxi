@@ -15,7 +15,7 @@ namespace Taxi.Services
 
         Task<List<TripHistoryRouteNode>> GetTripRouteNodes(Guid tripId);
 
-        void RemoveTrip(Guid customerId);
+        bool RemoveTrip(Guid customerId);
         
         Trip GetTrip(Guid customerId, bool includeRoutes = false);
 
@@ -25,7 +25,7 @@ namespace Taxi.Services
 
         Trip GetTripByDriver(Guid driverId, bool includeRoutes  = false);
         
-        Task AddTripHistory(TripHistory tripHistory);
+        Task<bool> AddTripHistory(TripHistory tripHistory);
 
         Task<TripHistory> GetTripHistory(Guid id);
 
@@ -33,10 +33,10 @@ namespace Taxi.Services
 
         PagedList<TripHistory> GetTripHistoriesForDriver(Guid DriverId, TripHistoryResourceParameters resourceParameters);
         Task<bool> UpdateTrip(Trip trip, PlaceDto from = null, PlaceDto to = null);
-        Task AddNode(TripRouteNode node);
+        Task<bool> AddNode(TripRouteNode node);
         void InsertTrip(Trip tripEntity, double lat1, double lon1, double lat2, double lon2);
-        void AddRefundRequest(RefundRequest refundRequest);
-        void AddContract(Contract contract);
+        bool AddRefundRequest(RefundRequest refundRequest);
+        bool AddContract(Contract contract);
 
         Contract GetContract(ulong id);
     }

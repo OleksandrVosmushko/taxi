@@ -63,16 +63,34 @@ namespace Taxi.Services
             _dataContext.Database.ExecuteSqlCommand(query, sqlParameters);
         }
 
-        public void AddRefundRequest(RefundRequest refundRequest)
+        public bool AddRefundRequest(RefundRequest refundRequest)
         {
             _dataContext.RefundRequests.Add(refundRequest);
-            _dataContext.SaveChanges();
+            try
+            {
+                _dataContext.SaveChanges();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
-        public void AddContract(Contract contract)
+        public bool AddContract(Contract contract)
         {
             _dataContext.Contracts.Add(contract);
-            _dataContext.SaveChanges();
+            try
+            {
+                _dataContext.SaveChanges();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public Contract GetContract(ulong id)
@@ -80,11 +98,19 @@ namespace Taxi.Services
             return _dataContext.Contracts.FirstOrDefault(c => c.Id == (long)id);
         }
 
-        public async Task AddTripHistory(TripHistory tripHistory)
+        public async Task<bool> AddTripHistory(TripHistory tripHistory)
         {
             await _dataContext.TripHistories.AddAsync(tripHistory);
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
 
-            await _dataContext.SaveChangesAsync();
+            return true;
         }
 
         public PagedList<TripDto> GetNearTrips(double lon, double lat, PaginationParameters paginationParameters)
@@ -133,10 +159,19 @@ namespace Taxi.Services
             
         }
         
-        public async Task AddNode(TripRouteNode node)
+        public async Task<bool> AddNode(TripRouteNode node)
         {
             await _dataContext.TripRouteNodes.AddAsync(node);
-            await _dataContext.SaveChangesAsync();
+            try
+            {
+                await _dataContext.SaveChangesAsync();
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
         public Trip GetTripByDriver(Guid driverId, bool includeRoutes = false)
         {
@@ -174,16 +209,24 @@ namespace Taxi.Services
                 .ToListAsync();
         }
 
-        public void RemoveTrip(Guid customerId)
+        public bool RemoveTrip(Guid customerId)
         {
             var tripToRemove = _dataContext.Trips.FirstOrDefault(t => t.CustomerId == customerId);
 
             if (tripToRemove != null)
             {
                 _dataContext.Trips.Remove(tripToRemove);
-                _dataContext.SaveChanges();
+                try
+                {
+                    _dataContext.SaveChanges();
+                }
+                catch
+                {
+                    return false;
+                }
+                
             }
-           
+            return true;
         }
 
         public async Task<bool> UpdateTrip(Trip trip, PlaceDto from=null , PlaceDto to = null)

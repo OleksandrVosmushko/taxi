@@ -133,7 +133,10 @@ namespace Taxi.Controllers
 
             _mapper.Map(customerDriverUpgradeDto, driver);
 
-            await _userRepository.AddDriver(driver);
+            var addres = await _userRepository.AddDriver(driver);
+
+            if (!addres)
+                return Conflict();
 
             var user = await _userManager.FindByIdAsync(uid);
 

@@ -73,7 +73,9 @@ namespace Taxi.Controllers
 
             if (driver?.DriverLicense != null)
             {
-                await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
+                var res = await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
+                if (!res)
+                    return Conflict();
             }
 
             DateTime licensedTo;
@@ -97,7 +99,10 @@ namespace Taxi.Controllers
                 LicensedTo = licensedTo,
                 LicensedFrom = licensedFrom
             };
-            await _usersRepository.AddDriverLicense(license);
+            var addres = await _usersRepository.AddDriverLicense(license);
+
+            if (!addres)
+                return Conflict();
 
             return NoContent();
         }
@@ -150,7 +155,9 @@ namespace Taxi.Controllers
                 driver.DriverLicense.UpdateTime = DateTime.UtcNow;
                 driver.DriverLicense.ImageId = imageId;
                 driver.DriverLicense.IsApproved = false;
-                await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
+                var res = await _usersRepository.UpdateDriverLicense(driver.DriverLicense);
+                if (!res)
+                    return Conflict();
                 System.IO.File.Delete(filename);
                 return Ok();
             }
@@ -184,8 +191,10 @@ namespace Taxi.Controllers
 
             if (driver.DriverLicense != null)
             {
-                await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
+                bool res = await _usersRepository.RemoveDriverLicense(driver.DriverLicense);
                 //remove picture from data context
+                if (!res)
+                    return BadRequest();
             }
             else return NotFound();
 

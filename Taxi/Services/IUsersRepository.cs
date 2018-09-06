@@ -12,30 +12,30 @@ namespace Taxi.Services
 {
     public interface IUsersRepository
     {
-        Task RemoveUser(AppUser user);
+        Task<bool> RemoveUser(AppUser user);
 
         AppUser GetUser(string id);
         PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
-        void UpdateRefund(RefundRequest request);
+        bool UpdateRefund(RefundRequest request);
         RefundRequest GetRefundRequest(Guid id);
         PagedList<DriverLicense> GetDriverLicenses(DriverLicenseResourceParameters resourceParameters); 
-        Task AddAdminResponse(AdminResponse response);
+        Task<bool> AddAdminResponse(AdminResponse response);
         Task<PagedList<AppUser>> GetUsers(UserResourceParameters resourceParameters);
         Admin GetAdminById(Guid adminId);
 
         PagedList<Admin> GetAdmins(PaginationParameters parameters);
 
-        Task AddAdmin(Admin admin);
+        Task<bool> AddAdmin(Admin admin);
 
-        Task ApproveAdmin(Admin admin);
+        Task<bool> ApproveAdmin(Admin admin);
 
-        Task AddCustomer(Customer customer);
+        Task<bool> AddCustomer(Customer customer);
 
-        Task AddDriver(Driver driver);
+        Task<bool> AddDriver(Driver driver);
 
-        Task UpdateCustomer(Customer customer);
+        Task<bool> UpdateCustomer(Customer customer);
 
-        Task UpdateDriver(Driver driver);
+        Task<bool> UpdateDriver(Driver driver);
 
         Customer GetCustomerByIdentityId(string identityId);
 
@@ -65,9 +65,9 @@ namespace Taxi.Services
 
         Task<Vehicle> GetVehicle(Guid vehicleId);
 
-        Task RemoveVehicle(Vehicle vehicle);
+        Task<bool> RemoveVehicle(Vehicle vehicle);
 
-        Task AddPictureToVehicle(Vehicle v,string id);
+        Task<bool> AddPictureToVehicle(Vehicle v,string id);
 
         Task<bool> RemoveProfilePicture(AppUser user);
 
@@ -79,7 +79,7 @@ namespace Taxi.Services
         
         Task<bool> AddDriverLicense(DriverLicense driverLicense);
 
-        Task UpdateDriverLicense(DriverLicense driverLicense);
+        Task<bool> UpdateDriverLicense(DriverLicense driverLicense);
         PagedList<AdminResponse> GetAdminResponses(string id, PaginationParameters resourceParameters);
     }
 }

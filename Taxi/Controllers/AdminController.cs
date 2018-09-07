@@ -374,15 +374,20 @@ namespace Taxi.Controllers
             {
                 return NotFound();
             }
-
+            var root = User.Claims.FirstOrDefault(c => c.Value == Helpers.Constants.Strings.JwtClaims.RootUserAccess)?.Value;
+            var adminidentityId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;
             var claims = await _userManager.GetClaimsAsync(user);
 
             foreach (var c in claims)
             {
+                if (root == null)
                 if (c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Rol &&
-                    c.Value == Helpers.Constants.Strings.JwtClaims.AdminAccess)
+                    c.Value == Helpers.Constants.Strings.JwtClaims.AdminAccess )
                     return StatusCode(403);
             }
+
+            if (root != null && id == adminidentityId)
+                return BadRequest("Can not remove root user");
 
             var res = await _usersRepository.RemoveUser(user);
 

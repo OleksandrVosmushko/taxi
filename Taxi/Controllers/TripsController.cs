@@ -581,6 +581,14 @@ namespace Taxi.Controllers
                 return BadRequest();
             var driver = _usersRepository.GetDriverById(Guid.Parse( driverId));
 
+            var drTrip = _tripsRepo.GetTripByDriver(Guid.Parse( driverId));
+
+            if (drTrip != null)
+            {
+                ModelState.AddModelError(nameof(Driver), "Driver already has trip");
+                return BadRequest();
+            }
+                
             var orderRes = Order.GetOrder((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User() {PrivateKey = driver.Identity.PrivateKey}, ModelState);
 

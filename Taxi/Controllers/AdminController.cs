@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.FileProviders;
 using Taxi.Entities;
 using Taxi.Helpers;
 using Taxi.Models;
@@ -465,6 +466,21 @@ namespace Taxi.Controllers
             if (!res)
                 return Conflict();
             return Ok();
+        }
+
+        [Authorize(Policy = "Root")]
+        [HttpDelete("root/removeadmin/{adminId}")]
+        public async Task<IActionResult> RemoveFromAdmins(Guid adminId)
+        {
+            var admin = _usersRepository.GetAdminById(adminId);
+            if (admin == null)
+                return NotFound();
+
+            var res = await _usersRepository.RemoveFromAdmins(admin);
+
+            if (!res)
+                return Conflict();
+            return NoContent();
         }
 
         [HttpPost]

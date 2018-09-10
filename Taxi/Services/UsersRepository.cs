@@ -180,6 +180,30 @@ namespace Taxi.Services
             return _dataContext.Admins.Include(a => a.Identity).ThenInclude(a => a.ProfilePicture).FirstOrDefault(ad => ad.Id == adminId);
         }
 
+        public async Task<bool> RemoveFromAdmins(Admin admin)
+        {
+            try
+            {
+                var claims = (await _userManager.GetClaimsAsync(admin.Identity)).Where(c => c.Value == Constants.Strings.JwtClaims.AdminAccess || 
+                                                                                            c.Type == Constants.Strings.JwtClaimIdentifiers.AdminId);
+
+                var res = await _userManager.RemoveClaimsAsync(admin.Identity, claims);
+
+                if (res.Succeeded != true)
+                    return false;
+
+                _dataContext.Remove(admin);
+
+                await _dataContext.SaveChangesAsync();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            
+        }
+
         public PagedList<Admin> GetAdmins(PaginationParameters paginationParameters)
         {
             var beforePaging = _dataContext.Admins.OrderBy(a => a.IsApproved).Include(a => a.Identity).ThenInclude(i => i.ProfilePicture);

@@ -13,7 +13,7 @@ namespace Taxi.Services
     public interface IUsersRepository
     {
         Task<bool> RemoveUser(AppUser user);
-
+        Task<bool> RemoveFromAdmins(Admin admin);
         AppUser GetUser(string id);
         PagedList<RefundRequest> GetRefundRequests(RefundResourceParameters resourceParameters);
         bool UpdateRefund(RefundRequest request);

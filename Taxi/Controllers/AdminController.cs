@@ -204,7 +204,9 @@ namespace Taxi.Controllers
 
             foreach (var r in refundsRequests)
             {
-                refundDtos.Add(Mapper.Map<RefundRequestDto>(r));
+                var responce = Mapper.Map<RefundRequestDto>(r);
+                responce.Response = _usersRepository.GetAdminResponse(r.AdminResponseId)?.Message;
+                refundDtos.Add(responce);
             }
 
             return Ok(refundDtos);
@@ -246,14 +248,8 @@ namespace Taxi.Controllers
             var adminid = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.AdminId)?.Value;
 
             request.Solved = true;
-
-            request.Message += ("\n " + solution.Message);
-
-            var updres = _usersRepository.UpdateRefund(request);
-
-            if (!updres)
-                return Conflict();
-
+            
+            
             var responce =new AdminResponse()
             {
                 AdminId = Guid.Parse(adminid),
@@ -266,6 +262,13 @@ namespace Taxi.Controllers
             if (!addres)
                 return Conflict();
 
+            request.AdminResponseId = responce.Id;
+
+            var updres = _usersRepository.UpdateRefund(request);
+
+            if (!updres)
+                return Conflict();
+            
             return NoContent();
         }
 

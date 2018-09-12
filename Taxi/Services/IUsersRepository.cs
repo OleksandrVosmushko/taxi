@@ -12,6 +12,7 @@ namespace Taxi.Services
 {
     public interface IUsersRepository
     {
+        AdminResponse GetAdminResponse(Guid id);
         Task<bool> RemoveUser(AppUser user);
         Task<bool> RemoveFromAdmins(Admin admin);
         AppUser GetUser(string id);

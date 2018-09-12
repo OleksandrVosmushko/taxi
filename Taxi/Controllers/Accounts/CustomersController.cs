@@ -157,7 +157,7 @@ namespace Taxi.Controllers.Accounts
         }
 
         [HttpGet("adminresponses",Name = "GetAdminResponses")]
-        [Authorize(Policy = "Customer")]
+      //  [Authorize(Policy = "Customer")]
         public async Task<IActionResult> GetAdminResponses(PaginationParameters resourceParameters)
         {
             var id = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.Id)?.Value;

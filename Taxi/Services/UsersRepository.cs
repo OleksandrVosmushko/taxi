@@ -35,6 +35,11 @@ namespace Taxi.Services
         }
 
 
+        public AdminResponse GetAdminResponse(Guid id)
+        {
+            return _dataContext.AdminResponces.FirstOrDefault(r => r.Id == id);
+        }
+
         public async Task<bool> RemoveUser(AppUser user)
         {
             var driver = _dataContext.Drivers.Include(d=> d.DriverLicense).Include(dr=>dr.Vehicle).ThenInclude(v=>v.Pictures).FirstOrDefault(d => d.IdentityId == user.Id);

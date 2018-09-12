@@ -20,5 +20,7 @@ namespace Taxi.Models.Admins
         public Guid IdentityId { get; set; }
 
         public Guid TripHistoryId { get; set; }
+
+        public string Response { get; set; }
     }
 }

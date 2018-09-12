@@ -31,7 +31,7 @@ namespace Taxi.Controllers
         private IGoogleMapsService _googleMapsService;
         private IConfiguration _configuration;
         private readonly IHubContext<RouteHub> _hubContext;
-
+        private const int MetersInKilometer = 1000;
         public TripsController(IHubContext<RouteHub> hubContext, IConfiguration configuration, IMapper mapper,
             ITripsRepository tripsRepo,
             IUsersRepository usersRepository,
@@ -190,7 +190,7 @@ namespace Taxi.Controllers
             if (Math.Abs(length) < double.Epsilon)
                 return BadRequest("No route to destination");
 
-            length /= 1000;
+            length /= MetersInKilometer;
 
 
             tripEntity.Distance = length;
@@ -241,6 +241,9 @@ namespace Taxi.Controllers
             }
             //TODO : refund
             var customer = _usersRepository.GetCustomerById(Guid.Parse(customerid));
+
+            if (customer == null)
+                return NotFound();
 
             var res = Refund.Create((ulong)trip.ContractId, new DefaultControllerPattern(),
                 new User {PrivateKey = customer.Identity.PrivateKey}, ModelState);
@@ -338,6 +341,9 @@ namespace Taxi.Controllers
         {
             var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
 
+            if (customer == null)
+                return NotFound();
+
             var trip = _tripsRepo.GetTrip(customer.Id, true);
             if (trip == null)
             {
@@ -400,6 +406,8 @@ namespace Taxi.Controllers
 
             var customer = _usersRepository.GetCustomerById(Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.CustomerId)?.Value));
 
+            if (customer == null)
+                return NotFound();
             //if (customer.CurrentTrip != null)
             //    _tripsRepo.RemoveTrip(customer.Id);
 
@@ -434,7 +442,7 @@ namespace Taxi.Controllers
             if (Math.Abs(length) < double.Epsilon)
                 return BadRequest("No route to destination");
 
-            length /= 1000;
+            length /= MetersInKilometer;
 
             tripEntity.Distance = length;
 
@@ -459,14 +467,19 @@ namespace Taxi.Controllers
             //swap
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-
-           
-
+            
             tripEntity.ContractId = contract.Id;
 
-            _tripsRepo.InsertTrip(tripEntity, tripCreationDto.From.Latitude,
-                tripCreationDto.From.Longitude,
-                tripCreationDto.To.Latitude, tripCreationDto.To.Longitude);
+            try
+            {
+                _tripsRepo.InsertTrip(tripEntity, tripCreationDto.From.Latitude,
+                    tripCreationDto.From.Longitude,
+                    tripCreationDto.To.Latitude, tripCreationDto.To.Longitude);
+            }
+            catch
+            {
+                return Conflict();
+            }
 
             #region Responce
 
@@ -641,10 +654,7 @@ namespace Taxi.Controllers
             var driverId = User.Claims.FirstOrDefault(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId)?.Value;
 
             var driver = _usersRepository.GetDriverByIdentityId(driverId);
-
-            // Set connectionId for Diver
-            //_routeHub.ConnectDriver(driver);
-
+            
             var trip = _tripsRepo.GetTripByDriver(Guid.Parse(driverId));
 
             if (trip == null)

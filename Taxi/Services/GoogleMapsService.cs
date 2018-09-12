@@ -23,9 +23,12 @@ namespace Taxi.Services
 
         public async Task<DirectionsData> GetDirections(double latFrom, double lonFrom, double latTo, double lonTo)
         {
-            var queryParams = $"?origin={latFrom},{lonFrom}&destination={latTo},{lonTo}&mode=driving" +
-                              //$"&key={_googleOptions.ApiKey}" +
-                              $"";
+            var queryParams = $"?origin={latFrom},{lonFrom}&destination={latTo},{lonTo}&mode=driving";
+            if (_googleOptions.ApiKey != null)
+            {
+                queryParams += $"&key={_googleOptions.ApiKey}";
+
+            }
             DirectionsData responce = null;
             using (HttpClient client = new HttpClient())
             using (HttpResponseMessage res = await client.GetAsync(BaseQueryUrl+queryParams))

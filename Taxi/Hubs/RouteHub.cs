@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Taxi.Entities;
 using Taxi.Models;
 using Taxi.Services;
+using TaxiCoinCoreLibrary.RequestObjectPatterns;
 
 namespace Taxi.Hubs
 {
@@ -14,9 +15,12 @@ namespace Taxi.Hubs
     {
 
         private IUsersRepository _usersRepository;
+        private IDriverLocRepository _locationRepository;
 
-        public RouteHub(IUsersRepository usersRepository)   {
+        public RouteHub(IUsersRepository usersRepository,
+            IDriverLocRepository locationRepository)   {
             _usersRepository = usersRepository;
+            _locationRepository = locationRepository;
         }
         
 
@@ -26,6 +30,37 @@ namespace Taxi.Hubs
             {
                 await Clients.Client(customerConnectionId).SendAsync("postGeoData", lat, lon);
             }          
+        }
+
+        [Authorize(Policy = "Driver")]
+        public async Task UpdateLocation( double lat, double lon)
+        {
+            var driverid = Context.User.Claims.Single(c => c.Type == Helpers.Constants.Strings.JwtClaimIdentifiers.DriverId).Value;
+            
+            var res = await _locationRepository.UpdateLocation(Guid.Parse(driverid), lat, lon);
+        }
+
+
+        [Authorize(Policy = "Customer")]
+        
+        public async Task GetNearDrivers(double lat, double lon)
+        {
+            
+            var drivers = await _locationRepository.GetNear(lat, lon);
+
+            var driverLocationToReturn = new List<DriverLocationDto>();
+
+            foreach (var driver in drivers)
+            {
+                var place = Helpers.Location.PointToPlaceDto(driver.Location);
+                driverLocationToReturn.Add(new DriverLocationDto()
+                {
+                    DriverId = driver.Id,
+                    Latitude = place.Latitude,
+                    Longitude = place.Longitude
+                });
+            }
+            await Clients.Client(Context.ConnectionId).SendAsync("nearDrivers", driverLocationToReturn);
         }
 
         [Authorize(Policy = "Customer")]

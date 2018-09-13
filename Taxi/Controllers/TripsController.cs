@@ -387,7 +387,7 @@ namespace Taxi.Controllers
             if (!addres)
                 return Conflict();
 
-            var res = _tripsRepo.RemoveTrip(customer.CurrentTrip.CustomerId);
+            var res = _tripsRepo.RemoveTrip(customer.Id);
 
             if (!res)
                 return Conflict();
